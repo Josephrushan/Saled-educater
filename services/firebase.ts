@@ -26,6 +26,14 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// Safety check for environment variables
+if (!firebaseConfig.apiKey) {
+  console.error('Firebase configuration is missing! Check your environment variables.');
+  if (typeof window !== 'undefined') {
+    alert('Critical Error: Firebase config is missing. Please set VITE_FIREBASE_API_KEY and other variables in your Vercel project settings.');
+  }
+}
+
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
 const db = getFirestore(app);
