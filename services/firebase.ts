@@ -52,7 +52,7 @@ export const requestForToken = async () => {
   try {
     // Note: You need to generate a VAPID key in Firebase Console -> Project Settings -> Cloud Messaging -> Web Configuration
     // and replace 'YOUR_VAPID_KEY' below.
-    const currentToken = await getToken(messaging, { vapidKey: 'BMs_XXXXXXXXXXXX' }); // Placeholder
+    const currentToken = await getToken(messaging, { vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY });
     if (currentToken) {
       console.log('FCM Token:', currentToken);
       // TODO: Save this token to the user's profile in Firestore

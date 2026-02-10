@@ -16,8 +16,8 @@ export default defineConfig(({ mode }) => {
           registerType: 'autoUpdate',
           includeAssets: ['pwa-192x192.png', 'pwa-512x512.png'],
           manifest: {
-            name: 'Educater Sales',
-            short_name: 'Educater Sales',
+            name: 'Educater Sales Portal',
+            short_name: 'Sales Portal',
             description: 'Sales CRM for Educater Sales Team',
             theme_color: '#00ff8e',
             background_color: '#f8fafc',
@@ -41,8 +41,6 @@ export default defineConfig(({ mode }) => {
         })
       ],
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
       },
       resolve: {
         alias: {

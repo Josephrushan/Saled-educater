@@ -7,7 +7,65 @@ import {
 } from 'lucide-react';
 import { School, SalesStage } from '../types';
 import { STAGE_CONFIG } from '../constants';
-import { generatePersonalizedEmail, getSalesAdvice } from '../services/gemini';
+
+// Basic templates since AI is removed
+const EMAIL_TEMPLATES: Record<string, (name: string, principal: string) => string> = {
+  problem: (name, principal) => `Subject: Reducing Printing Costs at ${name}
+
+Dear ${principal},
+
+I hope you are well. I noticed many schools like ${name} are struggling with high paper costs (often over R1200/month per student in printing).
+
+Educater helps specific schools go digital, saving significantly on these operational costs while improving parent engagement.
+
+Would you be open to a 10-minute chat this week to see how much we could save you?
+
+Best,
+[Your Name]`,
+  solution: (name, principal) => `Subject: Digital Solution for ${name}
+
+Dear ${principal},
+
+Following up on our paper-saving initiative. Educater isn't just about saving trees—it's about streamlining your entire school admin process.
+
+Our platform handles:
+- Digital homework & resources
+- Instant parent communication
+- Analytics for student performance
+
+Let me know if you'd like a demo.
+
+Best,
+[Your Name]`,
+  social: (name, principal) => `Subject: Quick question about ${name}'s digital strategy
+
+Hi ${principal},
+
+I saw ${name} recently posted about your sports day - looks like a great event!
+
+We help schools capture these moments and share them securely with parents. Just wanted to connect and see if you have a digital strategy in place for this term?
+
+Cheers,
+[Your Name]`,
+  nudge: (name, principal) => `Subject: Any thoughts on my previous email?
+
+Hi ${principal},
+
+Just floating this to the top of your inbox. I know term time is busy!
+
+Do you have 5 minutes this week to discuss digital transformation for ${name}?
+
+Best,
+[Your Name]`
+};
+
+const SALES_ADVICE = [
+  "Focus on the cost-saving benefit. Schools care about budget right now.",
+  "Try to schedule a face-to-face meeting with the principal.",
+  "Mention a nearby school that is already using Educater successfully.",
+  "Send a short video demo of the parent app features.",
+  "Follow up on Tuesday mornings - specifically between 9am and 10am."
+];
 
 interface SchoolDetailProps {
   school: School;
@@ -28,19 +86,27 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
 
   const handleGetAdvice = async () => {
     setIsLoadingAdvice(true);
-    const advice = await getSalesAdvice(school.stage);
-    setAiAdvice(advice);
-    setIsLoadingAdvice(false);
-    setActiveTab('ai_coach');
+    // Simulate API delay
+    setTimeout(() => {
+      // Pick random advice
+      const advice = SALES_ADVICE[Math.floor(Math.random() * SALES_ADVICE.length)];
+      setAiAdvice(advice);
+      setIsLoadingAdvice(false);
+      setActiveTab('ai_coach');
+    }, 1000);
   };
 
   const handleGenerateEmail = async (type: 'problem' | 'solution' | 'social' | 'nudge') => {
     setIsGeneratingEmail(true);
-    const email = await generatePersonalizedEmail(school.name, school.principalName, type);
-    setDraftEmail(email || '');
-    setActiveTab('emails');
-    setIsGeneratingEmail(false);
-    handleUpdate(SalesStage.EMAIL_SENT);
+    // Simulate API delay
+    setTimeout(() => {
+      const templateFn = EMAIL_TEMPLATES[type];
+      const email = templateFn ? templateFn(school.name, school.principalName) : "No template found.";
+      setDraftEmail(email || '');
+      setActiveTab('emails');
+      setIsGeneratingEmail(false);
+      handleUpdate(SalesStage.EMAIL_SENT);
+    }, 800);
   };
 
   const stages = [
@@ -260,7 +326,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                     <div className="flex items-center gap-4 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
                       <div className="p-3 bg-white rounded-xl text-indigo-500 shadow-sm"><Sparkles size={24} /></div>
                       <div>
-                        <h4 className="font-bold text-slate-900">AI Sales Coach</h4>
+                        <h4 className="font-bold text-slate-900">Digital Sales Coach</h4>
                         <p className="text-xs text-indigo-700/80 mt-1">
                            Get tactical advice for the {school.stage} stage.
                         </p>
@@ -269,7 +335,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                          onClick={handleGetAdvice}
                          className="ml-auto px-4 py-2 bg-indigo-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200"
                        >
-                         {isLoadingAdvice ? 'Thinking...' : 'Analyze Deal'}
+                         {isLoadingAdvice ? 'Thinking...' : 'Get Advice'}
                        </button>
                     </div>
 
