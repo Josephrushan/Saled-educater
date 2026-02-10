@@ -20,6 +20,7 @@ import {
   updateSchoolStageInFirebase 
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
+import PWAControls from './components/PWAControls';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -157,6 +158,8 @@ const App: React.FC = () => {
       {showAddModal && (
         <AddSchoolModal onClose={() => setShowAddModal(false)} onSubmit={handleAddSchool} />
       )}
+      
+      <PWAControls />
     </div>
   );
 };

@@ -14,6 +14,7 @@ import {
   deleteDoc
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { SalesRep, School, SalesStage, Resource } from '../types';
 
 const firebaseConfig = {
@@ -37,6 +38,42 @@ if (!firebaseConfig.apiKey) {
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
 const db = getFirestore(app);
+
+// Initialize Firebase Cloud Messaging
+let messaging: any = null;
+try {
+  messaging = getMessaging(app);
+} catch (err) {
+  console.log('Firebase Messaging not supported in this environment', err);
+}
+
+export const requestForToken = async () => {
+  if (!messaging) return null;
+  try {
+    // Note: You need to generate a VAPID key in Firebase Console -> Project Settings -> Cloud Messaging -> Web Configuration
+    // and replace 'YOUR_VAPID_KEY' below.
+    const currentToken = await getToken(messaging, { vapidKey: 'BMs_XXXXXXXXXXXX' }); // Placeholder
+    if (currentToken) {
+      console.log('FCM Token:', currentToken);
+      // TODO: Save this token to the user's profile in Firestore
+      return currentToken;
+    } else {
+      console.log('No registration token available. Request permission to generate one.');
+      return null;
+    }
+  } catch (err) {
+    console.log('An error occurred while retrieving token. ', err);
+    return null;
+  }
+};
+
+export const onMessageListener = () =>
+  new Promise((resolve) => {
+    if (!messaging) return;
+    onMessage(messaging, (payload) => {
+      resolve(payload);
+    });
+  });
 
 // Collection names as requested
 const REPS_COLLECTION = 'educater_salesman';
