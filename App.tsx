@@ -33,6 +33,21 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<SalesRep | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Restore user session on app mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('educater_currentUser');
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Error restoring user session:', error);
+        localStorage.removeItem('educater_currentUser');
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
   // Fetch schools on mount or when user changes
   useEffect(() => {
     if (currentUser) {
@@ -70,7 +85,6 @@ const App: React.FC = () => {
         });
         
         setSchools(firebaseSchools);
-        setIsLoading(false);
       };
       loadData();
     }
@@ -78,6 +92,8 @@ const App: React.FC = () => {
 
   const handleLogin = (rep: SalesRep) => {
     setCurrentUser(rep);
+    // Save user session to localStorage
+    localStorage.setItem('educater_currentUser', JSON.stringify(rep));
   };
 
   const handleLogout = () => {
@@ -85,6 +101,8 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
     setSelectedSchoolId(null);
     setIsDrawerOpen(false);
+    // Clear user session from localStorage
+    localStorage.removeItem('educater_currentUser');
   };
 
   const handleSchoolSelect = (school: School) => {
