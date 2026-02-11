@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, Mail, Shield, CheckCircle, Trash2, Loader2, X } from 'lucide-react';
+import { Users, UserPlus, Mail, Shield, CheckCircle, Trash2, Loader2, X, Eye, Bank, FileText } from 'lucide-react';
 import { SalesRep } from '../types';
 import { getAllReps, syncSalesRepToFirebase, deleteSalesRep, uploadFileToStorage } from '../services/firebase';
 
@@ -10,6 +10,7 @@ const RepManagement: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [selectedRepForBanking, setSelectedRepForBanking] = useState<SalesRep | null>(null);
   const [newRep, setNewRep] = useState({
     name: '',
     surname: '',
@@ -191,17 +192,6 @@ const RepManagement: React.FC = () => {
                 ) : (
                   rep.avatar
                 )}
-              
-              {rep.role !== 'admin' && (
-                <button 
-                  onClick={() => handleDeleteRep(rep.id)}
-                  disabled={isDeleting === rep.id}
-                  className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                  title="Delete User"
-                >
-                  {isDeleting === rep.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-                </button>
-              )}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -213,8 +203,112 @@ const RepManagement: React.FC = () => {
                   <span className="text-[10px] bg-slate-50 px-2 py-0.5 rounded-lg uppercase tracking-widest">{rep.role}</span>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setSelectedRepForBanking(rep)}
+                  className="p-3 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"
+                  title="View Banking Details"
+                >
+                  <Eye size={18} />
+                </button>
+                {rep.role !== 'admin' && (
+                  <button 
+                    onClick={() => handleDeleteRep(rep.id)}
+                    disabled={isDeleting === rep.id}
+                    className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                    title="Delete User"
+                  >
+                    {isDeleting === rep.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Banking Details Modal */}
+      {selectedRepForBanking && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[2rem] shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8 space-y-6 animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-slate-900">Banking Details</h2>
+                <p className="text-slate-500 text-sm mt-1">{selectedRepForBanking.name} {selectedRepForBanking.surname}</p>
+              </div>
+              <button 
+                onClick={() => setSelectedRepForBanking(null)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-all"
+              >
+                <X size={24} className="text-slate-600" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Bank Details */}
+              <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Bank size={16} className="text-brand" />
+                  Account Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bank Name</p>
+                    <p className="text-sm font-bold text-slate-900">{selectedRepForBanking.bankName || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Branch Code</p>
+                    <p className="text-sm font-bold text-slate-900">{selectedRepForBanking.branchCode || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Number</p>
+                    <p className="text-sm font-bold text-slate-900 break-all">{selectedRepForBanking.accountNumber || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Type</p>
+                    <p className="text-sm font-bold text-slate-900">{selectedRepForBanking.accountType || 'Not provided'}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Holder Name</p>
+                    <p className="text-sm font-bold text-slate-900">{selectedRepForBanking.accountHolderName || 'Not provided'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bank Proof */}
+              {selectedRepForBanking.bankProofUrl && (
+                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <FileText size={16} className="text-brand" />
+                    Proof of Bank Account
+                  </h3>
+                  <a 
+                    href={selectedRepForBanking.bankProofUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-brand hover:text-brand/80 font-bold text-sm"
+                  >
+                    <FileText size={16} />
+                    View Document
+                  </a>
+                </div>
+              )}
+
+              {/* No Banking Details */}
+              {!selectedRepForBanking.bankName && (
+                <div className="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                  <p className="text-sm font-bold text-amber-900">⚠️ No banking details provided yet</p>
+                </div>
+              )}
+            </div>
+
+            <button 
+              onClick={() => setSelectedRepForBanking(null)}
+              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm uppercase tracking-widest py-3 rounded-lg transition-all"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>

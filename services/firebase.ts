@@ -539,3 +539,33 @@ export async function migrateOldAdminData(): Promise<void> {
     console.error("Error during admin data migration:", error);
   }
 }
+
+/**
+ * Upload a file to Firebase Storage and return the download URL
+ */
+export async function uploadFile(file: File, path: string): Promise<string | null> {
+  try {
+    const storage = getStorage();
+    const fileRef = ref(storage, path);
+    await uploadBytes(fileRef, file);
+    const downloadURL = await getDownloadURL(fileRef);
+    return downloadURL;
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    return null;
+  }
+}
+
+/**
+ * Upload profile picture for a sales rep
+ */
+export async function uploadProfilePicture(file: File, repId: string): Promise<string | null> {
+  return uploadFile(file, `profile_pictures/${repId}/${file.name}`);
+}
+
+/**
+ * Upload bank proof document for a sales rep
+ */
+export async function uploadBankProof(file: File, repId: string): Promise<string | null> {
+  return uploadFile(file, `bank_proofs/${repId}/${file.name}`);
+}

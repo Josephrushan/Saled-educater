@@ -47,6 +47,8 @@ export interface SalesRep {
   accountNumber?: string;
   accountType?: string;
   branchCode?: string;
+  accountHolderName?: string;
+  bankProofUrl?: string;
   totalSchools: number;
   activeCommissions: number;
   role?: 'admin' | 'rep';

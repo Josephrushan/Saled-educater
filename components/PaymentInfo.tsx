@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { SalesRep } from '../types';
-import { CreditCard, Landmark, User, FileCheck, Save, Sparkles, Camera } from 'lucide-react';
-import { syncSalesRepToFirebase } from '../services/firebase';
+import { CreditCard, Landmark, User, FileCheck, Save, Sparkles, Camera, Upload, File } from 'lucide-react';
+import { syncSalesRepToFirebase, uploadProfilePicture, uploadBankProof } from '../services/firebase';
 
 interface PaymentInfoProps {
   currentUser: SalesRep;
@@ -18,10 +18,42 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
     bankName: currentUser.bankName || '',
     accountNumber: currentUser.accountNumber || '',
     accountType: currentUser.accountType || 'Savings',
-    branchCode: currentUser.branchCode || ''
+    branchCode: currentUser.branchCode || '',
+    accountHolderName: currentUser.accountHolderName || '',
+    bankProofUrl: currentUser.bankProofUrl || ''
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingProof, setUploadingProof] = useState(false);
+
+  const handleProfilePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const downloadURL = await uploadProfilePicture(file, currentUser.id);
+    if (downloadURL) {
+      setFormData({ ...formData, profilePicUrl: downloadURL });
+    } else {
+      alert('Failed to upload profile picture');
+    }
+    setUploadingImage(false);
+  };
+
+  const handleBankProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingProof(true);
+    const downloadURL = await uploadBankProof(file, currentUser.id);
+    if (downloadURL) {
+      setFormData({ ...formData, bankProofUrl: downloadURL });
+    } else {
+      alert('Failed to upload bank proof');
+    }
+    setUploadingProof(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,19 +88,20 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                   <User size={48} className="text-slate-300" />
                 )}
               </div>
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+              <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                 <Camera className="text-white" size={24} />
-              </div>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleProfilePictureUpload}
+                  disabled={uploadingImage}
+                  className="hidden"
+                />
+              </label>
             </div>
-            <div className="w-full space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block text-center">Profile Picture URL</label>
-              <input 
-                type="text" 
-                value={formData.profilePicUrl}
-                onChange={e => setFormData({...formData, profilePicUrl: e.target.value})}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all text-xs font-bold text-slate-900" 
-                placeholder="Paste image URL here..." 
-              />
+            <div className="text-center">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upload Profile Picture</p>
+              <p className="text-xs text-slate-500 mt-1">{uploadingImage ? 'Uploading...' : 'Click the image to upload'}</p>
             </div>
           </div>
 
@@ -116,6 +149,17 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Branch Code</label>
+                <input 
+                  type="text" 
+                  value={formData.branchCode}
+                  onChange={e => setFormData({...formData, branchCode: e.target.value})}
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                  placeholder="e.g. 632005"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Account Number</label>
                 <input 
                   type="text" 
@@ -125,6 +169,50 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                   placeholder="123456789"
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Account Holder Name</label>
+                <input 
+                  type="text" 
+                  value={formData.accountHolderName}
+                  onChange={e => setFormData({...formData, accountHolderName: e.target.value})}
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                  placeholder="Full Name"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Bank Proof Upload */}
+            <div className="mt-6 pt-6 border-t border-slate-50">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-3">Proof of Bank Account</label>
+              <div className="relative">
+                <input 
+                  type="file" 
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  onChange={handleBankProofUpload}
+                  disabled={uploadingProof}
+                  className="hidden"
+                  id="bank-proof-input"
+                />
+                <label 
+                  htmlFor="bank-proof-input"
+                  className="block w-full px-5 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-center cursor-pointer hover:border-brand hover:bg-brand/5 transition-all"
+                >
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Upload size={18} className={uploadingProof ? 'text-slate-400 animate-spin' : 'text-slate-400'} />
+                    <span className="text-sm font-bold text-slate-900">
+                      {uploadingProof ? 'Uploading...' : formData.bankProofUrl ? 'Change Document' : 'Upload Document'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">PDF, DOC, or Image (JPG, PNG)</p>
+                </label>
+                {formData.bankProofUrl && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-green-600">
+                    <FileCheck size={14} />
+                    <span>Document uploaded</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
