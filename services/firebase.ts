@@ -193,6 +193,8 @@ export async function loginSalesRep(email: string, password: string): Promise<Sa
     };
     // Ensure the admin exists in the salesman collection
     await syncSalesRepToFirebase(admin);
+    // Run migration to fix old admin data on login
+    await migrateOldAdminData();
     return admin;
   }
 
@@ -484,5 +486,56 @@ export async function deleteSchool(schoolId: string): Promise<boolean> {
   } catch (error) {
     console.error("Error deleting school:", error);
     return false;
+  }
+}
+
+/**
+ * Migration: Updates old "Super Admin" references to "Keagan Smith" and fixes rep assignments
+ */
+export async function migrateOldAdminData(): Promise<void> {
+  try {
+    const querySnapshot = await getDocs(collection(db, SCHOOLS_COLLECTION));
+    
+    for (const docSnap of querySnapshot.docs) {
+      const school = docSnap.data() as School;
+      const schoolId = docSnap.id;
+      
+      const isAppointmentOrLater = 
+        school.stage === SalesStage.APPOINTMENT_BOOKED ||
+        school.stage === SalesStage.FINALIZING ||
+        school.stage === SalesStage.LETTER_DISTRIBUTION ||
+        school.stage === SalesStage.COMPLETED;
+      
+      // Check if this school has old admin data
+      if (school.salesRepName === 'Super Admin' || school.salesRepId === 'admin_super') {
+        const schoolRef = doc(db, SCHOOLS_COLLECTION, schoolId);
+        const updateData: any = {};
+        
+        if (isAppointmentOrLater) {
+          // Update appointment or later stage schools to use "Keagan Smith"
+          updateData.salesRepId = 'admin_super';
+          updateData.salesRepName = 'Keagan Smith';
+        } else {
+          // Remove rep assignment from early-stage schools
+          updateData.salesRepId = null;
+          updateData.salesRepName = null;
+        }
+        
+        await updateDoc(schoolRef, updateData);
+        console.log(`Migrated school: ${school.name}`);
+      } else if (!isAppointmentOrLater && school.salesRepId) {
+        // Remove any rep assignment from early-stage schools
+        const schoolRef = doc(db, SCHOOLS_COLLECTION, schoolId);
+        await updateDoc(schoolRef, {
+          salesRepId: null,
+          salesRepName: null
+        });
+        console.log(`Cleared rep from early-stage school: ${school.name}`);
+      }
+    }
+    
+    console.log("Admin data migration completed");
+  } catch (error) {
+    console.error("Error during admin data migration:", error);
   }
 }

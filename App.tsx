@@ -39,7 +39,7 @@ const App: React.FC = () => {
       const loadData = async () => {
         let firebaseSchools = await getSchoolsFromFirebase();
         
-        // Ensure only APPOINTMENT_BOOKED or later stages have rep assignments
+        // Data cleanup: Migrate old "Super Admin" to "Keagan Smith" and fix rep assignments
         firebaseSchools = firebaseSchools.map(school => {
           const isAppointmentOrLater = 
             school.stage === SalesStage.APPOINTMENT_BOOKED ||
@@ -47,16 +47,26 @@ const App: React.FC = () => {
             school.stage === SalesStage.LETTER_DISTRIBUTION ||
             school.stage === SalesStage.COMPLETED;
           
-          // If school is in early stage but has a rep, remove it (data cleanup)
-          if (!isAppointmentOrLater && school.salesRepId) {
-            return {
-              ...school,
-              salesRepId: undefined,
-              salesRepName: undefined
-            };
+          let updated = { ...school };
+          
+          // Migrate old "Super Admin" references to "Keagan Smith"
+          if (updated.salesRepName === 'Super Admin' || updated.salesRepId === 'admin_super') {
+            if (isAppointmentOrLater) {
+              // Keep assignment but update name
+              updated.salesRepId = 'admin_super';
+              updated.salesRepName = 'Keagan Smith';
+            } else {
+              // Remove rep assignment for early-stage schools
+              updated.salesRepId = undefined;
+              updated.salesRepName = undefined;
+            }
+          } else if (!isAppointmentOrLater && updated.salesRepId) {
+            // Remove any rep assignment from early-stage schools
+            updated.salesRepId = undefined;
+            updated.salesRepName = undefined;
           }
           
-          return school;
+          return updated;
         });
         
         setSchools(firebaseSchools);
