@@ -172,6 +172,16 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
     studentCount: school.studentCount
   });
 
+  // Sync contact form with school data when school changes
+  React.useEffect(() => {
+    setContactForm({
+      principalName: school.principalName,
+      principalEmail: school.principalEmail,
+      secretaryEmail: school.secretaryEmail || '',
+      studentCount: school.studentCount
+    });
+  }, [school.id, school.principalName, school.principalEmail, school.secretaryEmail, school.studentCount]);
+
   const handleUpdate = (newStage: SalesStage) => {
     onUpdateStage(school.id, newStage);
     // Trigger confetti when appointment is booked
