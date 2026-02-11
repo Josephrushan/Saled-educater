@@ -15,13 +15,10 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'mine'>('mine');
 
-  // Only show schools assigned to current user that are in APPOINTMENT_BOOKED or later stage
+  // Only show schools assigned to current user in "Mine" view
+  // Don't filter by stage - the stage filter happens elsewhere
   const schools = filter === 'mine' 
-    ? allSchools.filter(s => s.salesRepId === currentUser?.id && 
-        (s.stage === SalesStage.APPOINTMENT_BOOKED || 
-         s.stage === SalesStage.FINALIZING || 
-         s.stage === SalesStage.LETTER_DISTRIBUTION || 
-         s.stage === SalesStage.COMPLETED))
+    ? allSchools.filter(s => s.salesRepId === currentUser?.id)
     : allSchools;
 
   const filteredSchools = schools.filter(s => 
