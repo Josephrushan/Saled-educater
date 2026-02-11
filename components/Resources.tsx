@@ -67,29 +67,16 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
     setIsSubmitting(false);
   };
 
-  const handleDownload = async (url: string, fileName: string) => {
-    try {
-      // For direct downloads, use fetch with no-cors mode if possible
-      const response = await fetch(url, { method: 'GET' });
-      if (response.ok) {
-        const blob = await response.blob();
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = fileName || 'download';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(downloadUrl);
-      } else {
-        // Fallback to direct link if fetch fails
-        window.open(url, '_blank');
-      }
-    } catch (error) {
-      console.error('Download error:', error);
-      // Fallback to direct link
-      window.open(url, '_blank');
-    }
+  const handleDownload = (url: string, fileName: string) => {
+    // Firebase Storage URLs can be downloaded directly
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName || 'download';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (

@@ -91,27 +91,34 @@ const triggerConfetti = () => {
   }
 };
 
-// Add CSS animation for confetti
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fall {
-    to {
-      transform: translateY(100vh) rotate(360deg);
-      opacity: 0;
+// Add CSS animations - ensure they're in the DOM
+if (typeof document !== 'undefined' && !document.getElementById('school-detail-styles')) {
+  const style = document.createElement('style');
+  style.id = 'school-detail-styles';
+  style.innerHTML = `
+    @keyframes fall {
+      0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(360deg);
+      }
     }
-  }
-  @keyframes coinFall {
-    0% {
-      transform: translateY(0) rotateY(0deg);
-      opacity: 1;
+    @keyframes coinFall {
+      0% {
+        opacity: 1;
+        transform: translateY(0) rotateY(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100vh) rotateY(720deg);
+      }
     }
-    100% {
-      transform: translateY(100vh) rotateY(720deg);
-      opacity: 0;
-    }
-  }
-`;
-document.head.appendChild(style);
+  `;
+  document.head.appendChild(style);
+}
 
 // Coin animation
 const triggerCoins = () => {
@@ -157,6 +164,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
   const [draftEmail, setDraftEmail] = useState<string>('');
   const [editingContact, setEditingContact] = useState(false);
+  const [isSavingContact, setIsSavingContact] = useState(false);
   const [contactForm, setContactForm] = useState({
     principalName: school.principalName,
     principalEmail: school.principalEmail,
@@ -348,13 +356,16 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                     </div>
                     <div className="flex gap-2 pt-4">
                       <button
-                        onClick={() => {
-                          onUpdateContactInfo(school.id, contactForm);
+                        onClick={async () => {
+                          setIsSavingContact(true);
+                          await onUpdateContactInfo(school.id, contactForm);
+                          setIsSavingContact(false);
                           setEditingContact(false);
                         }}
-                        className="flex-1 bg-brand text-slate-900 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-brand/90 transition-all"
+                        disabled={isSavingContact}
+                        className="flex-1 bg-brand text-slate-900 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-brand/90 transition-all disabled:opacity-50"
                       >
-                        Save Changes
+                        {isSavingContact ? 'Saving...' : 'Save Changes'}
                       </button>
                       <button
                         onClick={() => {
