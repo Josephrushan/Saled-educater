@@ -37,7 +37,28 @@ const App: React.FC = () => {
   useEffect(() => {
     if (currentUser) {
       const loadData = async () => {
-        const firebaseSchools = await getSchoolsFromFirebase();
+        let firebaseSchools = await getSchoolsFromFirebase();
+        
+        // Ensure only APPOINTMENT_BOOKED or later stages have rep assignments
+        firebaseSchools = firebaseSchools.map(school => {
+          const isAppointmentOrLater = 
+            school.stage === SalesStage.APPOINTMENT_BOOKED ||
+            school.stage === SalesStage.FINALIZING ||
+            school.stage === SalesStage.LETTER_DISTRIBUTION ||
+            school.stage === SalesStage.COMPLETED;
+          
+          // If school is in early stage but has a rep, remove it (data cleanup)
+          if (!isAppointmentOrLater && school.salesRepId) {
+            return {
+              ...school,
+              salesRepId: undefined,
+              salesRepName: undefined
+            };
+          }
+          
+          return school;
+        });
+        
         setSchools(firebaseSchools);
         setIsLoading(false);
       };

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Search, Plus, ChevronRight, User, Filter, School as SchoolIcon } from 'lucide-react';
 import { STAGE_CONFIG } from '../constants';
-import { School, SalesRep } from '../types';
+import { School, SalesRep, SalesStage } from '../types';
 
 interface SchoolListProps {
   onSelectSchool: (school: School) => void;
@@ -15,14 +15,35 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'mine'>('mine');
 
+  // Only show schools assigned to current user that are in APPOINTMENT_BOOKED or later stage
   const schools = filter === 'mine' 
-    ? allSchools.filter(s => s.salesRepId === currentUser?.id)
+    ? allSchools.filter(s => s.salesRepId === currentUser?.id && 
+        (s.stage === SalesStage.APPOINTMENT_BOOKED || 
+         s.stage === SalesStage.FINALIZING || 
+         s.stage === SalesStage.LETTER_DISTRIBUTION || 
+         s.stage === SalesStage.COMPLETED))
     : allSchools;
 
   const filteredSchools = schools.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.salesRepName.toLowerCase().includes(searchTerm.toLowerCase())
+    (s.salesRepName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
   );
+
+  // Helper function to determine if school should display a rep
+  const shouldShowRep = (school: School) => {
+    return school.salesRepId && school.salesRepName && 
+      (school.stage === SalesStage.APPOINTMENT_BOOKED || 
+       school.stage === SalesStage.FINALIZING || 
+       school.stage === SalesStage.LETTER_DISTRIBUTION || 
+       school.stage === SalesStage.COMPLETED);
+  };
+
+  const getRepDisplay = (school: School) => {
+    if (shouldShowRep(school)) {
+      return `Rep: ${school.salesRepName}`;
+    }
+    return 'Rep: Unassigned';
+  };
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in slide-in-from-bottom-6 duration-700">
@@ -89,7 +110,9 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest ${STAGE_CONFIG[school.stage]?.color || 'bg-gray-100 text-gray-500'}`}>
                     {school.stage?.split('(')[0] || 'Unknown'}
                   </span>
-                  <span className="text-[10px] font-bold text-slate-400">Rep: {school.salesRepName}</span>
+                  <span className={`text-[10px] font-bold ${shouldShowRep(school) ? 'text-slate-600' : 'text-slate-400'}`}>
+                    {getRepDisplay(school)}
+                  </span>
                 </div>
               </div>
               <ChevronRight size={18} className="text-slate-200" />
@@ -123,8 +146,10 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                       <div>
                         <span className="block font-black text-slate-900 text-lg group-hover:text-brand transition-colors">{school.name}</span>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <User size={12} className="text-slate-300" />
-                          <span className="text-xs font-bold text-slate-400">Rep: {school.salesRepName}</span>
+                          <User size={12} className={shouldShowRep(school) ? "text-slate-600" : "text-slate-300"} />
+                          <span className={`text-xs font-bold ${shouldShowRep(school) ? 'text-slate-600' : 'text-slate-400'}`}>
+                            {getRepDisplay(school)}
+                          </span>
                         </div>
                       </div>
                     </div>

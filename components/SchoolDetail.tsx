@@ -461,6 +461,11 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
               </div>
 
               {school.salesRepId && (
+                school.stage === SalesStage.APPOINTMENT_BOOKED ||
+                school.stage === SalesStage.FINALIZING ||
+                school.stage === SalesStage.LETTER_DISTRIBUTION ||
+                school.stage === SalesStage.COMPLETED
+              ) && (
                 <div className="pt-6 border-t border-slate-50">
                   <h3 className="text-xs font-bold text-slate-900 mb-3 uppercase tracking-wider">Assigned Rep</h3>
                   <div className="flex items-center gap-3">
