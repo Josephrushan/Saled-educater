@@ -1,19 +1,43 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area 
 } from 'recharts';
-import { TrendingUp, Users, DollarSign, School as SchoolIcon, Star } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, School as SchoolIcon, Star, Zap } from 'lucide-react';
 import { School, SalesRep } from '../types';
+import { seedSchoolsDatabase } from '../services/firebase';
 
 interface DashboardProps {
   currentUser: SalesRep | null;
   schools: School[];
+  onSchoolsUpdated?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools }) => {
+const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUpdated }) => {
+  const [seeding, setSeeding] = useState(false);
+  const [seedMessage, setSeedMessage] = useState<string | null>(null);
+  
   const mySchools = schools.filter(s => s.salesRepId === currentUser?.id);
+  
+  const handleSeedSchools = async () => {
+    setSeeding(true);
+    setSeedMessage('Seeding schools...');
+    try {
+      await seedSchoolsDatabase();
+      setSeedMessage('✅ Successfully added 100 schools!');
+      setTimeout(() => {
+        setSeedMessage(null);
+        onSchoolsUpdated?.();
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      setSeedMessage('❌ Failed to seed schools');
+      console.error(error);
+      setSeeding(false);
+      setTimeout(() => setSeedMessage(null), 3000);
+    }
+  };
   
   const stats = [
     { label: 'My Schools', value: mySchools.length, icon: <SchoolIcon className="text-slate-900" />, sub: 'Owned by you' },
@@ -32,12 +56,34 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools }) => {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700">
-      <div className="flex justify-between items-end">
+      <div className="flex justify-between items-start gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Welcome, {currentUser?.name.split(' ')[0]}</h1>
           <p className="text-slate-500 text-sm font-medium mt-1">Performance snapshot for today.</p>
         </div>
+        {currentUser?.role === 'admin' && schools.length < 100 && (
+          <button
+            onClick={handleSeedSchools}
+            disabled={seeding}
+            className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 disabled:bg-slate-300 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
+          >
+            <Zap size={16} />
+            {seeding ? 'Seeding...' : 'Seed Schools'}
+          </button>
+        )}
       </div>
+
+      {seedMessage && (
+        <div className={`p-4 rounded-xl font-medium text-sm ${
+          seedMessage.includes('✅') 
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+            : seedMessage.includes('❌')
+            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+            : 'bg-blue-50 text-blue-700 border border-blue-200'
+        }`}>
+          {seedMessage}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {stats.map((stat, idx) => (
