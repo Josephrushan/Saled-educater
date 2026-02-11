@@ -13,21 +13,14 @@ interface SchoolListProps {
 
 const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, currentUser, schools: allSchools }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'mine'>('mine');
+  // Admin users default to 'Team' view, regular reps default to 'Mine'
+  const [filter, setFilter] = useState<'all' | 'mine'>(currentUser?.role === 'admin' ? 'all' : 'mine');
 
   // Only show schools assigned to current user in "Mine" view
   // Don't filter by stage - the stage filter happens elsewhere
   const schools = filter === 'mine' 
     ? allSchools.filter(s => s.salesRepId === currentUser?.id)
     : allSchools;
-
-  // Log for debugging
-  React.useEffect(() => {
-    console.log('CurrentUser ID:', currentUser?.id);
-    console.log('Total schools:', allSchools.length);
-    console.log('Filtered schools (Mine):', schools.length);
-    console.log('Schools:', allSchools.map(s => ({ name: s.name, salesRepId: s.salesRepId, currentId: currentUser?.id })));
-  }, [currentUser, allSchools, schools]);
 
   const filteredSchools = schools.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -160,8 +153,8 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${STAGE_CONFIG[school.stage].color}`}>
-                      {STAGE_CONFIG[school.stage].icon}
+                    <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${STAGE_CONFIG[school.stage]?.color || 'bg-slate-100 text-slate-600'}`}>
+                      {STAGE_CONFIG[school.stage]?.icon || null}
                       {school.stage}
                     </span>
                   </td>
