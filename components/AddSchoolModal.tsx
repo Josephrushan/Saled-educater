@@ -46,11 +46,11 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
 
         <form className="p-8 space-y-6" onSubmit={(e) => {
           e.preventDefault();
-          if (checkResult === 'available') onSubmit(formData);
+          if (formData.name && checkResult === 'available') onSubmit(formData);
         }}>
           <div className="space-y-4">
             <div className="relative">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">School Name</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">School Name <span className="text-rose-500">*</span></label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <SchoolIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -90,12 +90,12 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
 
             {checkResult === 'available' && (
               <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Optional - Add details now or later</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="relative">
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Principal</label>
                     <input 
                       type="text"
-                      required
                       placeholder="Name"
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
                       value={formData.principalName}
@@ -106,7 +106,6 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Students</label>
                     <input 
                       type="number"
-                      required
                       placeholder="800"
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
                       value={formData.studentCount}
@@ -120,7 +119,6 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input 
                       type="email"
-                      required
                       placeholder="principal@school.co.za"
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
                       value={formData.principalEmail}
