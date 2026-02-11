@@ -170,19 +170,19 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [contactForm, setContactForm] = useState({
-    principalName: school.principalName,
-    principalEmail: school.principalEmail,
+    principalName: school.principalName || '',
+    principalEmail: school.principalEmail || '',
     secretaryEmail: school.secretaryEmail || '',
-    studentCount: school.studentCount
+    studentCount: school.studentCount || null
   });
 
   // Sync contact form with school data when school changes
   React.useEffect(() => {
     setContactForm({
-      principalName: school.principalName,
-      principalEmail: school.principalEmail,
+      principalName: school.principalName || '',
+      principalEmail: school.principalEmail || '',
       secretaryEmail: school.secretaryEmail || '',
-      studentCount: school.studentCount
+      studentCount: school.studentCount || null
     });
   }, [school.id, school.principalName, school.principalEmail, school.secretaryEmail, school.studentCount]);
 
@@ -215,7 +215,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
     // Simulate API delay
     setTimeout(() => {
       const templateFn = EMAIL_TEMPLATES[type];
-      const email = templateFn ? templateFn(school.name, school.principalName) : "No template found.";
+      const email = templateFn ? templateFn(school.name, school.principalName || 'Principal') : "No template found.";
       setDraftEmail(email || '');
       setActiveTab('emails');
       setIsGeneratingEmail(false);
@@ -427,10 +427,10 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                   <>
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm">
-                        {school.principalName.charAt(0)}
+                        {school.principalName?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-900">{school.principalName}</p>
+                        <p className="text-sm font-bold text-slate-900">{school.principalName || 'Name Not Provided'}</p>
                         <p className="text-xs text-slate-500 mb-2">Principal</p>
                         <div className="space-y-2 mt-3">
                           {school.principalEmail && (
