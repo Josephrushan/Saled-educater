@@ -326,14 +326,21 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Your Monthly Commission</p>
-              <div className="flex items-end justify-between mb-2">
-                <span className="text-3xl font-black text-brand tracking-tight">R{((school.studentCount || 0) * 5).toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-brand bg-brand/10 px-2 py-1 rounded-lg">10% of R50/student</span>
+            {school.studentCount ? (
+              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Your Monthly Commission</p>
+                <div className="flex items-end justify-between mb-2">
+                  <span className="text-3xl font-black text-brand tracking-tight">R{(school.studentCount * 5).toLocaleString()}</span>
+                  <span className="text-[10px] font-bold text-brand bg-brand/10 px-2 py-1 rounded-lg">10% of R50/student</span>
+                </div>
+                <p className="text-[10px] text-slate-400">{school.studentCount.toLocaleString()} students × R5 per month</p>
               </div>
-              <p className="text-[10px] text-slate-400">{(school.studentCount || 0).toLocaleString()} students × R5 per month</p>
-            </div>
+            ) : (
+              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm text-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Commission Value</p>
+                <p className="text-sm text-slate-400">Add student count to see commission potential</p>
+              </div>
+            )}
 
             <div className="space-y-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
               <div>

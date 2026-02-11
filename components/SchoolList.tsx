@@ -237,7 +237,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="text-sm font-black text-brand">R{((school.studentCount || 0) * 5).toLocaleString()}</span>
+                      <span className="text-sm font-black text-brand">{school.studentCount ? `R${(school.studentCount * 5).toLocaleString()}` : '—'}</span>
                       <span className="text-[10px] font-bold text-slate-400 uppercase">Monthly Commission</span>
                     </div>
                   </td>
