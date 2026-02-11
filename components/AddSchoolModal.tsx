@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { X, School as SchoolIcon, Mail, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { checkSchoolExists } from '../services/firebase';
 
 interface AddSchoolModalProps {
   onClose: () => void;
@@ -17,15 +18,17 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
   const [isChecking, setIsChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<'idle' | 'available' | 'taken'>('idle');
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     if (!formData.name) return;
     setIsChecking(true);
-    setTimeout(() => {
-      // Simulate checking logic
-      const isTaken = formData.name.toLowerCase().includes('high'); // Mock rule
-      setCheckResult(isTaken ? 'taken' : 'available');
-      setIsChecking(false);
-    }, 1200);
+    try {
+      const exists = await checkSchoolExists(formData.name);
+      setCheckResult(exists ? 'taken' : 'available');
+    } catch (error) {
+      console.error('Error checking school:', error);
+      setCheckResult('available'); // Default to available if check fails
+    }
+    setIsChecking(false);
   };
 
   return (

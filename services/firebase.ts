@@ -293,3 +293,17 @@ export async function updateSchoolStageInFirebase(schoolId: string, newStage: Sa
     return false;
   }
 }
+
+/**
+ * Checks if a school with the given name already exists in the database.
+ */
+export async function checkSchoolExists(schoolName: string): Promise<boolean> {
+  try {
+    const q = query(collection(db, SCHOOLS_COLLECTION), where("name", "==", schoolName));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty; // Returns true if school exists
+  } catch (error) {
+    console.error("Error checking school:", error);
+    return false;
+  }
+}
