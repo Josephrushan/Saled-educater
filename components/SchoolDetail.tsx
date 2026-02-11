@@ -67,21 +67,113 @@ const SALES_ADVICE = [
   "Follow up on Tuesday mornings - specifically between 9am and 10am."
 ];
 
+// Confetti animation
+const triggerConfetti = () => {
+  const colors = ['#ff6b6b', '#ffd93d', '#6bcf7f', '#4d96ff', '#ff85a2'];
+  const confettiPieces = 50;
+  
+  for (let i = 0; i < confettiPieces; i++) {
+    const confetti = document.createElement('div');
+    confetti.style.position = 'fixed';
+    confetti.style.left = Math.random() * 100 + '%';
+    confetti.style.top = '-10px';
+    confetti.style.width = '10px';
+    confetti.style.height = '10px';
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.borderRadius = '50%';
+    confetti.style.pointerEvents = 'none';
+    confetti.style.zIndex = '9999';
+    confetti.style.animation = `fall ${2 + Math.random() * 1}s linear forwards`;
+    
+    document.body.appendChild(confetti);
+    
+    setTimeout(() => confetti.remove(), 3000);
+  }
+};
+
+// Add CSS animation for confetti
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fall {
+    to {
+      transform: translateY(100vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  @keyframes coinFall {
+    0% {
+      transform: translateY(0) rotateY(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotateY(720deg);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
+
+// Coin animation
+const triggerCoins = () => {
+  const coinCount = 30;
+  
+  for (let i = 0; i < coinCount; i++) {
+    const coin = document.createElement('div');
+    coin.style.position = 'fixed';
+    coin.style.left = Math.random() * 100 + '%';
+    coin.style.top = '-20px';
+    coin.style.width = '24px';
+    coin.style.height = '24px';
+    coin.style.backgroundColor = '#FFD700';
+    coin.style.borderRadius = '50%';
+    coin.style.pointerEvents = 'none';
+    coin.style.zIndex = '9999';
+    coin.style.border = '2px solid #DAA520';
+    coin.style.boxShadow = '0 0 10px rgba(255, 215, 0, 0.6)';
+    coin.style.animation = `coinFall ${2.5 + Math.random() * 1}s ease-in forwards`;
+    coin.innerHTML = '💰';
+    coin.style.fontSize = '20px';
+    coin.style.display = 'flex';
+    coin.style.alignItems = 'center';
+    coin.style.justifyContent = 'center';
+    
+    document.body.appendChild(coin);
+    
+    setTimeout(() => coin.remove(), 3500);
+  }
+};
+
 interface SchoolDetailProps {
   school: School;
   onBack: () => void;
   onUpdateStage: (schoolId: string, newStage: SalesStage) => void;
+  onUpdateContactInfo: (schoolId: string, contactData: any) => void;
 }
 
-const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateStage }) => {
+const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateStage, onUpdateContactInfo }) => {
   const [activeTab, setActiveTab] = useState<'activity' | 'ai_coach' | 'emails'>('activity');
   const [isLoadingAdvice, setIsLoadingAdvice] = useState(false);
   const [aiAdvice, setAiAdvice] = useState<string>('');
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
   const [draftEmail, setDraftEmail] = useState<string>('');
+  const [editingContact, setEditingContact] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    principalName: school.principalName,
+    principalEmail: school.principalEmail,
+    secretaryEmail: school.secretaryEmail || '',
+    studentCount: school.studentCount
+  });
 
   const handleUpdate = (newStage: SalesStage) => {
     onUpdateStage(school.id, newStage);
+    // Trigger confetti when appointment is booked
+    if (newStage === SalesStage.APPOINTMENT_BOOKED) {
+      triggerConfetti();
+    }
+    // Trigger coins when completed
+    if (newStage === SalesStage.COMPLETED) {
+      triggerCoins();
+    }
   };
 
   const handleGetAdvice = async () => {
@@ -204,40 +296,133 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
 
             <div className="space-y-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
               <div>
-                <h3 className="text-xs font-bold text-slate-900 mb-4 uppercase tracking-wider">Contact Details</h3>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm">
-                    {school.principalName.charAt(0)}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Contact Details</h3>
+                  {!editingContact && (
+                    <button
+                      onClick={() => setEditingContact(true)}
+                      className="text-[10px] font-bold text-brand bg-brand/10 px-3 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-all"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                
+                {editingContact ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Principal Name</label>
+                      <input
+                        type="text"
+                        value={contactForm.principalName}
+                        onChange={e => setContactForm({...contactForm, principalName: e.target.value})}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Principal Email</label>
+                      <input
+                        type="email"
+                        value={contactForm.principalEmail}
+                        onChange={e => setContactForm({...contactForm, principalEmail: e.target.value})}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Secretary Email (Optional)</label>
+                      <input
+                        type="email"
+                        value={contactForm.secretaryEmail}
+                        onChange={e => setContactForm({...contactForm, secretaryEmail: e.target.value})}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Student Count</label>
+                      <input
+                        type="number"
+                        value={contactForm.studentCount}
+                        onChange={e => setContactForm({...contactForm, studentCount: parseInt(e.target.value) || 0})}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-4">
+                      <button
+                        onClick={() => {
+                          onUpdateContactInfo(school.id, contactForm);
+                          setEditingContact(false);
+                        }}
+                        className="flex-1 bg-brand text-slate-900 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-brand/90 transition-all"
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => {
+                          setContactForm({
+                            principalName: school.principalName,
+                            principalEmail: school.principalEmail,
+                            secretaryEmail: school.secretaryEmail || '',
+                            studentCount: school.studentCount
+                          });
+                          setEditingContact(false);
+                        }}
+                        className="flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">{school.principalName}</p>
-                    <p className="text-xs text-slate-500 mb-2">Principal</p>
-                    <div className="space-y-2 mt-3">
-                      <div className="flex items-center gap-2 text-xs text-slate-600 hover:text-brand cursor-pointer transition-colors group">
-                         <div className="p-1.5 bg-slate-50 rounded-md group-hover:bg-brand group-hover:text-white transition-colors"><Mail size={12} /></div>
-                         <span className="font-medium">principal@school.co.za</span>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm">
+                        {school.principalName.charAt(0)}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-600 hover:text-brand cursor-pointer transition-colors group">
-                         <div className="p-1.5 bg-slate-50 rounded-md group-hover:bg-brand group-hover:text-white transition-colors"><Phone size={12} /></div>
-                         <span className="font-medium">+(27) 82 555 0123</span>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">{school.principalName}</p>
+                        <p className="text-xs text-slate-500 mb-2">Principal</p>
+                        <div className="space-y-2 mt-3">
+                          {school.principalEmail && (
+                            <div className="flex items-center gap-2 text-xs text-slate-600 hover:text-brand cursor-pointer transition-colors group">
+                              <div className="p-1.5 bg-slate-50 rounded-md group-hover:bg-brand group-hover:text-white transition-colors"><Mail size={12} /></div>
+                              <span className="font-medium">{school.principalEmail}</span>
+                            </div>
+                          )}
+                          {school.secretaryEmail && (
+                            <div className="flex items-center gap-2 text-xs text-slate-600 hover:text-brand cursor-pointer transition-colors group">
+                              <div className="p-1.5 bg-slate-50 rounded-md group-hover:bg-brand group-hover:text-white transition-colors"><Mail size={12} /></div>
+                              <span className="font-medium">{school.secretaryEmail} (Secretary)</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
+                    </div>
+                    {school.lastEditedBy && (
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <p className="text-[10px] text-slate-400">Last edited by <span className="font-bold">{school.lastEditedBy}</span></p>
+                        {school.lastEditedAt && (
+                          <p className="text-[10px] text-slate-400">{new Date(school.lastEditedAt).toLocaleString()}</p>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {school.salesRepId && (
+                <div className="pt-6 border-t border-slate-50">
+                  <h3 className="text-xs font-bold text-slate-900 mb-3 uppercase tracking-wider">Assigned Rep</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white text-xs font-bold">
+                      {school.salesRepName?.charAt(0)}
+                    </div>
+                    <div> 
+                      <span className="text-sm font-bold text-slate-900 block">{school.salesRepName}</span>
+                      <span className="text-xs text-slate-400">Sales Representative</span>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="pt-6 border-t border-slate-50">
-                <h3 className="text-xs font-bold text-slate-900 mb-3 uppercase tracking-wider">Salesperson</h3>
-                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold">
-                     SA
-                   </div>
-                   <div> 
-                     <span className="text-sm font-bold text-slate-900 block">Sales Admin</span>
-                     <span className="text-xs text-slate-400">Owner</span>
-                   </div>
-                 </div>
-              </div>
+              )}
             </div>
           </div>
 

@@ -17,7 +17,8 @@ import { School, SalesRep, SalesStage, TrackType } from './types';
 import { 
   getSchoolsFromFirebase, 
   addSchoolToFirebase, 
-  updateSchoolStageInFirebase 
+  updateSchoolStageInFirebase,
+  updateSchoolContactInfo
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
 import PWAControls from './components/PWAControls';
@@ -101,6 +102,19 @@ const App: React.FC = () => {
     }
   };
 
+  const handleUpdateSchoolContactInfo = async (schoolId: string, contactData: any) => {
+    const editorName = `${currentUser?.name} ${currentUser?.surname || ''}`.trim();
+    const success = await updateSchoolContactInfo(schoolId, contactData, editorName);
+    if (success) {
+      setSchools(schools.map(s => s.id === schoolId ? { 
+        ...s, 
+        ...contactData,
+        lastEditedBy: editorName,
+        lastEditedAt: new Date().toISOString()
+      } : s));
+    }
+  };
+
   if (!currentUser) {
     return <Login onLogin={handleLogin} />;
   }
@@ -117,6 +131,7 @@ const App: React.FC = () => {
             setActiveTab('schools');
           }}
           onUpdateStage={handleUpdateStage}
+          onUpdateContactInfo={handleUpdateSchoolContactInfo}
         />
       );
     }

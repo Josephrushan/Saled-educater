@@ -303,18 +303,30 @@ export async function updateSchoolStageInFirebase(schoolId: string, newStage: Sa
 }
 
 /**
- * Assigns a school to a sales rep.
+ * Updates school contact information and tracks who edited it.
  */
-export async function assignSchoolToRep(schoolId: string, repId: string, repName: string) {
+export async function updateSchoolContactInfo(schoolId: string, contactData: {
+  principalName?: string;
+  principalEmail?: string;
+  secretaryEmail?: string;
+  studentCount?: number;
+}, editorName: string) {
   try {
     const schoolRef = doc(db, SCHOOLS_COLLECTION, schoolId);
-    await updateDoc(schoolRef, {
-      salesRepId: repId,
-      salesRepName: repName
-    });
+    const updateData: any = {
+      lastEditedBy: editorName,
+      lastEditedAt: new Date().toISOString()
+    };
+    
+    if (contactData.principalName !== undefined) updateData.principalName = contactData.principalName;
+    if (contactData.principalEmail !== undefined) updateData.principalEmail = contactData.principalEmail;
+    if (contactData.secretaryEmail !== undefined) updateData.secretaryEmail = contactData.secretaryEmail;
+    if (contactData.studentCount !== undefined) updateData.studentCount = contactData.studentCount;
+    
+    await updateDoc(schoolRef, updateData);
     return true;
   } catch (error) {
-    console.error("Error assigning school:", error);
+    console.error("Error updating school contact info:", error);
     return false;
   }
 }

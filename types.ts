@@ -30,6 +30,8 @@ export interface School {
   commissionEarned: number;
   engagementRate: number;
   notes: string;
+  lastEditedBy?: string;
+  lastEditedAt?: string;
 }
 
 export interface SalesRep {

@@ -67,14 +67,28 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
     setIsSubmitting(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Delete this resource?')) {
-      setIsDeleting(id);
-      const success = await deleteResource(id, type);
-      if (success) {
-        setResources(resources.filter(r => r.id !== id));
+  const handleDownload = async (url: string, fileName: string) => {
+    try {
+      // For direct downloads, use fetch with no-cors mode if possible
+      const response = await fetch(url, { method: 'GET' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = fileName || 'download';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      } else {
+        // Fallback to direct link if fetch fails
+        window.open(url, '_blank');
       }
-      setIsDeleting(null);
+    } catch (error) {
+      console.error('Download error:', error);
+      // Fallback to direct link
+      window.open(url, '_blank');
     }
   };
 
@@ -124,15 +138,25 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
               <h3 className="text-lg font-black text-slate-900 tracking-tight pr-8">{item.name}</h3>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{item.type}</p>
               
-              <a 
-                href={item.url} 
-                target="_blank"
-                rel="noreferrer"
-                className="mt-8 w-full flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand hover:text-slate-900 transition-all shadow-lg shadow-slate-900/10"
-              >
-                {item.type === 'Link' ? <ExternalLink size={16} /> : <Download size={16} />}
-                {item.type === 'Link' ? 'Open Link' : 'Download Asset'}
-              </a>
+              {item.type === 'Link' ? (
+                <a 
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-8 w-full flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand hover:text-slate-900 transition-all shadow-lg shadow-slate-900/10"
+                >
+                  <ExternalLink size={16} />
+                  Open Link
+                </a>
+              ) : (
+                <button
+                  onClick={() => handleDownload(item.url, item.name)}
+                  className="mt-8 w-full flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand hover:text-slate-900 transition-all shadow-lg shadow-slate-900/10"
+                >
+                  <Download size={16} />
+                  Download Asset
+                </button>
+              )}
             </div>
           ))}
         </div>
