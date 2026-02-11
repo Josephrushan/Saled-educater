@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Plus, ChevronRight, User, Filter, School as SchoolIcon } from 'lucide-react';
+import { Search, Plus, ChevronRight, User, Filter, School as SchoolIcon, Eye, EyeOff } from 'lucide-react';
 import { STAGE_CONFIG } from '../constants';
 import { School, SalesRep, SalesStage } from '../types';
 
@@ -16,6 +16,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
   // Admin users default to 'Team' view, regular reps default to 'Mine'
   const [repFilter, setRepFilter] = useState<'all' | 'mine'>(currentUser?.role === 'admin' ? 'all' : 'mine');
   const [stageFilter, setStageFilter] = useState<'all' | 'fresh' | 'email' | 'appointment' | 'completed'>('all');
+  const [hideNoEmail, setHideNoEmail] = useState(false);
 
   // Debug log
   React.useEffect(() => {
@@ -38,10 +39,17 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
   });
 
   // Apply search filter
-  const filteredSchools = stageFilteredSchools.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (s.salesRepName ? s.salesRepName.toLowerCase().includes(searchTerm.toLowerCase()) : false)
-  );
+  const filteredSchools = stageFilteredSchools.filter(s => {
+    // Search filter
+    const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (s.salesRepName ? s.salesRepName.toLowerCase().includes(searchTerm.toLowerCase()) : false);
+    
+    // Email filter
+    const hasEmail = s.principalEmail && s.principalEmail.trim() !== '';
+    const matchesEmail = !hideNoEmail || hasEmail;
+    
+    return matchesSearch && matchesEmail;
+  });
 
   // Helper function to determine if school should display a rep
   const shouldShowRep = (school: School) => {
@@ -127,15 +135,26 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
             </button>
           </div>
 
-          <div className="relative w-full">
+          <div className="relative w-full flex items-center gap-2">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
             <input 
               type="text" 
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-brand/5 transition-all text-sm font-medium"
+              className="flex-1 pl-11 pr-4 py-2.5 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-brand/5 transition-all text-sm font-medium"
             />
+            <button
+              onClick={() => setHideNoEmail(!hideNoEmail)}
+              className={`p-2.5 rounded-xl transition-all ${
+                hideNoEmail 
+                  ? 'bg-slate-900 text-white' 
+                  : 'bg-white border border-slate-200 text-slate-400 hover:text-slate-900'
+              }`}
+              title={hideNoEmail ? 'Show all schools' : 'Hide schools without email'}
+            >
+              {hideNoEmail ? <Eye size={18} /> : <EyeOff size={18} />}
+            </button>
           </div>
         </div>
 
