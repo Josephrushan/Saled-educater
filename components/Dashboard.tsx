@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area 
 } from 'recharts';
-import { TrendingUp, Users, DollarSign, School as SchoolIcon, Star, Zap } from 'lucide-react';
+import { TrendingUp, Users, School as SchoolIcon, Star, Zap } from 'lucide-react';
 import { School, SalesRep } from '../types';
 import { seedSchoolsDatabase } from '../services/firebase';
 
@@ -41,7 +41,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
   
   const stats = [
     { label: 'My Schools', value: mySchools.length, icon: <SchoolIcon className="text-slate-900" />, sub: 'Owned by you' },
-    { label: 'Active Commission', value: `R${(mySchools.reduce((acc, s) => acc + (s.studentCount * 5), 0)).toLocaleString()}`, icon: <DollarSign className="text-brand" />, sub: 'Monthly recurring' },
+    { label: 'Active Commission', value: `R${(mySchools.reduce((acc, s) => acc + ((s.studentCount || 0) * 5), 0)).toLocaleString()}`, icon: <span className="text-brand font-black text-lg">ZAR</span>, sub: 'Monthly recurring' },
     { label: 'Global Schools', value: schools.length, icon: <Users className="text-slate-400" />, sub: 'Educater Network' },
     { label: 'Top Engagement', value: '92%', icon: <Star className="text-brand" />, sub: 'Engagement Track' },
   ];
@@ -90,7 +90,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
           <div key={idx} className="bg-white p-5 md:p-7 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-brand/5 transition-all duration-300">
             <div className="flex justify-between items-start mb-4 md:mb-6">
               <div className="p-2.5 md:p-3.5 bg-slate-50 rounded-xl md:rounded-2xl text-slate-900">{stat.icon}</div>
-              <div className="text-[8px] md:text-[10px] font-black text-slate-900 bg-brand px-2 py-0.5 md:py-1 rounded-full uppercase tracking-widest">Live</div>
+              <div className="text-[8px] md:text-[10px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 md:py-1 rounded-full uppercase tracking-widest">Live</div>
             </div>
             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest truncate">{stat.label}</p>
             <p className="text-xl md:text-3xl font-black text-slate-900 mt-0.5">{stat.value}</p>
