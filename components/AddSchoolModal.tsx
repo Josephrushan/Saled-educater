@@ -46,7 +46,12 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
 
         <form className="p-8 space-y-6" onSubmit={(e) => {
           e.preventDefault();
-          if (formData.name && checkResult === 'available') onSubmit(formData);
+          if (formData.name && checkResult === 'available') {
+            onSubmit({
+              ...formData,
+              studentCount: formData.studentCount ? parseInt(formData.studentCount) : null
+            });
+          }
         }}>
           <div className="space-y-4">
             <div className="relative">

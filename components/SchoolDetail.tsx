@@ -329,7 +329,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
             <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Estimated Value</p>
               <div className="flex items-end justify-between">
-                <span className="text-3xl font-black text-slate-900 tracking-tight">R{(school.studentCount * 5).toLocaleString()}</span>
+                <span className="text-3xl font-black text-slate-900 tracking-tight">R{((school.studentCount || 0) * 5).toLocaleString()}</span>
                 <span className="text-[10px] font-bold text-brand bg-brand/10 px-2 py-1 rounded-lg">Potential</span>
               </div>
             </div>

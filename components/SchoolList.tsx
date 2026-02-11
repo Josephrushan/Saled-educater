@@ -230,7 +230,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="text-sm font-black text-slate-700">{school.studentCount}</span>
+                      <span className="text-sm font-black text-slate-700">{school.studentCount || '—'}</span>
                       <span className="text-[10px] font-bold text-slate-400 uppercase">Learners</span>
                     </div>
                   </td>
