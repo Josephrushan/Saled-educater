@@ -681,18 +681,8 @@ export async function seedSchoolsDatabase(): Promise<void> {
   ];
 
   try {
-    console.log("🗑️ Deleting all existing schools...");
+    console.log("➕ Adding 100 new schools (keeping existing schools)...");
     const schoolsCollection = collection(db, "schools");
-    const snapshot = await getDocs(schoolsCollection);
-    
-    let deletedCount = 0;
-    for (const docSnapshot of snapshot.docs) {
-      await deleteDoc(doc(db, "schools", docSnapshot.id));
-      deletedCount++;
-    }
-    console.log(`✅ Deleted ${deletedCount} schools`);
-
-    console.log("➕ Adding 100 new schools...");
     let addedCount = 0;
     
     for (const school of schoolsData) {
@@ -700,7 +690,7 @@ export async function seedSchoolsDatabase(): Promise<void> {
         name: school.name,
         location: school.location,
         principalEmail: school.principalEmail,
-        stage: "INITIAL_CONTACT",
+        stage: "Cold Lead",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         notes: "",
@@ -712,9 +702,9 @@ export async function seedSchoolsDatabase(): Promise<void> {
       }
     }
 
-    console.log(`\n✨ SUCCESS! Database seeded with 100 schools!`);
+    console.log(`\n✨ SUCCESS! Added 100 new schools to database!`);
   } catch (error) {
-    console.error("❌ Error seeding database:", error);
+    console.error("❌ Error adding schools:", error);
     throw error;
   }
 }

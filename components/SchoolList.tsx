@@ -14,15 +14,26 @@ interface SchoolListProps {
 const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, currentUser, schools: allSchools }) => {
   const [searchTerm, setSearchTerm] = useState('');
   // Admin users default to 'Team' view, regular reps default to 'Mine'
-  const [filter, setFilter] = useState<'all' | 'mine'>(currentUser?.role === 'admin' ? 'all' : 'mine');
+  const [repFilter, setRepFilter] = useState<'all' | 'mine'>(currentUser?.role === 'admin' ? 'all' : 'mine');
+  const [stageFilter, setStageFilter] = useState<'all' | 'fresh' | 'email' | 'appointment' | 'completed'>('all');
 
   // Only show schools assigned to current user in "Mine" view
-  // Don't filter by stage - the stage filter happens elsewhere
-  const schools = filter === 'mine' 
+  const repFilteredSchools = repFilter === 'mine' 
     ? allSchools.filter(s => s.salesRepId === currentUser?.id)
     : allSchools;
 
-  const filteredSchools = schools.filter(s => 
+  // Apply stage filter
+  const stageFilteredSchools = repFilteredSchools.filter(s => {
+    if (stageFilter === 'all') return true;
+    if (stageFilter === 'fresh') return s.stage === SalesStage.COLD_LEAD;
+    if (stageFilter === 'email') return s.stage === SalesStage.EMAIL_SENT;
+    if (stageFilter === 'appointment') return s.stage === SalesStage.APPOINTMENT_BOOKED;
+    if (stageFilter === 'completed') return s.stage === SalesStage.COMPLETED;
+    return true;
+  });
+
+  // Apply search filter
+  const filteredSchools = stageFilteredSchools.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     (s.salesRepName ? s.salesRepName.toLowerCase().includes(searchTerm.toLowerCase()) : false)
   );
@@ -60,23 +71,58 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
       </div>
 
       <div className="bg-white rounded-3xl md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-4 md:p-6 border-b border-slate-50 bg-slate-50/30 flex flex-col md:flex-row gap-4 items-center">
-          <div className="flex w-full md:w-auto bg-white p-1 rounded-2xl border border-slate-100">
+        <div className="p-4 md:p-6 border-b border-slate-50 bg-slate-50/30 space-y-4">
+          {/* Rep Filter (Mine/Team) */}
+          <div className="flex w-full bg-white p-1 rounded-2xl border border-slate-100">
             <button 
-              onClick={() => setFilter('mine')}
-              className={`flex-1 md:flex-none px-4 md:px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === 'mine' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}
+              onClick={() => setRepFilter('mine')}
+              className={`flex-1 md:flex-none px-4 md:px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${repFilter === 'mine' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}
             >
               Mine
             </button>
             <button 
-              onClick={() => setFilter('all')}
-              className={`flex-1 md:flex-none px-4 md:px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === 'all' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}
+              onClick={() => setRepFilter('all')}
+              className={`flex-1 md:flex-none px-4 md:px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${repFilter === 'all' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}
             >
               Team
             </button>
           </div>
 
-          <div className="relative w-full flex-1">
+          {/* Stage Filter */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            <button 
+              onClick={() => setStageFilter('all')}
+              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-900'}`}
+            >
+              All Stages
+            </button>
+            <button 
+              onClick={() => setStageFilter('fresh')}
+              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'fresh' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-500'}`}
+            >
+              Fresh
+            </button>
+            <button 
+              onClick={() => setStageFilter('email')}
+              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'email' ? 'bg-amber-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-amber-500'}`}
+            >
+              Email Sent
+            </button>
+            <button 
+              onClick={() => setStageFilter('appointment')}
+              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'appointment' ? 'bg-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-purple-500'}`}
+            >
+              Appointment
+            </button>
+            <button 
+              onClick={() => setStageFilter('completed')}
+              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'completed' ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-green-500'}`}
+            >
+              Completed
+            </button>
+          </div>
+
+          <div className="relative w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
             <input 
               type="text" 
