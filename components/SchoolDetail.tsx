@@ -155,9 +155,10 @@ interface SchoolDetailProps {
   onBack: () => void;
   onUpdateStage: (schoolId: string, newStage: SalesStage) => void;
   onUpdateContactInfo: (schoolId: string, contactData: any) => void;
+  onDeleteSchool: (schoolId: string) => void;
 }
 
-const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateStage, onUpdateContactInfo }) => {
+const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateStage, onUpdateContactInfo, onDeleteSchool }) => {
   const [activeTab, setActiveTab] = useState<'activity' | 'ai_coach' | 'emails'>('activity');
   const [isLoadingAdvice, setIsLoadingAdvice] = useState(false);
   const [aiAdvice, setAiAdvice] = useState<string>('');
@@ -165,6 +166,9 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
   const [draftEmail, setDraftEmail] = useState<string>('');
   const [editingContact, setEditingContact] = useState(false);
   const [isSavingContact, setIsSavingContact] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [contactForm, setContactForm] = useState({
     principalName: school.principalName,
     principalEmail: school.principalEmail,
@@ -299,9 +303,27 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                 <PlusIcon className="w-4 h-4" />
                 New Activity
               </button>
-              <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-all">
-                <MoreHorizontal size={18} />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                  className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-all"
+                >
+                  <MoreHorizontal size={18} />
+                </button>
+                {showMoreMenu && (
+                  <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+                    <button
+                      onClick={() => {
+                        setShowDeleteModal(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors first:rounded-t-lg last:rounded-b-lg border-b border-slate-100 last:border-b-0"
+                    >
+                      Delete School
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
@@ -596,6 +618,65 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
 
           </div>
         </div>
+
+        {/* Delete School Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full space-y-6 p-8 animate-in fade-in zoom-in duration-300">
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 mb-2">Delete School?</h2>
+                <p className="text-slate-600 text-sm">
+                  This action cannot be undone. Please type the school name below to confirm deletion.
+                </p>
+              </div>
+
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-4">
+                <p className="text-sm font-bold text-rose-900 mb-2">School to delete:</p>
+                <p className="text-sm font-black text-rose-600">{school.name}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Type the school name to confirm:
+                </label>
+                <input
+                  type="text"
+                  placeholder={school.name}
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 text-sm"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmation('');
+                  }}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (deleteConfirmation === school.name) {
+                      onDeleteSchool(school.id);
+                      setShowDeleteModal(false);
+                      setDeleteConfirmation('');
+                    } else {
+                      alert('Please type the school name exactly to confirm deletion.');
+                    }
+                  }}
+                  disabled={deleteConfirmation !== school.name}
+                  className="flex-1 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 disabled:cursor-not-allowed text-white py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-all"
+                >
+                  Delete School
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

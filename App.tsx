@@ -18,7 +18,8 @@ import {
   getSchoolsFromFirebase, 
   addSchoolToFirebase, 
   updateSchoolStageInFirebase,
-  updateSchoolContactInfo
+  updateSchoolContactInfo,
+  deleteSchool
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
 import PWAControls from './components/PWAControls';
@@ -117,6 +118,23 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDeleteSchool = async (schoolId: string) => {
+    try {
+      const success = await deleteSchool(schoolId);
+      if (success) {
+        setSchools(schools.filter(s => s.id !== schoolId));
+        setSelectedSchoolId(null);
+        setActiveTab('schools');
+        alert('School deleted successfully');
+      } else {
+        alert('Failed to delete school');
+      }
+    } catch (error) {
+      console.error('Error deleting school:', error);
+      alert('Error deleting school');
+    }
+  };
+
   if (!currentUser) {
     return <Login onLogin={handleLogin} />;
   }
@@ -134,6 +152,7 @@ const App: React.FC = () => {
           }}
           onUpdateStage={handleUpdateStage}
           onUpdateContactInfo={handleUpdateSchoolContactInfo}
+          onDeleteSchool={handleDeleteSchool}
         />
       );
     }

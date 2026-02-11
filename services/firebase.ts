@@ -183,10 +183,10 @@ export async function loginSalesRep(email: string, password: string): Promise<Sa
     const adminId = 'admin_super';
     const admin: SalesRep = {
       id: adminId,
-      name: 'Super',
-      surname: 'Admin',
+      name: 'Keagan',
+      surname: 'Smith',
       email: email,
-      avatar: 'SA',
+      avatar: 'KS',
       totalSchools: 0,
       activeCommissions: 0,
       role: 'admin'
@@ -409,6 +409,80 @@ export async function checkSchoolExists(schoolName: string): Promise<boolean> {
     return false;
   } catch (error) {
     console.error("Error checking school:", error);
+    return false;
+  }
+}
+
+/**
+ * Fetches all email templates from Firestore.
+ */
+export async function getEmailTemplates(): Promise<any[]> {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'email_templates'));
+    return querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+  } catch (error) {
+    console.error("Error fetching email templates:", error);
+    return [];
+  }
+}
+
+/**
+ * Adds a new email template to Firestore.
+ */
+export async function addEmailTemplate(template: { track: string; title: string; subject: string; content: string }): Promise<string | null> {
+  try {
+    const docRef = await addDoc(collection(db, 'email_templates'), {
+      ...template,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding email template:", error);
+    return null;
+  }
+}
+
+/**
+ * Updates an email template in Firestore.
+ */
+export async function updateEmailTemplate(templateId: string, template: { track: string; title: string; subject: string; content: string }): Promise<boolean> {
+  try {
+    const docRef = doc(db, 'email_templates', templateId);
+    await updateDoc(docRef, {
+      ...template,
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error("Error updating email template:", error);
+    return false;
+  }
+}
+
+/**
+ * Deletes an email template from Firestore.
+ */
+export async function deleteEmailTemplate(templateId: string): Promise<boolean> {
+  try {
+    const docRef = doc(db, 'email_templates', templateId);
+    await deleteDoc(docRef);
+    return true;
+  } catch (error) {
+    console.error("Error deleting email template:", error);
+    return false;
+  }
+}
+
+/**
+ * Deletes a school from Firestore.
+ */
+export async function deleteSchool(schoolId: string): Promise<boolean> {
+  try {
+    const schoolRef = doc(db, SCHOOLS_COLLECTION, schoolId);
+    await deleteDoc(schoolRef);
+    return true;
+  } catch (error) {
+    console.error("Error deleting school:", error);
     return false;
   }
 }
