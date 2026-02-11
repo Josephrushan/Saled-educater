@@ -431,10 +431,11 @@ export async function getEmailTemplates(): Promise<any[]> {
 /**
  * Adds a new email template to Firestore.
  */
-export async function addEmailTemplate(template: { track: string; title: string; subject: string; content: string }): Promise<string | null> {
+export async function addEmailTemplate(template: { track: string; title: string; templateType: string; subject: string; content: string; isImportant?: boolean }): Promise<string | null> {
   try {
     const docRef = await addDoc(collection(db, 'email_templates'), {
       ...template,
+      isImportant: template.isImportant || false,
       createdAt: new Date().toISOString()
     });
     return docRef.id;
@@ -447,11 +448,12 @@ export async function addEmailTemplate(template: { track: string; title: string;
 /**
  * Updates an email template in Firestore.
  */
-export async function updateEmailTemplate(templateId: string, template: { track: string; title: string; subject: string; content: string }): Promise<boolean> {
+export async function updateEmailTemplate(templateId: string, template: { track: string; title: string; templateType: string; subject: string; content: string; isImportant?: boolean }): Promise<boolean> {
   try {
     const docRef = doc(db, 'email_templates', templateId);
     await updateDoc(docRef, {
       ...template,
+      isImportant: template.isImportant || false,
       updatedAt: new Date().toISOString()
     });
     return true;

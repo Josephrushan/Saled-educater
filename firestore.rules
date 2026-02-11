@@ -46,6 +46,10 @@ service cloud.firestore {
       allow read, write: if true; 
     }
 
+    match /email_templates/{document} {
+      allow read, write: if true;
+    }
+
     // --- JOINT COLLECTIONS ---
 
     // 1. SCHOOLS

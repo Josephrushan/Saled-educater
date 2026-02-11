@@ -62,3 +62,21 @@ export interface Resource {
   category: 'tools' | 'training';
   createdAt: string;
 }
+
+export enum TemplateType {
+  EMAIL = 'Email Draft',
+  DIALOGUE = 'Call Dialogue',
+  SCRIPT = 'Verbal Script'
+}
+
+export interface SalesTemplate {
+  id?: string;
+  track: string;
+  title: string;
+  templateType: TemplateType;
+  subject: string;
+  content: string;
+  isImportant?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
