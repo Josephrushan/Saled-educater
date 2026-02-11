@@ -278,15 +278,23 @@ export async function addSchoolToFirebase(school: Omit<School, 'id'>): Promise<s
 }
 
 /**
- * Updates a school's stage in Firestore.
+ * Updates a school's stage in Firestore and optionally assigns it to a rep.
  */
-export async function updateSchoolStageInFirebase(schoolId: string, newStage: SalesStage) {
+export async function updateSchoolStageInFirebase(schoolId: string, newStage: SalesStage, repId?: string, repName?: string) {
   try {
     const schoolRef = doc(db, SCHOOLS_COLLECTION, schoolId);
-    await updateDoc(schoolRef, {
+    const updateData: any = {
       stage: newStage,
       lastContactDate: new Date().toISOString().split('T')[0]
-    });
+    };
+    
+    // If appointment stage is reached and rep info provided, assign to rep
+    if (newStage === SalesStage.APPOINTMENT_BOOKED && repId && repName) {
+      updateData.salesRepId = repId;
+      updateData.salesRepName = repName;
+    }
+    
+    await updateDoc(schoolRef, updateData);
     return true;
   } catch (error) {
     console.error("Error updating school stage:", error);
@@ -295,13 +303,96 @@ export async function updateSchoolStageInFirebase(schoolId: string, newStage: Sa
 }
 
 /**
- * Checks if a school with the given name already exists in the database.
+ * Assigns a school to a sales rep.
+ */
+export async function assignSchoolToRep(schoolId: string, repId: string, repName: string) {
+  try {
+    const schoolRef = doc(db, SCHOOLS_COLLECTION, schoolId);
+    await updateDoc(schoolRef, {
+      salesRepId: repId,
+      salesRepName: repName
+    });
+    return true;
+  } catch (error) {
+    console.error("Error assigning school:", error);
+    return false;
+  }
+}
+
+/**
+ * Normalize school name: remove spaces and standardize school type suffixes
+ * High School and Secondary School are treated as the same
+ */
+function normalizeSchoolName(name: string): string {
+  let normalized = name.trim().toLowerCase();
+  // Remove all spaces
+  normalized = normalized.replace(/\s+/g, '');
+  // Normalize high school and secondary school to the same value
+  normalized = normalized.replace(/(highschool|secondaryschool)/g, 'highschool');
+  return normalized;
+}
+
+/**
+ * Calculate similarity between two strings (Levenshtein distance based)
+ */
+function stringSimilarity(str1: string, str2: string): number {
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+  const longerLength = longer.length;
+  if (longerLength === 0) return 1.0;
+  const editDistance = getEditDistance(longer, shorter);
+  return (longerLength - editDistance) / longerLength;
+}
+
+/**
+ * Calculate edit distance (Levenshtein)
+ */
+function getEditDistance(s1: string, s2: string): number {
+  const costs = [];
+  for (let i = 0; i <= s1.length; i++) {
+    let lastValue = i;
+    for (let j = 0; j <= s2.length; j++) {
+      if (i === 0) costs[j] = j;
+      else if (j > 0) {
+        let newValue = costs[j - 1];
+        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+          newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+        }
+        costs[j - 1] = lastValue;
+        lastValue = newValue;
+      }
+    }
+    if (i > 0) costs[s2.length] = lastValue;
+  }
+  return costs[s2.length];
+}
+
+/**
+ * Checks if a school with a similar name already exists in the database.
+ * Ignores spaces, treats High School = Secondary School, detects typos.
  */
 export async function checkSchoolExists(schoolName: string): Promise<boolean> {
   try {
-    const q = query(collection(db, SCHOOLS_COLLECTION), where("name", "==", schoolName));
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty; // Returns true if school exists
+    const normalizedInput = normalizeSchoolName(schoolName);
+    const querySnapshot = await getDocs(collection(db, SCHOOLS_COLLECTION));
+    
+    for (const doc of querySnapshot.docs) {
+      const existingName = doc.data().name;
+      const normalizedExisting = normalizeSchoolName(existingName);
+      
+      // Check for exact match after normalization
+      if (normalizedExisting === normalizedInput) {
+        return true;
+      }
+      
+      // Check for fuzzy match (> 85% similar)
+      const similarity = stringSimilarity(normalizedExisting, normalizedInput);
+      if (similarity > 0.85) {
+        return true;
+      }
+    }
+    
+    return false;
   } catch (error) {
     console.error("Error checking school:", error);
     return false;

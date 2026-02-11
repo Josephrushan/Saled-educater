@@ -21,8 +21,8 @@ export interface School {
   principalName: string;
   principalEmail: string;
   secretaryEmail?: string;
-  salesRepId: string;
-  salesRepName: string;
+  salesRepId?: string;
+  salesRepName?: string;
   stage: SalesStage;
   track: TrackType;
   studentCount: number;

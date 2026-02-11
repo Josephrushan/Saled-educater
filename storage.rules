@@ -15,7 +15,8 @@ service firebase.storage {
     }
     
     match /resources/{allPaths=**} {
-      allow read, write: if isSignedIn();
+      allow read: if true;
+      allow write: if isSignedIn();
     }
     
     // Default deny for other paths (unless other apps add their rules here)

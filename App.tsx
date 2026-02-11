@@ -64,8 +64,9 @@ const App: React.FC = () => {
       name: data.name,
       principalName: data.principalName,
       principalEmail: data.principalEmail,
-      salesRepId: currentUser?.id || 'rep1',
-      salesRepName: `${currentUser?.name} ${currentUser?.surname || ''}`.trim(),
+      // Don't assign to a rep on creation - do it when appointment stage is reached
+      salesRepId: undefined,
+      salesRepName: undefined,
       stage: SalesStage.COLD_LEAD,
       track: TrackType.ACQUISITION,
       studentCount: parseInt(data.studentCount) || 0,
@@ -83,9 +84,20 @@ const App: React.FC = () => {
   };
 
   const handleUpdateStage = async (schoolId: string, newStage: SalesStage) => {
-    const success = await updateSchoolStageInFirebase(schoolId, newStage);
+    // Assign school to current user when appointment stage is reached
+    const repId = currentUser?.id;
+    const repName = `${currentUser?.name} ${currentUser?.surname || ''}`.trim();
+    
+    const success = await updateSchoolStageInFirebase(schoolId, newStage, repId, repName);
     if (success) {
-      setSchools(schools.map(s => s.id === schoolId ? { ...s, stage: newStage, lastContactDate: new Date().toISOString().split('T')[0] } : s));
+      setSchools(schools.map(s => s.id === schoolId ? { 
+        ...s, 
+        stage: newStage, 
+        lastContactDate: new Date().toISOString().split('T')[0],
+        // Assign to current user when appointment stage is reached
+        salesRepId: newStage === SalesStage.APPOINTMENT_BOOKED ? repId : s.salesRepId,
+        salesRepName: newStage === SalesStage.APPOINTMENT_BOOKED ? repName : s.salesRepName
+      } : s));
     }
   };
 
