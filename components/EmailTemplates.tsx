@@ -176,7 +176,7 @@ const EmailTemplates: React.FC = () => {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Sales Scripts Library</h1>
-          <p className="text-slate-500 font-medium mt-1">Email drafts, call dialogues, and verbal scripts for your sales team.</p>
+          <p className="text-slate-500 font-medium mt-1">Create and manage communication templates for email, phone calls, and in-person pitches.</p>
         </div>
         <button
           onClick={handleNewTemplate}
