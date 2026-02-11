@@ -52,8 +52,10 @@ const App: React.FC = () => {
   // Fetch schools on mount or when user changes
   useEffect(() => {
     if (currentUser) {
+      console.log('📚 Loading schools for user:', currentUser.name);
       const loadData = async () => {
         let firebaseSchools = await getSchoolsFromFirebase();
+        console.log('✅ Schools loaded from Firebase:', firebaseSchools.length);
         
         // Data cleanup: Migrate old "Super Admin" to "Keagan Smith" and fix rep assignments
         firebaseSchools = firebaseSchools.map(school => {
@@ -85,6 +87,7 @@ const App: React.FC = () => {
           return updated;
         });
         
+        console.log('📊 Final schools count:', firebaseSchools.length);
         setSchools(firebaseSchools);
       };
       loadData();

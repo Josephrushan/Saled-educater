@@ -17,6 +17,11 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
   const [repFilter, setRepFilter] = useState<'all' | 'mine'>(currentUser?.role === 'admin' ? 'all' : 'mine');
   const [stageFilter, setStageFilter] = useState<'all' | 'fresh' | 'email' | 'appointment' | 'completed'>('all');
 
+  // Debug log
+  React.useEffect(() => {
+    console.log('🏫 SchoolList received schools:', allSchools.length, 'Filter:', repFilter, 'Stage:', stageFilter);
+  }, [allSchools, repFilter, stageFilter]);
+
   // Only show schools assigned to current user in "Mine" view
   const repFilteredSchools = repFilter === 'mine' 
     ? allSchools.filter(s => s.salesRepId === currentUser?.id)

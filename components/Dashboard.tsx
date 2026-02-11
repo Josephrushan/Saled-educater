@@ -61,7 +61,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Welcome, {currentUser?.name.split(' ')[0]}</h1>
           <p className="text-slate-500 text-sm font-medium mt-1">Performance snapshot for today.</p>
         </div>
-        {currentUser?.role === 'admin' && schools.length < 100 && (
+        {currentUser?.role === 'admin' && (
           <button
             onClick={handleSeedSchools}
             disabled={seeding}
