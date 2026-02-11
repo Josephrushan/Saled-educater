@@ -68,15 +68,15 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
   };
 
   const handleDownload = (url: string, fileName: string) => {
-    // Firebase Storage URLs can be downloaded directly
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName || 'download';
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Firebase Storage files need special handling
+    // Add alt=media parameter to force download instead of preview
+    let downloadUrl = url;
+    if (url.includes('firebasestorage')) {
+      downloadUrl = url.includes('?') ? url + '&alt=media' : url + '?alt=media';
+    }
+    
+    // Direct download - alt=media prevents login redirect
+    window.location.href = downloadUrl;
   };
 
   return (

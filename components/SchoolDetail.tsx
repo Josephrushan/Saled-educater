@@ -357,10 +357,18 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                     <div className="flex gap-2 pt-4">
                       <button
                         onClick={async () => {
-                          setIsSavingContact(true);
-                          await onUpdateContactInfo(school.id, contactForm);
-                          setIsSavingContact(false);
-                          setEditingContact(false);
+                          try {
+                            setIsSavingContact(true);
+                            console.log('Saving contact info:', contactForm);
+                            await onUpdateContactInfo(school.id, contactForm);
+                            setIsSavingContact(false);
+                            setEditingContact(false);
+                            console.log('Contact info saved successfully');
+                          } catch (error) {
+                            console.error('Error saving contact info:', error);
+                            setIsSavingContact(false);
+                            alert('Error saving contact information. Please try again.');
+                          }
                         }}
                         disabled={isSavingContact}
                         className="flex-1 bg-brand text-slate-900 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-brand/90 transition-all disabled:opacity-50"

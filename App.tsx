@@ -104,7 +104,9 @@ const App: React.FC = () => {
 
   const handleUpdateSchoolContactInfo = async (schoolId: string, contactData: any) => {
     const editorName = `${currentUser?.name} ${currentUser?.surname || ''}`.trim();
+    console.log('Updating contact info for school:', schoolId, contactData);
     const success = await updateSchoolContactInfo(schoolId, contactData, editorName);
+    console.log('Update success:', success);
     if (success) {
       setSchools(schools.map(s => s.id === schoolId ? { 
         ...s, 

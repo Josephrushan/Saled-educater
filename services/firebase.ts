@@ -323,7 +323,9 @@ export async function updateSchoolContactInfo(schoolId: string, contactData: {
     if (contactData.secretaryEmail !== undefined) updateData.secretaryEmail = contactData.secretaryEmail;
     if (contactData.studentCount !== undefined) updateData.studentCount = contactData.studentCount;
     
+    console.log('Firestore update data:', updateData);
     await updateDoc(schoolRef, updateData);
+    console.log('School contact info updated successfully');
     return true;
   } catch (error) {
     console.error("Error updating school contact info:", error);
