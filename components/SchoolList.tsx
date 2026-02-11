@@ -15,8 +15,8 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
   const [searchTerm, setSearchTerm] = useState('');
   // Admin users default to 'Team' view, regular reps default to 'Mine'
   const [repFilter, setRepFilter] = useState<'all' | 'mine'>(currentUser?.role === 'admin' ? 'all' : 'mine');
-  const [stageFilter, setStageFilter] = useState<'all' | 'fresh' | 'email' | 'appointment' | 'completed'>('all');
-  const [hideNoEmail, setHideNoEmail] = useState(false);
+  const [stageFilter, setStageFilter] = useState<'all' | 'fresh' | 'email' | 'appointment' | 'completed'>('fresh');
+  const [hideNoEmail, setHideNoEmail] = useState(true);
 
   // Debug log
   React.useEffect(() => {
@@ -116,12 +116,6 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
               Fresh
             </button>
             <button 
-              onClick={() => setStageFilter('email')}
-              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'email' ? 'bg-amber-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-amber-500'}`}
-            >
-              Email Sent
-            </button>
-            <button 
               onClick={() => setStageFilter('appointment')}
               className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'appointment' ? 'bg-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-purple-500'}`}
             >
@@ -132,6 +126,12 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
               className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'completed' ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-green-500'}`}
             >
               Completed
+            </button>
+            <button 
+              onClick={() => setStageFilter('email')}
+              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'email' ? 'bg-amber-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-amber-500'}`}
+            >
+              Email Sent
             </button>
           </div>
 
