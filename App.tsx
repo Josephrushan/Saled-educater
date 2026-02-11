@@ -19,7 +19,8 @@ import {
   addSchoolToFirebase, 
   updateSchoolStageInFirebase,
   updateSchoolContactInfo,
-  deleteSchool
+  deleteSchool,
+  seedSchoolsDatabase
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
 import PWAControls from './components/PWAControls';
@@ -89,6 +90,25 @@ const App: React.FC = () => {
       loadData();
     }
   }, [currentUser]);
+
+  // Expose seedSchoolsDatabase to window for one-time setup
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).seedSchools = async () => {
+        console.log("Starting school database seed...");
+        try {
+          await seedSchoolsDatabase();
+          console.log("Seed complete! Refreshing...");
+          // Reload schools from Firebase
+          const firebaseSchools = await getSchoolsFromFirebase();
+          setSchools(firebaseSchools);
+        } catch (error) {
+          console.error("Seed failed:", error);
+        }
+      };
+      console.log("💡 Tip: To seed the database with 100 schools, run: seedSchools()");
+    }
+  }, []);
 
   const handleLogin = (rep: SalesRep) => {
     setCurrentUser(rep);
