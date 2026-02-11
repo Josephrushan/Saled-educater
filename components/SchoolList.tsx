@@ -196,6 +196,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                 <th className="px-8 py-6">School & Ownership</th>
                 <th className="px-8 py-6">Sales Phase</th>
                 <th className="px-8 py-6">Capacity</th>
+                <th className="px-8 py-6">Revenue Potential</th>
                 <th className="px-8 py-6 text-right">Progress</th>
               </tr>
             </thead>
@@ -232,6 +233,12 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                     <div className="flex flex-col">
                       <span className="text-sm font-black text-slate-700">{school.studentCount || '—'}</span>
                       <span className="text-[10px] font-bold text-slate-400 uppercase">Learners</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-black text-brand">R{((school.studentCount || 0) * 5).toLocaleString()}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Monthly Commission</span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-right">
