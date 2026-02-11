@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, Mail, Shield, CheckCircle, Trash2, Loader2, X, Eye, Bank, FileText } from 'lucide-react';
+import { Users, UserPlus, Mail, Shield, CheckCircle, Trash2, Loader2, X, Eye, Building2, FileText } from 'lucide-react';
 import { SalesRep } from '../types';
 import { getAllReps, syncSalesRepToFirebase, deleteSalesRep, uploadFileToStorage } from '../services/firebase';
 
@@ -248,7 +248,7 @@ const RepManagement: React.FC = () => {
               {/* Bank Details */}
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <Bank size={16} className="text-brand" />
+                  <Building2 size={16} className="text-brand" />
                   Account Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
