@@ -21,9 +21,17 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
     ? allSchools.filter(s => s.salesRepId === currentUser?.id)
     : allSchools;
 
+  // Log for debugging
+  React.useEffect(() => {
+    console.log('CurrentUser ID:', currentUser?.id);
+    console.log('Total schools:', allSchools.length);
+    console.log('Filtered schools (Mine):', schools.length);
+    console.log('Schools:', allSchools.map(s => ({ name: s.name, salesRepId: s.salesRepId, currentId: currentUser?.id })));
+  }, [currentUser, allSchools, schools]);
+
   const filteredSchools = schools.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (s.salesRepName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+    (s.salesRepName ? s.salesRepName.toLowerCase().includes(searchTerm.toLowerCase()) : false)
   );
 
   // Helper function to determine if school should display a rep
