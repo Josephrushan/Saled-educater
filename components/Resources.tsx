@@ -67,40 +67,22 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
     setIsSubmitting(false);
   };
 
-  const handleDownload = async (url: string, fileName: string) => {
-    try {
-      // Fetch the file with CORS and credentials handling
-      const response = await fetch(url, {
-        mode: 'cors',
-        credentials: 'omit'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      
-      // Create and trigger download
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = fileName || 'download';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Clean up
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error('Download failed:', error);
-      // Fallback - try direct link with alt=media parameter
-      let downloadUrl = url;
-      if (url.includes('firebasestorage')) {
-        downloadUrl = url.includes('?') ? url + '&alt=media' : url + '?alt=media';
-      }
-      window.location.href = downloadUrl;
+  const handleDownload = (url: string, fileName: string) => {
+    // Firebase Storage URLs need alt=media parameter to trigger download
+    // This bypasses the preview and forces direct download
+    let downloadUrl = url;
+    if (url.includes('firebasestorage')) {
+      downloadUrl = url.includes('?') ? url + '&alt=media' : url + '?alt=media';
     }
+    
+    // Create a temporary link element and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName || 'download';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleDelete = async (id: string) => {
