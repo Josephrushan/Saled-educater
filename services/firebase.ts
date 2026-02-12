@@ -160,16 +160,20 @@ export async function uploadFileToStorage(file: File, path: string): Promise<str
  * Persists salesperson data to the 'salesman' collection.
  */
 export async function syncSalesRepToFirebase(rep: SalesRep) {
-  console.log(`[Firebase Sync] Saving rep to salesman collection: ${rep.email}`);
+  console.log(`[Firebase Sync] Saving rep to salesman collection: ${rep.email}`, rep);
   try {
     const repRef = doc(db, REPS_COLLECTION, rep.id);
     await setDoc(repRef, {
       ...rep,
       updatedAt: new Date().toISOString()
     }, { merge: true });
+    console.log(`[Firebase Sync] ✅ Successfully saved rep: ${rep.email}`);
     return true;
   } catch (error) {
-    console.error("Error syncing rep:", error);
+    console.error("❌ Error syncing rep:", error);
+    console.error("Collection:", REPS_COLLECTION);
+    console.error("Rep ID:", rep.id);
+    console.error("Rep Email:", rep.email);
     return false;
   }
 }

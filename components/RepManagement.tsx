@@ -55,12 +55,21 @@ const RepManagement: React.FC = () => {
       role: 'rep'
     };
 
-    const success = await syncSalesRepToFirebase(repData);
-    if (success) {
-      setReps([...reps, repData]);
-      setNewRep({ name: '', surname: '', email: '', password: '' });
-      setSelectedFile(null);
-      setShowAddForm(false);
+    try {
+      const success = await syncSalesRepToFirebase(repData);
+      if (success) {
+        setReps([...reps, repData]);
+        setNewRep({ name: '', surname: '', email: '', password: '' });
+        setSelectedFile(null);
+        setShowAddForm(false);
+        alert('✅ Sales rep created successfully!');
+      } else {
+        alert('❌ Failed to save sales rep. Please try again.');
+        console.error('syncSalesRepToFirebase returned false');
+      }
+    } catch (error) {
+      alert(`❌ Error creating sales rep: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error in handleAddRep:', error);
     }
     setIsSubmitting(false);
   };
