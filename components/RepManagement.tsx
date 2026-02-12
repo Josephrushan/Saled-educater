@@ -32,12 +32,13 @@ const RepManagement: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    let avatarUrl = newRep.name.charAt(0).toUpperCase() + (newRep.surname.charAt(0).toUpperCase() || '');
+    const initials = newRep.name.charAt(0).toUpperCase() + (newRep.surname.charAt(0).toUpperCase() || '');
+    let profilePicUrl: string | undefined = undefined;
 
     if (selectedFile) {
       const url = await uploadFileToStorage(selectedFile, 'profile_pics/');
       if (url) {
-        avatarUrl = url;
+        profilePicUrl = url;
       }
     }
 
@@ -47,7 +48,8 @@ const RepManagement: React.FC = () => {
       surname: newRep.surname,
       email: newRep.email,
       password: newRep.password, // Store password
-      avatar: avatarUrl,
+      avatar: initials,
+      profilePicUrl: profilePicUrl,
       totalSchools: 0,
       activeCommissions: 0,
       role: 'rep'

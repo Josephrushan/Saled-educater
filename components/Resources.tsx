@@ -67,16 +67,40 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
     setIsSubmitting(false);
   };
 
-  const handleDownload = (url: string, fileName: string) => {
-    // Firebase Storage files need special handling
-    // Add alt=media parameter to force download instead of preview
-    let downloadUrl = url;
-    if (url.includes('firebasestorage')) {
-      downloadUrl = url.includes('?') ? url + '&alt=media' : url + '?alt=media';
+  const handleDownload = async (url: string, fileName: string) => {
+    try {
+      // Fetch the file with CORS and credentials handling
+      const response = await fetch(url, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Create and trigger download
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback - try direct link with alt=media parameter
+      let downloadUrl = url;
+      if (url.includes('firebasestorage')) {
+        downloadUrl = url.includes('?') ? url + '&alt=media' : url + '?alt=media';
+      }
+      window.location.href = downloadUrl;
     }
-    
-    // Direct download - alt=media prevents login redirect
-    window.location.href = downloadUrl;
   };
 
   const handleDelete = async (id: string) => {
