@@ -79,6 +79,17 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
     window.location.href = downloadUrl;
   };
 
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this resource?')) {
+      setIsDeleting(id);
+      const success = await deleteResource(id, type);
+      if (success) {
+        setResources(resources.filter(r => r.id !== id));
+      }
+      setIsDeleting(null);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
