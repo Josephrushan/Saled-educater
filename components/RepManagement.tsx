@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, Mail, Shield, CheckCircle, Trash2, Loader2, X, Eye, Building2, FileText } from 'lucide-react';
+import { Users, UserPlus, Mail, Shield, CheckCircle, Trash2, Loader2, X, Eye, Building2, FileText, Upload } from 'lucide-react';
 import { SalesRep } from '../types';
 import { getAllReps, syncSalesRepToFirebase, deleteSalesRep, uploadFileToStorage } from '../services/firebase';
 
