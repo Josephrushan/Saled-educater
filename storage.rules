@@ -12,12 +12,12 @@ service firebase.storage {
     // Allow read/write for Educater Sales CRM
     // Profile pictures for sales reps
     match /profile_pics/{allPaths=**} {
-      allow read, write: if isSignedIn();
+      allow read, write: if true;  // Public read/write for custom auth app
     }
     
     match /profile_pictures/{allPaths=**} {
       allow read: if true;  // Public read for displaying profile pictures
-      allow write: if isSignedIn();
+      allow write: if true;  // Allow writes
     }
     
     // Bank proofs for sales reps

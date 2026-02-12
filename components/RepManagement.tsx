@@ -42,18 +42,23 @@ const RepManagement: React.FC = () => {
       }
     }
 
+    // Build rep data - only include profilePicUrl if it has a value
     const repData: SalesRep = {
       id: `rep_${Date.now()}`,
       name: newRep.name,
       surname: newRep.surname,
       email: newRep.email,
-      password: newRep.password, // Store password
+      password: newRep.password,
       avatar: initials,
-      profilePicUrl: profilePicUrl,
       totalSchools: 0,
       activeCommissions: 0,
       role: 'rep'
     };
+
+    // Only add profilePicUrl if it's defined
+    if (profilePicUrl) {
+      repData.profilePicUrl = profilePicUrl;
+    }
 
     try {
       const success = await syncSalesRepToFirebase(repData);
