@@ -39,10 +39,13 @@ const RepManagement: React.FC = () => {
       const url = await uploadFileToStorage(selectedFile, 'profile_pics/');
       if (url) {
         profilePicUrl = url;
+        console.log('✅ Profile picture uploaded:', url);
+      } else {
+        console.log('⚠️ Profile picture upload failed, continuing without picture');
       }
     }
 
-    // Build rep data - only include profilePicUrl if it has a value
+    // Build rep data - include all fields (undefined values will be filtered in syncSalesRepToFirebase)
     const repData: SalesRep = {
       id: `rep_${Date.now()}`,
       name: newRep.name,
@@ -50,15 +53,11 @@ const RepManagement: React.FC = () => {
       email: newRep.email,
       password: newRep.password,
       avatar: initials,
+      profilePicUrl: profilePicUrl,  // May be undefined, but will be filtered before saving
       totalSchools: 0,
       activeCommissions: 0,
       role: 'rep'
     };
-
-    // Only add profilePicUrl if it's defined
-    if (profilePicUrl) {
-      repData.profilePicUrl = profilePicUrl;
-    }
 
     try {
       const success = await syncSalesRepToFirebase(repData);

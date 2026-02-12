@@ -159,12 +159,21 @@ export async function uploadFileToStorage(file: File, path: string): Promise<str
 /**
  * Persists salesperson data to the 'salesman' collection.
  */
+/**
+ * Persists salesperson data to the 'salesman' collection.
+ */
 export async function syncSalesRepToFirebase(rep: SalesRep) {
   console.log(`[Firebase Sync] Saving rep to salesman collection: ${rep.email}`, rep);
   try {
     const repRef = doc(db, REPS_COLLECTION, rep.id);
+    
+    // Remove undefined fields to prevent Firestore errors
+    const cleanRep = Object.fromEntries(
+      Object.entries(rep).filter(([_, value]) => value !== undefined)
+    ) as any;
+    
     await setDoc(repRef, {
-      ...rep,
+      ...cleanRep,
       updatedAt: new Date().toISOString()
     }, { merge: true });
     console.log(`[Firebase Sync] ✅ Successfully saved rep: ${rep.email}`);
