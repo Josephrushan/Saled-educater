@@ -54,12 +54,22 @@ export interface SalesRep {
   role?: 'admin' | 'rep';
 }
 
+export interface ResourceCategory {
+  id: string;
+  name: string;
+  displayOrder: number; // Priority/ordering number - higher numbers appear first
+  category: 'tools' | 'training';
+  createdAt: string;
+}
+
 export interface Resource {
   id: string;
   name: string;
   type: string; // 'PDF', 'Link', etc.
   url: string;
+  coverImage?: string; // URL to cover image
   category: 'tools' | 'training';
+  categoryId?: string; // Link to ResourceCategory
   createdAt: string;
 }
 

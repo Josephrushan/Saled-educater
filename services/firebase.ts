@@ -15,7 +15,7 @@ import {
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { SalesRep, School, SalesStage, Resource } from '../types';
+import { SalesRep, School, SalesStage, Resource, ResourceCategory } from '../types';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -135,6 +135,118 @@ export async function deleteResource(id: string, category: 'tools' | 'training')
     return true;
   } catch (error) {
     console.error(`Error deleting ${category}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Fetches all categories for resources
+ */
+export async function getResourceCategories(category: 'tools' | 'training'): Promise<ResourceCategory[]> {
+  try {
+    const q = query(
+      collection(db, 'resource_categories'),
+      where('category', '==', category)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs
+      .map(doc => ({ ...doc.data(), id: doc.id } as ResourceCategory))
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+}
+
+/**
+ * Checks if a display order is already used
+ */
+export async function checkDisplayOrderExists(displayOrder: number, category: 'tools' | 'training', excludeId?: string): Promise<boolean> {
+  try {
+    const q = query(
+      collection(db, 'resource_categories'),
+      where('category', '==', category),
+      where('displayOrder', '==', displayOrder)
+    );
+    const querySnapshot = await getDocs(q);
+    if (excludeId && querySnapshot.docs.length === 1 && querySnapshot.docs[0].id === excludeId) {
+      return false; // It's the same document, not a duplicate
+    }
+    return querySnapshot.docs.length > 0;
+  } catch (error) {
+    console.error('Error checking display order:', error);
+    return false;
+  }
+}
+
+/**
+ * Finds the next available display order number
+ */
+export async function getNextDisplayOrder(category: 'tools' | 'training'): Promise<number> {
+  try {
+    const categories = await getResourceCategories(category);
+    if (categories.length === 0) return 1;
+    return Math.max(...categories.map(c => c.displayOrder)) + 1;
+  } catch (error) {
+    console.error('Error getting next display order:', error);
+    return 1;
+  }
+}
+
+/**
+ * Adds a new resource category
+ */
+export async function addResourceCategory(categoryData: Omit<ResourceCategory, 'id'>): Promise<string | null> {
+  try {
+    // Check if displayOrder already exists
+    const exists = await checkDisplayOrderExists(categoryData.displayOrder, categoryData.category);
+    if (exists) {
+      throw new Error(`Display order ${categoryData.displayOrder} is already in use. Please choose a different number.`);
+    }
+
+    const docRef = await addDoc(collection(db, 'resource_categories'), {
+      ...categoryData,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding category:', error);
+    throw error;
+  }
+}
+
+/**
+ * Updates a resource category
+ */
+export async function updateResourceCategory(id: string, categoryData: Partial<ResourceCategory>): Promise<boolean> {
+  try {
+    if (categoryData.displayOrder !== undefined) {
+      const exists = await checkDisplayOrderExists(categoryData.displayOrder, categoryData.category || 'training', id);
+      if (exists) {
+        throw new Error(`Display order ${categoryData.displayOrder} is already in use. Please choose a different number.`);
+      }
+    }
+
+    await updateDoc(doc(db, 'resource_categories', id), {
+      ...categoryData,
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error('Error updating category:', error);
+    throw error;
+  }
+}
+
+/**
+ * Deletes a resource category
+ */
+export async function deleteResourceCategory(id: string): Promise<boolean> {
+  try {
+    await deleteDoc(doc(db, 'resource_categories', id));
+    return true;
+  } catch (error) {
+    console.error('Error deleting category:', error);
     return false;
   }
 }
