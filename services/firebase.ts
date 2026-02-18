@@ -281,8 +281,13 @@ export async function getSchoolsFromFirebase(): Promise<School[]> {
  */
 export async function addSchoolToFirebase(school: Omit<School, 'id'>): Promise<string | null> {
   try {
+    // Remove undefined fields before adding to Firestore
+    const cleanedSchool = Object.fromEntries(
+      Object.entries(school).filter(([, value]) => value !== undefined)
+    );
+    
     const docRef = await addDoc(collection(db, SCHOOLS_COLLECTION), {
-      ...school,
+      ...cleanedSchool,
       createdAt: new Date().toISOString()
     });
     return docRef.id;
