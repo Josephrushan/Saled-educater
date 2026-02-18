@@ -114,8 +114,13 @@ export async function getResources(category: 'tools' | 'training'): Promise<Reso
 export async function addResource(resource: Omit<Resource, 'id'>): Promise<string | null> {
   const collectionName = resource.category === 'tools' ? TOOLS_COLLECTION : TRAINING_COLLECTION;
   try {
+    // Remove undefined fields before adding to Firestore
+    const cleanedResource = Object.fromEntries(
+      Object.entries(resource).filter(([, value]) => value !== undefined)
+    );
+    
     const docRef = await addDoc(collection(db, collectionName), {
-      ...resource,
+      ...cleanedResource,
       createdAt: new Date().toISOString()
     });
     return docRef.id;
@@ -204,8 +209,13 @@ export async function addResourceCategory(categoryData: Omit<ResourceCategory, '
       throw new Error(`Display order ${categoryData.displayOrder} is already in use. Please choose a different number.`);
     }
 
+    // Remove undefined fields before adding to Firestore
+    const cleanedData = Object.fromEntries(
+      Object.entries(categoryData).filter(([, value]) => value !== undefined)
+    );
+
     const docRef = await addDoc(collection(db, 'resource_categories'), {
-      ...categoryData,
+      ...cleanedData,
       createdAt: new Date().toISOString()
     });
     return docRef.id;

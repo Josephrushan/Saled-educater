@@ -46,6 +46,10 @@ service cloud.firestore {
       allow read, write: if true; 
     }
 
+    match /resource_categories/{document} {
+      allow read, write: if true;
+    }
+
     match /email_templates/{document} {
       allow read, write: if true;
     }
