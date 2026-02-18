@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Download, FileText, ExternalLink, BookOpen, Trash2, Plus, Loader2, Link, Upload, FolderPlus, AlertCircle } from 'lucide-react';
+import { Download, FileText, ExternalLink, BookOpen, Trash2, Plus, Loader2, Link, Upload, FolderPlus, AlertCircle, Edit2 } from 'lucide-react';
 import { SalesRep, Resource, ResourceCategory } from '../types';
-import { getResources, addResource, deleteResource, uploadFileToStorage, getResourceCategories, addResourceCategory, updateResourceCategory, deleteResourceCategory, checkDisplayOrderExists, getNextDisplayOrder } from '../services/firebase';
+import { getResources, addResource, deleteResource, updateResource, uploadFileToStorage, getResourceCategories, addResourceCategory, updateResourceCategory, deleteResourceCategory, checkDisplayOrderExists, getNextDisplayOrder } from '../services/firebase';
 
 interface ResourcesProps {
   type: 'tools' | 'training';
@@ -15,6 +15,8 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingResourceId, setEditingResourceId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categoryError, setCategoryError] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -159,6 +161,97 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
     }
   };
 
+  const handleEditResource = async (id: string) => {
+    const resource = resources.find(r => r.id === id);
+    if (!resource) return;
+    
+    setEditingResourceId(id);
+    setNewResource({
+      name: resource.name,
+      url: resource.url,
+      type: resource.type,
+      categoryId: resource.categoryId || ''
+    });
+  };
+
+  const handleSaveEditResource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingResourceId) return;
+    
+    setIsSubmitting(true);
+    const resource = resources.find(r => r.id === editingResourceId);
+    if (!resource) return;
+
+    let resourceUrl = newResource.url;
+    let coverImageUrl = resource.coverImage;
+
+    if (selectedFile) {
+      const uploadedUrl = await uploadFileToStorage(selectedFile, 'resources/');
+      if (uploadedUrl) resourceUrl = uploadedUrl;
+    }
+
+    if (coverImage) {
+      const uploadedCover = await uploadFileToStorage(coverImage, 'resources/covers/');
+      if (uploadedCover) coverImageUrl = uploadedCover;
+    }
+
+    const updates: Partial<Resource> = {
+      name: newResource.name,
+      url: resourceUrl,
+      type: newResource.type,
+      categoryId: newResource.categoryId || undefined,
+      coverImage: coverImageUrl || undefined
+    };
+
+    const success = await updateResource(editingResourceId, type, updates);
+    if (success) {
+      setResources(resources.map(r => r.id === editingResourceId ? { ...r, ...updates } : r));
+      setEditingResourceId(null);
+      setNewResource({ name: '', url: '', type: 'PDF', categoryId: '' });
+      setSelectedFile(null);
+      setCoverImage(null);
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleEditCategory = async (id: string) => {
+    const category = categories.find(c => c.id === id);
+    if (!category) return;
+    
+    setEditingCategoryId(id);
+    setNewCategory({
+      name: category.name,
+      displayOrder: category.displayOrder
+    });
+    setCategoryError('');
+  };
+
+  const handleSaveEditCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategoryId) return;
+    
+    setCategoryError('');
+    setIsSubmitting(true);
+
+    try {
+      const updates: Partial<ResourceCategory> = {
+        name: newCategory.name,
+        displayOrder: newCategory.displayOrder
+      };
+
+      const success = await updateResourceCategory(editingCategoryId, updates);
+      if (success) {
+        setCategories(categories.map(c => c.id === editingCategoryId ? { ...c, ...updates } : c).sort((a, b) => a.displayOrder - b.displayOrder));
+        setEditingCategoryId(null);
+        setNewCategory({ name: '', displayOrder: nextDisplayOrder });
+        setCategoryError('');
+      }
+    } catch (error: any) {
+      setCategoryError(error.message || 'Error updating category');
+    }
+    setIsSubmitting(false);
+  };
+
   const getResourcesByCategory = (categoryId?: string) => {
     return resources.filter(r => r.categoryId === categoryId);
   };
@@ -208,12 +301,20 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-black text-slate-900">{cat.name}</h2>
                   {isAdmin && (
-                    <button 
-                      onClick={() => handleDeleteCategory(cat.id)}
-                      className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all"
-                    >
-                      {isDeletingCategory === cat.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleEditCategory(cat.id)}
+                        className="p-2 text-slate-300 hover:text-brand hover:bg-brand/10 rounded-full transition-all"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteCategory(cat.id)}
+                        className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all"
+                      >
+                        {isDeletingCategory === cat.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                      </button>
+                    </div>
                   )}
                 </div>
                 
@@ -229,6 +330,7 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
                         isAdmin={isAdmin}
                         onDelete={handleDelete}
                         onDownload={handleDownload}
+                        onEdit={handleEditResource}
                         isDeleting={isDeleting === item.id}
                       />
                     ))}
@@ -251,6 +353,7 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
                     isAdmin={isAdmin}
                     onDelete={handleDelete}
                     onDownload={handleDownload}
+                    onEdit={handleEditResource}
                     isDeleting={isDeleting === item.id}
                   />
                 ))}
@@ -456,6 +559,200 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
           </div>
         </div>
       )}
+
+      {/* Edit Resource Modal */}
+      {editingResourceId && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-[2rem] max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-black text-slate-900 mb-6">Edit Resource</h3>
+            <form onSubmit={handleSaveEditResource} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Title</label>
+                <input 
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-brand"
+                  value={newResource.name}
+                  onChange={e => setNewResource({...newResource, name: e.target.value})}
+                  placeholder="e.g. Sales Brochure 2026"
+                />
+              </div>
+
+              {categories.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Category (Optional)</label>
+                  <select 
+                    className="w-full px-4 py-3 bg-slate-50 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-brand"
+                    value={newResource.categoryId}
+                    onChange={e => setNewResource({...newResource, categoryId: e.target.value})}
+                  >
+                    <option value="">-- No Category --</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Type</label>
+                <select 
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-brand"
+                  value={newResource.type}
+                  onChange={e => setNewResource({...newResource, type: e.target.value})}
+                >
+                  <option value="PDF">PDF Document</option>
+                  <option value="Link">External Link</option>
+                  <option value="Doc">Word Doc</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Cover Image (Optional)</label>
+                <div className="relative">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={e => setCoverImage(e.target.files ? e.target.files[0] : null)}
+                    className="hidden"
+                    id="edit-cover-upload"
+                  />
+                  <label 
+                    htmlFor="edit-cover-upload"
+                    className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
+                  >
+                    <div className="bg-brand/10 p-2 rounded-xl text-brand">
+                      <Upload size={20} />
+                    </div>
+                    <span className="text-sm font-bold text-slate-600 truncate">
+                      {coverImage ? coverImage.name : "Click to upload new cover image"}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  {newResource.type === 'Link' ? 'External URL' : 'Upload File (Optional)'}
+                </label>
+                
+                {newResource.type === 'Link' ? (
+                  <input 
+                    required
+                    className="w-full px-4 py-3 bg-slate-50 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-brand"
+                    value={newResource.url}
+                    onChange={e => setNewResource({...newResource, url: e.target.value})}
+                    placeholder="https://..."
+                  />
+                ) : (
+                  <div className="relative">
+                    <input 
+                      type="file" 
+                      onChange={e => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                      className="hidden"
+                      id="edit-resource-upload"
+                    />
+                    <label 
+                      htmlFor="edit-resource-upload"
+                      className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
+                    >
+                      <div className="bg-brand/10 p-2 rounded-xl text-brand">
+                        <Upload size={20} />
+                      </div>
+                      <span className="text-sm font-bold text-slate-600 truncate">
+                        {selectedFile ? selectedFile.name : "Click to upload new file"}
+                      </span>
+                    </label>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-3 mt-8 pt-4">
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="flex-1 bg-brand text-slate-900 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-brand/90 transition-all disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setEditingResourceId(null);
+                    setNewResource({ name: '', url: '', type: 'PDF', categoryId: '' });
+                    setSelectedFile(null);
+                    setCoverImage(null);
+                  }}
+                  className="px-6 bg-slate-100 text-slate-400 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Category Modal */}
+      {editingCategoryId && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-[2rem] max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-black text-slate-900 mb-6">Edit Category</h3>
+            <form onSubmit={handleSaveEditCategory} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Category Name</label>
+                <input 
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-brand"
+                  value={newCategory.name}
+                  onChange={e => setNewCategory({...newCategory, name: e.target.value})}
+                  placeholder="e.g. Beginners, Advanced, etc."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Display Order (Position)</label>
+                <p className="text-xs text-slate-400">Lower numbers appear first. Must be unique.</p>
+                <input 
+                  required
+                  type="number"
+                  min="1"
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-brand"
+                  value={newCategory.displayOrder}
+                  onChange={e => setNewCategory({...newCategory, displayOrder: parseInt(e.target.value) || 1})}
+                  placeholder="1"
+                />
+              </div>
+
+              {categoryError && (
+                <div className="flex gap-3 p-4 bg-rose-50 rounded-xl border border-rose-200">
+                  <AlertCircle size={20} className="text-rose-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm font-bold text-rose-700">{categoryError}</p>
+                </div>
+              )}
+              
+              <div className="flex gap-3 mt-8 pt-4">
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="flex-1 bg-brand text-slate-900 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-brand/90 transition-all disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setEditingCategoryId(null);
+                    setCategoryError('');
+                  }}
+                  className="px-6 bg-slate-100 text-slate-400 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -466,10 +763,11 @@ interface ResourceCardProps {
   isAdmin: boolean;
   onDelete: (id: string) => void;
   onDownload: (url: string, name: string) => void;
+  onEdit: (id: string) => void;
   isDeleting: boolean;
 }
 
-const ResourceCard: React.FC<ResourceCardProps> = ({ item, type, isAdmin, onDelete, onDownload, isDeleting }) => {
+const ResourceCard: React.FC<ResourceCardProps> = ({ item, type, isAdmin, onDelete, onDownload, onEdit, isDeleting }) => {
   return (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-brand/5 transition-all group relative overflow-hidden flex flex-col h-full">
       {item.coverImage && (
@@ -484,12 +782,20 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ item, type, isAdmin, onDele
       
       <div className="p-6 flex flex-col flex-grow">
         {isAdmin && (
-          <button 
-            onClick={() => onDelete(item.id)}
-            className="absolute top-4 right-4 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all"
-          >
-            {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-          </button>
+          <div className="absolute top-4 right-4 flex gap-2">
+            <button 
+              onClick={() => onEdit(item.id)}
+              className="p-2 text-slate-300 hover:text-brand hover:bg-brand/10 rounded-full transition-all"
+            >
+              <Edit2 size={16} />
+            </button>
+            <button 
+              onClick={() => onDelete(item.id)}
+              className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all"
+            >
+              {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+            </button>
+          </div>
         )}
         
         <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand/10 group-hover:text-brand transition-colors flex-shrink-0">

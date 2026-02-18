@@ -145,6 +145,28 @@ export async function deleteResource(id: string, category: 'tools' | 'training')
 }
 
 /**
+ * Updates an existing resource
+ */
+export async function updateResource(id: string, category: 'tools' | 'training', updates: Partial<Resource>): Promise<boolean> {
+  const collectionName = category === 'tools' ? TOOLS_COLLECTION : TRAINING_COLLECTION;
+  try {
+    // Remove undefined fields before updating
+    const cleanedUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([, value]) => value !== undefined)
+    );
+
+    await updateDoc(doc(db, collectionName, id), {
+      ...cleanedUpdates,
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error(`Error updating ${category}:`, error);
+    return false;
+  }
+}
+
+/**
  * Fetches all categories for resources
  */
 export async function getResourceCategories(category: 'tools' | 'training'): Promise<ResourceCategory[]> {
