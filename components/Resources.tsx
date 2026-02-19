@@ -771,11 +771,12 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ item, type, isAdmin, onDele
   return (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-brand/5 transition-all group relative overflow-hidden flex flex-col h-full">
       {item.coverImage && (
-        <div className="w-full h-40 bg-gradient-to-br from-brand/20 to-brand/5 overflow-hidden">
+        <div className="w-full h-32 sm:h-36 md:h-40 bg-gradient-to-br from-brand/20 to-brand/5 overflow-hidden flex-shrink-0">
           <img 
             src={item.coverImage} 
             alt={item.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 loading-lazy"
+            loading="lazy"
           />
         </div>
       )}
