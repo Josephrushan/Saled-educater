@@ -10,7 +10,12 @@ service cloud.firestore {
     }
 
     function isSuperAdmin() {
-      return isSignedIn() && request.auth.token.email == 'info@visualmotion.co.za';
+      return isSignedIn() && (request.auth.token.email == 'info@visualmotion.co.za' || request.auth.token.email == 'test@educater.co.za');
+    }
+
+    // Check if user is an Educater Institute principal (global resource creator)
+    function isEducaterInstitutePrincipal() {
+      return isSignedIn() && mySchoolId() == 'educater-institute' && isPrincipal();
     }
 
     // Check if this is a CRM operation (no Firebase Auth involved)

@@ -9,7 +9,7 @@ service firebase.storage {
     }
     
     function isSuperAdmin() {
-      return request.auth.token.email == 'info@visualmotion.co.za';
+      return request.auth.token.email == 'info@visualmotion.co.za' || request.auth.token.email == 'test@educater.co.za';
     }
 
     // --- CRM COLLECTIONS (Public Access for Sales Team) ---
