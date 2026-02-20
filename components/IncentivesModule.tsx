@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gift, Upload, Trash2 } from 'lucide-react';
+import { Gift, Upload, Trash2, X } from 'lucide-react';
 import { SalesRep, Incentive } from '../types';
 import { 
   addIncentive, 
@@ -21,6 +21,7 @@ const IncentivesModule: React.FC<IncentivesModuleProps> = ({ currentUser }) => {
   const [imagePreview, setImagePreview] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [expandedIncentiveId, setExpandedIncentiveId] = useState<string | null>(null);
 
   const isAdmin = currentUser?.email === 'info@visualmotion.co.za';
 
@@ -223,7 +224,11 @@ const IncentivesModule: React.FC<IncentivesModuleProps> = ({ currentUser }) => {
           </div>
         ) : (
           incentives.map((incentive) => (
-            <div key={incentive.id} className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-lg transition-all">
+            <div 
+              key={incentive.id} 
+              onClick={() => setExpandedIncentiveId(incentive.id)}
+              className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-lg transition-all cursor-pointer hover:border-brand"
+            >
               {/* Image */}
               <img
                 src={incentive.imageUrl}
@@ -235,6 +240,7 @@ const IncentivesModule: React.FC<IncentivesModuleProps> = ({ currentUser }) => {
               <div className="p-6 space-y-4">
                 <h3 className="text-xl font-bold text-slate-900">{incentive.title}</h3>
                 <p className="text-sm text-slate-600 line-clamp-3">{incentive.description}</p>
+                <div className="text-xs text-brand font-bold">Click to read more →</div>
 
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
@@ -243,7 +249,10 @@ const IncentivesModule: React.FC<IncentivesModuleProps> = ({ currentUser }) => {
                   </span>
                   {isAdmin && (
                     <button
-                      onClick={() => handleDeleteIncentive(incentive.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteIncentive(incentive.id);
+                      }}
                       className="text-red-500 hover:text-red-700 transition-colors"
                     >
                       <Trash2 size={18} />
@@ -255,6 +264,59 @@ const IncentivesModule: React.FC<IncentivesModuleProps> = ({ currentUser }) => {
           ))
         )}
       </div>
+
+      {/* Expanded View Modal */}
+      {expandedIncentiveId && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
+            {/* Header with close button */}
+            <div className="sticky top-0 bg-white border-b border-slate-100 p-6 flex items-center justify-between z-10">
+              <h2 className="text-2xl font-bold text-slate-900">
+                {incentives.find(i => i.id === expandedIncentiveId)?.title}
+              </h2>
+              <button
+                onClick={() => setExpandedIncentiveId(null)}
+                className="p-2 hover:bg-slate-100 rounded-xl transition-all"
+              >
+                <X size={24} className="text-slate-500" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Full Image */}
+              <img
+                src={incentives.find(i => i.id === expandedIncentiveId)?.imageUrl}
+                alt={incentives.find(i => i.id === expandedIncentiveId)?.title}
+                className="w-full h-auto rounded-xl object-cover"
+              />
+
+              {/* Full Description */}
+              <div>
+                <h3 className="text-sm font-bold text-slate-400 uppercase mb-3">Description</h3>
+                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  {incentives.find(i => i.id === expandedIncentiveId)?.description}
+                </p>
+              </div>
+
+              {/* Metadata */}
+              <div className="pt-6 border-t border-slate-100">
+                <p className="text-xs text-slate-400">
+                  Created: {incentives.find(i => i.id === expandedIncentiveId)?.createdAt && new Date(incentives.find(i => i.id === expandedIncentiveId)?.createdAt!).toLocaleDateString()}
+                </p>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setExpandedIncentiveId(null)}
+                className="w-full px-6 py-3 bg-slate-100 text-slate-900 rounded-xl font-bold hover:bg-slate-200 transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
