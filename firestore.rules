@@ -13,18 +13,26 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.email == 'info@visualmotion.co.za';
     }
 
-    // Check if this is a CRM operation (no Firebase Auth, uses custom Firestore auth)
+    // Check if this is a CRM operation (no Firebase Auth involved)
     function isCRMOperation() {
       return request.auth == null;
     }
 
-    // Safely fetches the current authenticated user's profile data (for school app)
+    // Safely fetches the current authenticated user's profile data
     function getAuthUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
     function isParent() {
       return isSignedIn() && getAuthUserData().role == 'Parent';
+    }
+
+    function isPrincipal() {
+      return isSignedIn() && getAuthUserData().role == 'Principal';
+    }
+
+    function isTeacher() {
+      return isSignedIn() && getAuthUserData().role == 'Teacher';
     }
 
     function isStaff() {
@@ -36,37 +44,31 @@ service cloud.firestore {
       return getAuthUserData().schoolId;
     }
 
-    // --- NEW APP COLLECTIONS (Educater Sales CRM) ---
+    // --- CRM COLLECTIONS (Public Access for Sales Team) ---
     
-    // Allow public read/write for the sales team app (since it uses custom auth)
-    match /educater_salesman/{document} {
-      allow read, write: if true; 
-    }
-
-    match /sales_artillery/{document} {
-      allow read, write: if true; 
-    }
-
-    match /training_academy/{document} {
-      allow read, write: if true; 
-    }
-
-    match /resource_categories/{document} {
+    match /educater_salesman/{document=**} {
       allow read, write: if true;
     }
 
-    match /email_templates/{document} {
+    match /sales_artillery/{document=**} {
       allow read, write: if true;
     }
 
-    // --- SHARED COLLECTIONS (Used by both CRM and School App) ---
+    match /training_academy/{document=**} {
+      allow read, write: if true;
+    }
+
+    match /email_templates/{document=**} {
+      allow read, write: if true;
+    }
+
+    // --- MAIN APP COLLECTIONS ---
 
     // 1. SCHOOLS
-    // CRM can create schools, School app staff can manage their own schools
     match /schools/{schoolId} {
       allow read: if true;
-      // Allow CRM operations (no auth) and super admin
-      allow write: if isCRMOperation() || isSuperAdmin(); 
+      // Allow write for: CRM (no auth), super admin, or staff members
+      allow write: if isCRMOperation() || isSuperAdmin() || (isSignedIn() && isStaff() && mySchoolId() == schoolId);
       
       match /config/{configId} {
         allow read: if isSignedIn() && (mySchoolId() == schoolId || isSuperAdmin());
@@ -74,16 +76,21 @@ service cloud.firestore {
       }
     }
 
-    // --- SCHOOL APP ONLY COLLECTIONS ---
-
     // 2. USERS
     match /users/{userId} {
       allow read: if true;
       allow create: if 
         // CRM can create principals for schools it manages
         (isCRMOperation() && request.resource.data.role == 'Principal' && request.resource.data.source == 'crm') ||
-        // School app - requires Firebase Auth
-        isSignedIn();
+        // School app users with Firebase Auth
+        (isSignedIn() && (
+          request.auth.uid == userId || 
+          isSuperAdmin() || 
+          (isParent() && 
+           request.resource.data.role == 'Student' && 
+           request.resource.data.parentId == request.auth.uid &&
+           request.resource.data.schoolId == mySchoolId())
+        ));
       allow update: if isSignedIn() && (
         request.auth.uid == userId || 
         isSuperAdmin() || 
@@ -114,7 +121,7 @@ service cloud.firestore {
       allow create, update, delete: if isSignedIn() && (isStaff() && (request.resource.data.schoolId == mySchoolId() || resource.data.schoolId == mySchoolId()) || isSuperAdmin());
     }
 
-    // 5. COMMUNITY FEED (Chat)
+    // 5. COMMUNITY FEED (Chat) - Principals can view all chats across grades
     match /messages/{id} {
       allow read: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
       allow create: if isSignedIn() && (getAuthUserData().role != 'Student' && request.resource.data.schoolId == mySchoolId() || isSuperAdmin());
@@ -143,7 +150,7 @@ service cloud.firestore {
       allow delete: if isSignedIn() && (isStaff() || isSuperAdmin());
     }
 
-    // 7. MEMORIES (Yearbook & Journal)
+    // 7. MEMORIES (Yearbook & Journal) - Principals can view all journals across grades
     match /yearbook/{id} {
       allow read: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
       allow create: if isSignedIn() && (isStaff() || isSuperAdmin());
@@ -157,7 +164,7 @@ service cloud.firestore {
       allow create, update, delete: if isSignedIn() && (isStaff() || isSuperAdmin());
     }
 
-    // 9. PUSH NOTIFICATIONS
+    // 9. PUSH NOTIFICATIONS - Subscriptions
     match /pushSubscriptions/{subscriptionId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isSuperAdmin());
@@ -172,7 +179,68 @@ service cloud.firestore {
       allow delete: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
     }
 
-    // GLOBAL FALLBACK (Preserved from original rules)
+    // 10. LEARNING GAMES & QUIZZES
+
+    // Game Scores - Students can create, all users can read for leaderboards
+    match /gameScores/{scoreId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (request.auth.uid == request.resource.data.playerId || isSuperAdmin());
+      allow update, delete: if isSignedIn() && (isStaff() || isSuperAdmin());
+    }
+
+    // Quizzes - Teachers create school-specific, admins create global
+    match /quizzes/{quizId} {
+      allow read: if isSignedIn() && (
+        resource.data.schoolId == mySchoolId() || 
+        resource.data.isGlobal == true ||
+        resource.data.createdBy == request.auth.uid ||
+        isSuperAdmin()
+      );
+      allow create: if isSignedIn() && (isTeacher() || isPrincipal() || isSuperAdmin());
+      allow update, delete: if isSignedIn() && (
+        resource.data.createdBy == request.auth.uid ||
+        isSuperAdmin()
+      );
+    }
+
+    // Student Quiz Attempts
+    match /studentQuizAttempts/{attemptId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.studentId ||
+        isStaff() ||
+        isSuperAdmin()
+      );
+      allow create: if isSignedIn() && (request.auth.uid == request.resource.data.studentId || isSuperAdmin());
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.studentId || isSuperAdmin());
+      allow delete: if isSignedIn() && (isSuperAdmin());
+    }
+
+    // CRM Collections - Incentives, Group Chats, Direct Messages
+    match /incentives/{incId} {
+      allow read: if true;
+      allow write: if isCRMOperation() || isSuperAdmin();
+    }
+
+    match /groupChats/{groupId} {
+      allow read, write: if isCRMOperation() || true;
+      match /messages/{messageId} {
+        allow read, write: if isCRMOperation() || true;
+      }
+    }
+
+    match /directMessages/{dmId} {
+      allow read, write: if isCRMOperation() || true;
+      match /messages/{messageId} {
+        allow read, write: if isCRMOperation() || true;
+      }
+    }
+
+    // Additional CRM Collections
+    match /resource_categories/{document=**} {
+      allow read, write: if true;
+    }
+
+    // GLOBAL FALLBACK
     match /{document=**} {
       allow read, write: if isSuperAdmin();
     }
