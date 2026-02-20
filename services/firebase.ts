@@ -17,7 +17,7 @@ import {
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { SalesRep, School, SalesStage, Resource, ResourceCategory, Incentive, GroupChat, Message, DirectMessage } from '../types';
+import { SalesRep, School, SalesStage, Resource, ResourceCategory, Incentive, Message, DirectMessage } from '../types';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -912,78 +912,6 @@ export async function deleteIncentive(id: string): Promise<boolean> {
   } catch (error) {
     console.error('Error deleting incentive:', error);
     return false;
-  }
-}
-
-/**
- * GROUP CHAT FUNCTIONS
- */
-export async function addGroupChat(group: Omit<GroupChat, 'id'>): Promise<string | null> {
-  try {
-    const docRef = await addDoc(collection(db, 'groupChats'), {
-      ...group,
-      createdAt: new Date().toISOString()
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error('Error creating group chat:', error);
-    return null;
-  }
-}
-
-export async function getGroupChats(): Promise<GroupChat[]> {
-  try {
-    const querySnapshot = await getDocs(collection(db, 'groupChats'));
-    return querySnapshot.docs.map(doc => ({ ...doc.data() as GroupChat, id: doc.id }));
-  } catch (error) {
-    console.error('Error fetching group chats:', error);
-    return [];
-  }
-}
-
-export async function addGroupMessage(groupId: string, message: Omit<Message, 'id'>): Promise<string | null> {
-  try {
-    const docRef = await addDoc(collection(db, `groupChats/${groupId}/messages`), {
-      ...message,
-      createdAt: new Date().toISOString()
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error('Error sending message:', error);
-    return null;
-  }
-}
-
-export async function getGroupMessages(groupId: string): Promise<Message[]> {
-  try {
-    const q = query(
-      collection(db, `groupChats/${groupId}/messages`),
-      orderBy('createdAt', 'asc')
-    );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ ...doc.data() as Message, id: doc.id }));
-  } catch (error) {
-    console.error('Error fetching group messages:', error);
-    return [];
-  }
-}
-
-// Real-time listener for group messages
-export function subscribeToGroupMessages(groupId: string, callback: (messages: Message[]) => void) {
-  try {
-    const q = query(
-      collection(db, `groupChats/${groupId}/messages`),
-      orderBy('createdAt', 'asc')
-    );
-    return onSnapshot(q, (snapshot) => {
-      const messages = snapshot.docs.map(doc => ({ ...doc.data() as Message, id: doc.id }));
-      callback(messages);
-    }, (error) => {
-      console.error('Error listening to group messages:', error);
-    });
-  } catch (error) {
-    console.error('Error setting up group message listener:', error);
-    return () => {};
   }
 }
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Download, BookOpen, LogOut, ChevronRight, Users } from 'lucide-react';
+import { X, Download, BookOpen, LogOut, ChevronRight, Users, LayoutDashboard, School, FileText, Mail, Gift } from 'lucide-react';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -14,9 +14,15 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose, onNavigate
   if (!isOpen) return null;
 
   const items = [
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, hide: false },
+    { id: 'schools', label: 'Schools', icon: <School size={20} />, hide: false },
+    { id: 'templates', label: 'Email Drafts', icon: <FileText size={20} />, hide: false },
+    { id: 'tools', label: 'Sales Tools', icon: <Download size={20} />, hide: false },
+    { id: 'training', label: 'Training', icon: <BookOpen size={20} />, hide: false },
+    { id: 'crew', label: 'Crew Directory', icon: <Users size={20} />, hide: false },
+    { id: 'direct-message', label: 'Direct Message', icon: <Mail size={20} />, hide: false },
+    { id: 'incentives', label: 'Incentives', icon: <Gift size={20} />, hide: false },
     { id: 'reps', label: 'Sales Members', icon: <Users size={20} />, hide: !isAdmin },
-    { id: 'tools', label: 'Sales Artillery', icon: <Download size={20} />, hide: false },
-    { id: 'training', label: 'Training Academy', icon: <BookOpen size={20} />, hide: false },
   ];
 
   return (

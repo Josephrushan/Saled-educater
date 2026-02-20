@@ -14,7 +14,6 @@ import MobileNav from './components/MobileNav';
 import MobileTopBar from './components/MobileTopBar';
 import MobileDrawer from './components/MobileDrawer';
 import CrewDirectoryModule from './components/CrewDirectoryModule';
-import GroupChatModule from './components/GroupChatModule';
 import DirectMessageModule from './components/DirectMessageModule';
 import IncentivesModule from './components/IncentivesModule';
 import { School, SalesRep, SalesStage, TrackType } from './types';
@@ -241,7 +240,6 @@ const App: React.FC = () => {
       case 'tools': return <Resources type="tools" currentUser={currentUser} />;
       case 'training': return <Resources type="training" currentUser={currentUser} />;
       case 'crew': return <CrewDirectoryModule currentUser={currentUser} />;
-      case 'group-chat': return <GroupChatModule currentUser={currentUser} />;
       case 'direct-message': return <DirectMessageModule currentUser={currentUser} />;
       case 'incentives': return <IncentivesModule currentUser={currentUser} />;
       case 'payment': return <PaymentInfo currentUser={currentUser} onUpdate={setCurrentUser} />;
