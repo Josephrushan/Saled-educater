@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // --- HELPERS (From Existing App) ---
+    // --- HELPERS ---
     
     function isSignedIn() {
       return request.auth != null;
@@ -13,7 +13,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.email == 'info@visualmotion.co.za';
     }
 
-    // Safely fetches the current authenticated user's profile data
+    // Check if this is a CRM operation (no Firebase Auth, uses custom Firestore auth)
+    function isCRMOperation() {
+      return request.auth == null;
+    }
+
+    // Safely fetches the current authenticated user's profile data (for school app)
     function getAuthUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
@@ -54,14 +59,14 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // --- JOINT COLLECTIONS ---
+    // --- SHARED COLLECTIONS (Used by both CRM and School App) ---
 
     // 1. SCHOOLS
-    // Merged Rule: Allows access for both the new CRM (public write) and the old School App
+    // CRM can create schools, School app staff can manage their own schools
     match /schools/{schoolId} {
       allow read: if true;
-      // UPDATED: Changed from 'isSuperAdmin()' to 'true' to allow the Sales CRM to write here.
-      allow write: if true; 
+      // Allow CRM operations (no auth) and super admin
+      allow write: if isCRMOperation() || isSuperAdmin(); 
       
       match /config/{configId} {
         allow read: if isSignedIn() && (mySchoolId() == schoolId || isSuperAdmin());
@@ -69,19 +74,16 @@ service cloud.firestore {
       }
     }
 
-    // --- EXISTING APP COLLECTIONS ---
+    // --- SCHOOL APP ONLY COLLECTIONS ---
 
     // 2. USERS
     match /users/{userId} {
       allow read: if true;
-      allow create: if isSignedIn() && (
-        request.auth.uid == userId || 
-        isSuperAdmin() || 
-        (isParent() && 
-         request.resource.data.role == 'Student' && 
-         request.resource.data.parentId == request.auth.uid &&
-         request.resource.data.schoolId == mySchoolId())
-      );
+      allow create: if 
+        // CRM can create principals for schools it manages
+        (isCRMOperation() && request.resource.data.role == 'Principal' && request.resource.data.source == 'crm') ||
+        // School app - requires Firebase Auth
+        isSignedIn();
       allow update: if isSignedIn() && (
         request.auth.uid == userId || 
         isSuperAdmin() || 

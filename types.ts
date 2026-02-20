@@ -90,3 +90,42 @@ export interface SalesTemplate {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderProfilePic?: string;
+  content: string;
+  createdAt: string;
+  readBy?: string[]; // Array of user IDs who read this message
+}
+
+export interface GroupChat {
+  id: string;
+  name: string;
+  description?: string;
+  members: string[]; // Array of sales rep IDs
+  lastMessage?: Message;
+  lastMessageTime?: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface DirectMessage {
+  id: string;
+  participantIds: string[]; // Two participant IDs
+  lastMessage?: Message;
+  lastMessageTime?: string;
+  createdAt: string;
+}
+
+export interface Incentive {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  createdBy: string; // Should be info@visualmotion (admin)
+  createdAt: string;
+  expiresAt?: string;
+}

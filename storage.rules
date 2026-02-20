@@ -4,10 +4,14 @@ service firebase.storage {
     
     // Helper functions
     function isSignedIn() {
-      // Since this app uses custom Firestore-based auth without Firebase Auth sessions,
-      // we must allow public read/write to these specific buckets for the app to function.
-      return true; 
+      return request.auth != null;
     }
+    
+    function isSuperAdmin() {
+      return request.auth.token.email == 'info@visualmotion.co.za';
+    }
+
+    // --- CRM PATHS (Public Access for Sales Team) ---
     
     // Allow read/write for Educater Sales CRM
     // Profile pictures for sales reps
@@ -22,19 +26,59 @@ service firebase.storage {
     
     // Bank proofs for sales reps
     match /bank_proofs/{allPaths=**} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if true;
     }
     
     // Resources (training materials, tools)
     match /resources/{allPaths=**} {
-      allow read: if true;  // Public read for downloads
+      allow read, write: if true;
+    }
+
+    // --- SCHOOL APP PATHS (Firebase Auth) ---
+
+    // School logos - Authenticated users can upload
+    match /schools/{schoolId}/logo {
+      allow read: if true;
       allow write: if isSignedIn();
     }
     
-    // Default deny for other paths (unless other apps add their rules here)
+    // User avatars and profiles
+    match /users/{userId}/avatar {
+      allow read: if true;
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+    
+    match /users/{userId}/profile/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+    
+    match /users/{userId}/cover/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // General user files
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // General uploads
+    match /uploads/{userId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // Assignments
+    match /assignments/{assignmentId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    // Default deny for all other paths
     match /{allPaths=**} {
-      allow read, write: if false; 
+      allow read, write: if false;
     }
   }
 }

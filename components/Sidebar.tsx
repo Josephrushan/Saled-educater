@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, School, Users, FileText, LogOut, Download, BookOpen, CreditCard, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, School, Users, FileText, LogOut, Download, BookOpen, CreditCard, ShieldCheck, MessageCircle, Mail, Gift } from 'lucide-react';
 import { SIDEBAR_LOGO_URL } from '../constants';
 import { SalesRep } from '../types';
 
@@ -21,6 +21,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
     { id: 'templates', label: 'Email Drafts', icon: <FileText size={20} />, hide: false },
     { id: 'tools', label: 'Sales Tools', icon: <Download size={20} />, hide: false },
     { id: 'training', label: 'Training', icon: <BookOpen size={20} />, hide: false },
+    { id: 'crew', label: 'Crew Directory', icon: <Users size={20} />, hide: false },
+    { id: 'group-chat', label: 'Group Chat', icon: <MessageCircle size={20} />, hide: false },
+    { id: 'direct-message', label: 'Direct Message', icon: <Mail size={20} />, hide: false },
+    { id: 'incentives', label: 'Incentives', icon: <Gift size={20} />, hide: false },
   ];
 
   return (

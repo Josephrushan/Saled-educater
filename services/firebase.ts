@@ -11,11 +11,12 @@ import {
   where, 
   updateDoc,
   addDoc,
-  deleteDoc
+  deleteDoc,
+  orderBy
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { SalesRep, School, SalesStage, Resource, ResourceCategory } from '../types';
+import { SalesRep, School, SalesStage, Resource, ResourceCategory, Incentive, GroupChat, Message, DirectMessage } from '../types';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -875,3 +876,148 @@ export async function seedSchoolsDatabase(): Promise<void> {
     throw error;
   }
 }
+
+/**
+ * INCENTIVES FUNCTIONS
+ */
+export async function addIncentive(incentive: Omit<Incentive, 'id'>): Promise<string | null> {
+  try {
+    const docRef = await addDoc(collection(db, 'incentives'), {
+      ...incentive,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding incentive:', error);
+    return null;
+  }
+}
+
+export async function getIncentives(): Promise<Incentive[]> {
+  try {
+    const q = query(collection(db, 'incentives'), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as Incentive, id: doc.id }));
+  } catch (error) {
+    console.error('Error fetching incentives:', error);
+    return [];
+  }
+}
+
+export async function deleteIncentive(id: string): Promise<boolean> {
+  try {
+    await deleteDoc(doc(db, 'incentives', id));
+    return true;
+  } catch (error) {
+    console.error('Error deleting incentive:', error);
+    return false;
+  }
+}
+
+/**
+ * GROUP CHAT FUNCTIONS
+ */
+export async function addGroupChat(group: Omit<GroupChat, 'id'>): Promise<string | null> {
+  try {
+    const docRef = await addDoc(collection(db, 'groupChats'), {
+      ...group,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating group chat:', error);
+    return null;
+  }
+}
+
+export async function getGroupChats(): Promise<GroupChat[]> {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'groupChats'));
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as GroupChat, id: doc.id }));
+  } catch (error) {
+    console.error('Error fetching group chats:', error);
+    return [];
+  }
+}
+
+export async function addGroupMessage(groupId: string, message: Omit<Message, 'id'>): Promise<string | null> {
+  try {
+    const docRef = await addDoc(collection(db, `groupChats/${groupId}/messages`), {
+      ...message,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return null;
+  }
+}
+
+export async function getGroupMessages(groupId: string): Promise<Message[]> {
+  try {
+    const q = query(
+      collection(db, `groupChats/${groupId}/messages`),
+      orderBy('createdAt', 'asc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as Message, id: doc.id }));
+  } catch (error) {
+    console.error('Error fetching group messages:', error);
+    return [];
+  }
+}
+
+/**
+ * DIRECT MESSAGE FUNCTIONS
+ */
+export async function getOrCreateDirectMessage(userId1: string, userId2: string): Promise<string> {
+  try {
+    const dmId = [userId1, userId2].sort().join('_');
+    const dmRef = doc(db, 'directMessages', dmId);
+    const dmSnap = await getDoc(dmRef);
+
+    if (!dmSnap.exists()) {
+      await setDoc(dmRef, {
+        participantIds: [userId1, userId2],
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    return dmId;
+  } catch (error) {
+    console.error('Error getting/creating DM:', error);
+    throw error;
+  }
+}
+
+export async function addDirectMessage(dmId: string, message: Omit<Message, 'id'>): Promise<string | null> {
+  try {
+    const docRef = await addDoc(collection(db, `directMessages/${dmId}/messages`), {
+      ...message,
+      createdAt: new Date().toISOString()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error sending DM:', error);
+    return null;
+  }
+}
+
+export async function getDirectMessages(dmId: string): Promise<Message[]> {
+  try {
+    const q = query(
+      collection(db, `directMessages/${dmId}/messages`),
+      orderBy('createdAt', 'asc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as Message, id: doc.id }));
+  } catch (error) {
+    console.error('Error fetching DM messages:', error);
+    return [];
+  }
+}
+
+/**
+ * Alias for getAllReps for convenience
+ */
+export const getSalesReps = getAllReps;
