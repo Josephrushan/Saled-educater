@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Send, Plus, Users } from 'lucide-react';
 import { SalesRep, GroupChat, Message } from '../types';
-import { getSalesReps, getGroupChats, addGroupChat, addGroupMessage, getGroupMessages } from '../services/firebase';
+import { getSalesReps, getGroupChats, addGroupChat, addGroupMessage, getGroupMessages, subscribeToGroupMessages } from '../services/firebase';
 
 interface GroupChatModuleProps {
   currentUser: SalesRep | null;
@@ -25,9 +25,23 @@ const GroupChatModule: React.FC<GroupChatModuleProps> = ({ currentUser }) => {
 
   useEffect(() => {
     if (selectedGroupId) {
-      fetchGroupMessages(selectedGroupId);
+      // Subscribe to real-time updates
+      const unsubscribe = subscribeToGroupMessages(selectedGroupId, setGroupMessages);
+      // Cleanup subscription when component unmounts or selectedGroupId changes
+      return () => unsubscribe();
     }
   }, [selectedGroupId]);
+
+  const fetchGroupMessages = async (groupId: string) => {
+    // This function is kept for backwards compatibility but is no longer used
+    // Real-time listening is now handled in the useEffect above
+    try {
+      const messages = await getGroupMessages(groupId);
+      setGroupMessages(messages);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
 
   const fetchInitialData = async () => {
     setIsLoading(true);
@@ -45,15 +59,6 @@ const GroupChatModule: React.FC<GroupChatModuleProps> = ({ currentUser }) => {
       console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fetchGroupMessages = async (groupId: string) => {
-    try {
-      const messages = await getGroupMessages(groupId);
-      setGroupMessages(messages);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
     }
   };
 

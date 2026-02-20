@@ -12,7 +12,8 @@ import {
   updateDoc,
   addDoc,
   deleteDoc,
-  orderBy
+  orderBy,
+  onSnapshot
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
@@ -967,6 +968,25 @@ export async function getGroupMessages(groupId: string): Promise<Message[]> {
   }
 }
 
+// Real-time listener for group messages
+export function subscribeToGroupMessages(groupId: string, callback: (messages: Message[]) => void) {
+  try {
+    const q = query(
+      collection(db, `groupChats/${groupId}/messages`),
+      orderBy('createdAt', 'asc')
+    );
+    return onSnapshot(q, (snapshot) => {
+      const messages = snapshot.docs.map(doc => ({ ...doc.data() as Message, id: doc.id }));
+      callback(messages);
+    }, (error) => {
+      console.error('Error listening to group messages:', error);
+    });
+  } catch (error) {
+    console.error('Error setting up group message listener:', error);
+    return () => {};
+  }
+}
+
 /**
  * DIRECT MESSAGE FUNCTIONS
  */
@@ -1014,6 +1034,25 @@ export async function getDirectMessages(dmId: string): Promise<Message[]> {
   } catch (error) {
     console.error('Error fetching DM messages:', error);
     return [];
+  }
+}
+
+// Real-time listener for direct messages
+export function subscribeToDirectMessages(dmId: string, callback: (messages: Message[]) => void) {
+  try {
+    const q = query(
+      collection(db, `directMessages/${dmId}/messages`),
+      orderBy('createdAt', 'asc')
+    );
+    return onSnapshot(q, (snapshot) => {
+      const messages = snapshot.docs.map(doc => ({ ...doc.data() as Message, id: doc.id }));
+      callback(messages);
+    }, (error) => {
+      console.error('Error listening to DM messages:', error);
+    });
+  } catch (error) {
+    console.error('Error setting up DM listener:', error);
+    return () => {};
   }
 }
 

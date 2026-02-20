@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Send, Search } from 'lucide-react';
 import { SalesRep, Message } from '../types';
-import { getSalesReps, getOrCreateDirectMessage, addDirectMessage, getDirectMessages } from '../services/firebase';
+import { getSalesReps, getOrCreateDirectMessage, addDirectMessage, getDirectMessages, subscribeToDirectMessages } from '../services/firebase';
 
 interface DirectMessageModuleProps {
   currentUser: SalesRep | null;
@@ -22,7 +22,13 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
 
   useEffect(() => {
     if (selectedRepId && !conversations.has(selectedRepId)) {
-      fetchConversation(selectedRepId);
+      let unsubscribe: (() => void) | null = null;
+      subscribeToConversation(selectedRepId).then(unsub => {
+        unsubscribe = unsub;
+      });
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
     }
   }, [selectedRepId]);
 
@@ -42,16 +48,19 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
     }
   };
 
-  const fetchConversation = async (repId: string) => {
+  const subscribeToConversation = async (repId: string) => {
     try {
       const dmId = await getOrCreateDirectMessage(currentUser?.id || '', repId);
-      const messages = await getDirectMessages(dmId);
-      const rep = allReps.find(r => r.id === repId);
-      if (rep) {
-        setConversations(new Map(conversations).set(repId, { rep, messages }));
-      }
+      const unsubscribe = subscribeToDirectMessages(dmId, (messages) => {
+        const rep = allReps.find(r => r.id === repId);
+        if (rep) {
+          setConversations(new Map(conversations).set(repId, { rep, messages }));
+        }
+      });
+      return unsubscribe;
     } catch (error) {
-      console.error('Error fetching conversation:', error);
+      console.error('Error subscribing to conversation:', error);
+      return () => {}; // Return no-op unsubscribe if error
     }
   };
 
