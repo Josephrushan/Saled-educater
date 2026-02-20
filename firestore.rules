@@ -106,13 +106,13 @@ service cloud.firestore {
 
     // 3. ANNOUNCEMENTS (Staff Bulletin)
     match /announcements/{id} {
-      allow read: if isSignedIn() && (isStaff() && (resource == null || resource.data.schoolId == mySchoolId()) || isSuperAdmin());
+      allow read: if isSuperAdmin() || (isSignedIn() && isStaff() && (resource == null || resource.data.schoolId == mySchoolId()));
       allow write: if isSignedIn() && (isStaff() && (request.resource.data.schoolId == mySchoolId() || resource.data.schoolId == mySchoolId()) || isSuperAdmin());
     }
 
     // 4. ACADEMICS (Assignments & Resources)
     match /assignments/{id} {
-      allow read: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
+      allow read: if isSuperAdmin() || (isSignedIn() && resource.data.schoolId == mySchoolId());
       allow create, delete: if isSignedIn() && (isStaff() && (request.resource.data.schoolId == mySchoolId() || resource.data.schoolId == mySchoolId()) || isSuperAdmin());
       allow update: if isSignedIn() && (
         (isStaff() && (request.resource.data.schoolId == mySchoolId() || resource.data.schoolId == mySchoolId())) ||
@@ -122,13 +122,13 @@ service cloud.firestore {
     }
 
     match /resources/{id} {
-      allow read: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
+      allow read: if isSuperAdmin() || (isSignedIn() && resource.data.schoolId == mySchoolId());
       allow create, update, delete: if isSignedIn() && (isStaff() && (request.resource.data.schoolId == mySchoolId() || resource.data.schoolId == mySchoolId()) || isSuperAdmin());
     }
 
     // 5. COMMUNITY FEED (Chat) - Principals can view all chats across grades
     match /messages/{id} {
-      allow read: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
+      allow read: if isSuperAdmin() || (isSignedIn() && resource.data.schoolId == mySchoolId());
       allow create: if isSignedIn() && (getAuthUserData().role != 'Student' && request.resource.data.schoolId == mySchoolId() || isSuperAdmin());
       allow delete: if isSignedIn() && (isStaff() || resource.data.senderId == request.auth.uid || isSuperAdmin());
     }
@@ -149,7 +149,7 @@ service cloud.firestore {
 
     // 6. ALERTS (Absence & Health)
     match /alerts/{id} {
-      allow read: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
+      allow read: if isSuperAdmin() || (isSignedIn() && resource.data.schoolId == mySchoolId());
       allow create: if isSignedIn() && (isStaff() || isSuperAdmin());
       allow update: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
       allow delete: if isSignedIn() && (isStaff() || isSuperAdmin());
@@ -157,7 +157,7 @@ service cloud.firestore {
 
     // 7. MEMORIES (Yearbook & Journal) - Principals can view all journals across grades
     match /yearbook/{id} {
-      allow read: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
+      allow read: if isSuperAdmin() || (isSignedIn() && resource.data.schoolId == mySchoolId());
       allow create: if isSignedIn() && (isStaff() || isSuperAdmin());
       allow update: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
       allow delete: if isSignedIn() && (isStaff() || isSuperAdmin());
@@ -165,7 +165,7 @@ service cloud.firestore {
 
     // 8. CALENDAR
     match /events/{id} {
-      allow read: if isSignedIn() && (resource.data.schoolId == mySchoolId() || isSuperAdmin());
+      allow read: if isSuperAdmin() || (isSignedIn() && resource.data.schoolId == mySchoolId());
       allow create, update, delete: if isSignedIn() && (isStaff() || isSuperAdmin());
     }
 
@@ -195,11 +195,10 @@ service cloud.firestore {
 
     // Quizzes - Teachers create school-specific, admins create global
     match /quizzes/{quizId} {
-      allow read: if isSignedIn() && (
+      allow read: if isSuperAdmin() || isSignedIn() && (
         resource.data.schoolId == mySchoolId() || 
         resource.data.isGlobal == true ||
-        resource.data.createdBy == request.auth.uid ||
-        isSuperAdmin()
+        resource.data.createdBy == request.auth.uid
       );
       allow create: if isSignedIn() && (isTeacher() || isPrincipal() || isSuperAdmin());
       allow update, delete: if isSignedIn() && (
