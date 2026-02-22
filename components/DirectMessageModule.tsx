@@ -77,7 +77,7 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
       const newMessage: Omit<Message, 'id'> = {
         senderId: currentUser?.id || '',
         senderName: currentUser?.name || '',
-        senderProfilePic: currentUser?.profilePicUrl,
+        senderProfilePic: currentUser?.profilePicUrl || '',
         content: messageInput.trim(),
         createdAt: new Date().toISOString()
       };
