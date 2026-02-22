@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Send, Search } from 'lucide-react';
+import { Mail, Send, Search, ArrowLeft } from 'lucide-react';
 import { SalesRep, Message } from '../types';
 import { getSalesReps, getOrCreateDirectMessage, addDirectMessage, getDirectMessages, subscribeToDirectMessages } from '../services/firebase';
 
@@ -15,6 +15,7 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
   const [messageInput, setMessageInput] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewingConversation, setViewingConversation] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -102,6 +103,16 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
     }
   };
 
+  const handleSelectRep = (repId: string) => {
+    setSelectedRepId(repId);
+    setViewingConversation(true);
+  };
+
+  const handleBackToList = () => {
+    setViewingConversation(false);
+    setMessageInput('');
+  };
+
   const selectedConversation = selectedRepId ? conversations.get(selectedRepId) : null;
   const filteredReps = allReps.filter(rep =>
     rep.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -126,9 +137,9 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
         <p className="text-slate-500 mt-2">One-on-one conversations with team members</p>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* People List */}
-        <div className="w-80 border-r border-slate-100 overflow-y-auto bg-white flex flex-col">
+      {/* List View - Show only names */}
+      {!viewingConversation ? (
+        <div className="flex-1 overflow-y-auto bg-white flex flex-col">
           {/* Search */}
           <div className="p-4 border-b border-slate-100">
             <div className="relative">
@@ -144,8 +155,12 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
           </div>
 
           {/* Reps List */}
-          <div className="flex-1 overflow-y-auto space-y-1 p-4">
-            {filteredReps.length === 0 ? (
+          <div className="flex-1 overflow-y-auto space-y-2 p-4">
+            {isLoading ? (
+              <div className="text-center text-slate-400 text-sm py-8">
+                Loading team members...
+              </div>
+            ) : filteredReps.length === 0 ? (
               <div className="text-center text-slate-400 text-sm py-8">
                 No team members found
               </div>
@@ -153,48 +168,53 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
               filteredReps.map(rep => (
                 <button
                   key={rep.id}
-                  onClick={() => setSelectedRepId(rep.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
-                    selectedRepId === rep.id
-                      ? 'bg-brand text-slate-900 shadow-lg'
-                      : 'text-slate-700 hover:bg-slate-100'
-                  }`}
+                  onClick={() => handleSelectRep(rep.id)}
+                  className="w-full flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-slate-100 transition-colors text-left border border-transparent hover:border-slate-200"
                 >
                   {/* Avatar */}
                   {rep.profilePicUrl ? (
                     <img
                       src={rep.profilePicUrl}
                       alt={rep.name}
-                      className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                      className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                      loading="lazy"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-slate-300 flex items-center justify-center text-sm font-bold flex-shrink-0">
                       {rep.avatar || rep.name[0]}
                     </div>
                   )}
 
-                  {/* Name */}
+                  {/* Name only */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold truncate">{rep.name}</p>
-                    <p className="text-xs opacity-70">Sales Rep</p>
+                    <p className="font-bold text-slate-900 truncate">{rep.name}</p>
+                    <p className="text-sm text-slate-500">Click to message</p>
                   </div>
                 </button>
               ))
             )}
           </div>
         </div>
-
-        {/* Chat Area */}
+      ) : (
+        /* Conversation View */
         <div className="flex-1 flex flex-col bg-slate-50">
           {selectedConversation ? (
             <>
-              {/* Header */}
+              {/* Header with Back Button */}
               <div className="border-b border-slate-200 p-4 bg-white flex items-center gap-3">
+                <button
+                  onClick={handleBackToList}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Back to list"
+                >
+                  <ArrowLeft size={20} className="text-slate-600" />
+                </button>
                 {selectedConversation.rep.profilePicUrl ? (
                   <img
                     src={selectedConversation.rep.profilePicUrl}
                     alt={selectedConversation.rep.name}
                     className="w-10 h-10 rounded-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-slate-300 flex items-center justify-center font-bold">
@@ -224,6 +244,7 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
                           src={msg.senderProfilePic}
                           alt={msg.senderName}
                           className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-xs font-bold flex-shrink-0">
@@ -278,7 +299,7 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
             </div>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

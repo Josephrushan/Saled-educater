@@ -85,6 +85,12 @@ service firebase.storage {
       allow write: if isSignedIn();
     }
     
+    // Yearbook entries - Authenticated users can upload to their yearbook entries
+    match /yearbook/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
     // Default fallback - Deny all other paths
     match /{allPaths=**} {
       allow read, write: if false;
