@@ -5,9 +5,10 @@ import { getSalesReps, getOrCreateDirectMessage, addDirectMessage, getDirectMess
 
 interface DirectMessageModuleProps {
   currentUser: SalesRep | null;
+  onMarkMessageAsRead?: (messageId: string) => void;
 }
 
-const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }) => {
+const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, onMarkMessageAsRead }) => {
   const [allReps, setAllReps] = useState<SalesRep[]>([]);
   const [conversations, setConversations] = useState<Map<string, { rep: SalesRep; messages: Message[] }>>(new Map());
   const [selectedRepId, setSelectedRepId] = useState<string | null>(null);
@@ -32,6 +33,21 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
       };
     }
   }, [selectedRepId]);
+
+  // Mark incoming messages as read when viewing conversation
+  useEffect(() => {
+    if (selectedRepId && conversations.has(selectedRepId)) {
+      const conversation = conversations.get(selectedRepId);
+      if (conversation && onMarkMessageAsRead) {
+        // Mark all incoming messages in this conversation as read
+        conversation.messages.forEach(msg => {
+          if (msg.senderId !== currentUser?.id) {
+            onMarkMessageAsRead(msg.id);
+          }
+        });
+      }
+    }
+  }, [selectedRepId, conversations, currentUser?.id, onMarkMessageAsRead]);
 
   const fetchInitialData = async () => {
     setIsLoading(true);

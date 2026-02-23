@@ -8,6 +8,8 @@ interface NotificationToastProps {
   onClose: (id: string) => void;
   duration?: number;
   type?: 'message' | 'alert';
+  messageId?: string;
+  onMarkAsRead?: (messageId: string) => void;
 }
 
 const NotificationToast: React.FC<NotificationToastProps> = ({
@@ -16,18 +18,26 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   message,
   onClose,
   duration = 5000,
-  type = 'message'
+  type = 'message',
+  messageId,
+  onMarkAsRead
 }) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(() => onClose(id), 300);
+      setTimeout(() => {
+        onClose(id);
+        // Mark as read when auto-dismissed
+        if (messageId && onMarkAsRead) {
+          onMarkAsRead(messageId);
+        }
+      }, 300);
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [id, duration, onClose]);
+  }, [id, duration, onClose, messageId, onMarkAsRead]);
 
   return (
     <div
@@ -55,7 +65,13 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       <button
         onClick={() => {
           setIsVisible(false);
-          setTimeout(() => onClose(id), 300);
+          setTimeout(() => {
+            onClose(id);
+            // Mark as read when user dismisses
+            if (messageId && onMarkAsRead) {
+              onMarkAsRead(messageId);
+            }
+          }, 300);
         }}
         className="flex-shrink-0 p-1 hover:bg-slate-100 rounded transition-colors"
         title="Close"

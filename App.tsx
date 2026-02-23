@@ -43,7 +43,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<SalesRep | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activePopup, setActivePopup] = useState<boolean>(false);
-  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; type?: 'message' | 'alert' }>>([]);
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; type?: 'message' | 'alert'; messageId?: string }>>([]);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [notifiedMessageIds, setNotifiedMessageIds] = useState<Set<string>>(new Set());
   const [allReps, setAllReps] = useState<SalesRep[]>([]);
@@ -164,7 +164,8 @@ const App: React.FC = () => {
                   showNotification(
                     `New message from ${message.senderName}`,
                     message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
-                    'message'
+                    'message',
+                    message.id
                   );
                   setNotifiedMessageIds(prev => new Set([...prev, message.id]));
                 }
@@ -272,13 +273,20 @@ const App: React.FC = () => {
     localStorage.removeItem('educater_currentUser');
   };
 
-  const showNotification = (title: string, message: string, type: 'message' | 'alert' = 'message') => {
+  const showNotification = (title: string, message: string, type: 'message' | 'alert' = 'message', messageId?: string) => {
     const id = Math.random().toString(36).substring(2, 11);
-    setNotifications(prev => [...prev, { id, title, message, type }]);
+    setNotifications(prev => [...prev, { id, title, message, type, messageId }]);
   };
 
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const markMessageAsRead = (messageId: string) => {
+    // Mark message as notified so it doesn't notify again
+    setNotifiedMessageIds(prev => new Set([...prev, messageId]));
+    // Remove notification if still displayed
+    setNotifications(prev => prev.filter(n => n.messageId !== messageId));
   };
 
   const handleSchoolSelect = (school: School) => {
@@ -390,7 +398,7 @@ const App: React.FC = () => {
       case 'tools': return <Resources type="tools" currentUser={currentUser} />;
       case 'training': return <Resources type="training" currentUser={currentUser} />;
       case 'crew': return <CrewDirectoryModule currentUser={currentUser} />;
-      case 'direct-message': return <DirectMessageModule currentUser={currentUser} />;
+      case 'direct-message': return <DirectMessageModule currentUser={currentUser} onMarkMessageAsRead={markMessageAsRead} />;
       case 'incentives': return <IncentivesModule currentUser={currentUser} />;
       case 'payment': return <PaymentInfo currentUser={currentUser} onUpdate={setCurrentUser} />;
       default: return <Dashboard currentUser={currentUser} schools={schools} />;
@@ -455,7 +463,9 @@ const App: React.FC = () => {
             title={notification.title}
             message={notification.message}
             type={notification.type}
+            messageId={notification.messageId}
             onClose={removeNotification}
+            onMarkAsRead={markMessageAsRead}
           />
         ))}
       </div>
