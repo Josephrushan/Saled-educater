@@ -334,7 +334,7 @@ export async function syncSalesRepToFirebase(rep: SalesRep) {
 }
 
 /**
- * Authenticates users, including Super Admin check.
+ * Authenticates users, including Super Admin check, and updates last seen timestamp
  */
 export async function loginSalesRep(email: string, password: string): Promise<SalesRep | null> {
   // Super Admin Check
@@ -348,10 +348,13 @@ export async function loginSalesRep(email: string, password: string): Promise<Sa
       avatar: 'KS',
       totalSchools: 0,
       activeCommissions: 0,
-      role: 'admin'
+      role: 'admin',
+      lastSeen: new Date().toISOString()
     };
     // Ensure the admin exists in the salesman collection
     await syncSalesRepToFirebase(admin);
+    // Update lastSeen in Firebase
+    await updateSalesRepLastSeen(adminId);
     // Run migration to fix old admin data on login
     await migrateOldAdminData();
     return admin;
@@ -387,7 +390,11 @@ export async function loginSalesRep(email: string, password: string): Promise<Sa
           return null; // Uncomment this to block legacy users without passwords
       }
 
-      return data;
+      // Update lastSeen timestamp
+      await updateSalesRepLastSeen(repDoc.id);
+      const updatedData = { ...data, lastSeen: new Date().toISOString() };
+      
+      return updatedData;
     }
   } catch (error) {
     console.error("Login error:", error);
@@ -406,6 +413,22 @@ export async function getAllReps(): Promise<SalesRep[]> {
   } catch (error) {
     console.error("Error fetching reps:", error);
     return [];
+  }
+}
+
+/**
+ * Updates the lastSeen timestamp for a sales rep
+ */
+export async function updateSalesRepLastSeen(repId: string): Promise<boolean> {
+  try {
+    const repRef = doc(db, REPS_COLLECTION, repId);
+    await updateDoc(repRef, {
+      lastSeen: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error("Error updating lastSeen:", error);
+    return false;
   }
 }
 

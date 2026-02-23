@@ -52,6 +52,7 @@ export interface SalesRep {
   totalSchools: number;
   activeCommissions: number;
   role?: 'admin' | 'rep';
+  lastSeen?: string; // ISO timestamp of last login
 }
 
 export interface ResourceCategory {
