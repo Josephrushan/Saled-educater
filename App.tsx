@@ -23,7 +23,8 @@ import {
   updateSchoolStageInFirebase,
   updateSchoolContactInfo,
   deleteSchool,
-  seedSchoolsDatabase
+  seedSchoolsDatabase,
+  updateSalesRepLastSeen
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
 import PWAControls from './components/PWAControls';
@@ -51,6 +52,22 @@ const App: React.FC = () => {
     }
     setIsLoading(false);
   }, []);
+
+  // Update lastSeen when user is set or app comes into focus
+  useEffect(() => {
+    if (currentUser) {
+      // Update lastSeen when component mounts and user is loaded
+      updateSalesRepLastSeen(currentUser.id);
+
+      // Update lastSeen when the app comes back into focus
+      const handleFocus = () => {
+        updateSalesRepLastSeen(currentUser.id);
+      };
+
+      window.addEventListener('focus', handleFocus);
+      return () => window.removeEventListener('focus', handleFocus);
+    }
+  }, [currentUser?.id]);
 
   // Fetch schools on mount or when user changes
   useEffect(() => {
