@@ -39,7 +39,7 @@ const DailyTip: React.FC<DailyTipProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="bg-gradient-to-r from-brand/10 via-brand/5 to-transparent rounded-lg p-4 mb-6 relative flex items-center gap-4">
+    <div className="bg-white rounded-lg p-4 mb-6 relative flex items-center gap-4 shadow-sm">
       {/* Speech Bubble Icon */}
       <img 
         src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/speech%20bubble_200x200.webp?alt=media&token=25c10f21-477c-4028-8217-fe815cfd540e"
@@ -48,7 +48,7 @@ const DailyTip: React.FC<DailyTipProps> = ({ onClose }) => {
       />
 
       {/* Vertical Line Separator */}
-      <div className="w-1 h-16 bg-gradient-to-b from-brand/30 to-brand/10 rounded-full"></div>
+      <div className="w-1 h-16 bg-[#072432] rounded-full"></div>
 
       {/* Close button */}
       <button
