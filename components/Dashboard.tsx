@@ -7,6 +7,7 @@ import {
 import { TrendingUp, Users, School as SchoolIcon, Star, Zap } from 'lucide-react';
 import { School, SalesRep } from '../types';
 import { seedSchoolsDatabase } from '../services/firebase';
+import DailyTip from './DailyTip';
 
 interface DashboardProps {
   currentUser: SalesRep | null;
@@ -84,6 +85,8 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
           {seedMessage}
         </div>
       )}
+
+      <DailyTip />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {stats.map((stat, idx) => (

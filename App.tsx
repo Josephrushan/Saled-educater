@@ -16,6 +16,8 @@ import MobileDrawer from './components/MobileDrawer';
 import CrewDirectoryModule from './components/CrewDirectoryModule';
 import DirectMessageModule from './components/DirectMessageModule';
 import IncentivesModule from './components/IncentivesModule';
+import PopupBanner from './components/PopupBanner';
+import DailyTip from './components/DailyTip';
 import { School, SalesRep, SalesStage, TrackType } from './types';
 import { 
   getSchoolsFromFirebase, 
@@ -37,6 +39,7 @@ const App: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<SalesRep | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activePopup, setActivePopup] = useState<'morning' | 'afternoon' | null>(null);
 
   // Restore user session on app mount
   useEffect(() => {
@@ -68,6 +71,46 @@ const App: React.FC = () => {
       return () => window.removeEventListener('focus', handleFocus);
     }
   }, [currentUser?.id]);
+
+  // Check and display daily popups
+  useEffect(() => {
+    if (currentUser) {
+      checkAndShowPopup();
+    }
+  }, [currentUser]);
+
+  const checkAndShowPopup = () => {
+    // Get current time in South African timezone (UTC+2)
+    const now = new Date();
+    const saTime = new Date(now.toLocaleString('en-US', { timeZone: 'Africa/Johannesburg' }));
+    const currentHour = saTime.getHours();
+    
+    // Get today's date as string (YYYY-MM-DD)
+    const today = saTime.toISOString().split('T')[0];
+    const popupKey = `popup_${today}`;
+    const shownPopups = JSON.parse(localStorage.getItem(popupKey) || '{}');
+
+    // Morning popup: 7 AM to 11:59 AM
+    if (currentHour >= 7 && currentHour < 12 && !shownPopups.morning) {
+      setActivePopup('morning');
+    }
+    // Afternoon popup: 12 PM onwards
+    else if (currentHour >= 12 && !shownPopups.afternoon) {
+      setActivePopup('afternoon');
+    }
+  };
+
+  const handleClosePopup = (type: 'morning' | 'afternoon') => {
+    setActivePopup(null);
+    
+    // Mark this popup as shown today
+    const saTime = new Date();
+    const today = saTime.toLocaleString('en-US', { timeZone: 'Africa/Johannesburg' }).split('T')[0];
+    const popupKey = `popup_${today}`;
+    const shownPopups = JSON.parse(localStorage.getItem(popupKey) || '{}');
+    shownPopups[type] = true;
+    localStorage.setItem(popupKey, JSON.stringify(shownPopups));
+  };
 
   // Fetch schools on mount or when user changes
   useEffect(() => {
@@ -303,6 +346,17 @@ const App: React.FC = () => {
       )}
       
       <PWAControls />
+
+      {activePopup && (
+        <PopupBanner
+          title={activePopup === 'morning' ? '🌅 Good Morning' : '☀️ Afternoon Reminder'}
+          message={activePopup === 'morning' 
+            ? 'Start your day off right! Check your daily tasks and priorities.' 
+            : 'Remember to update your progress and follow up on leads!'}
+          onClose={() => handleClosePopup(activePopup)}
+          type={activePopup}
+        />
+      )}
     </div>
   );
 };
