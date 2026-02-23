@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import SchoolList from './components/SchoolList';
@@ -18,7 +18,7 @@ import IncentivesModule from './components/IncentivesModule';
 import PopupBanner from './components/PopupBanner';
 import DailyTip from './components/DailyTip';
 import NotificationToast from './components/NotificationToast';
-import { School, SalesRep, SalesStage, TrackType } from './types';
+import { School, SalesRep, SalesStage, TrackType, Message } from './types';
 import { 
   getSchoolsFromFirebase, 
   addSchoolToFirebase, 
@@ -26,7 +26,10 @@ import {
   updateSchoolContactInfo,
   deleteSchool,
   seedSchoolsDatabase,
-  updateSalesRepLastSeen
+  updateSalesRepLastSeen,
+  getSalesReps,
+  getOrCreateDirectMessage,
+  subscribeToDirectMessages
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
 import PWAControls from './components/PWAControls';
@@ -41,6 +44,42 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activePopup, setActivePopup] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; type?: 'message' | 'alert' }>>([]);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [notifiedMessageIds, setNotifiedMessageIds] = useState<Set<string>>(new Set());
+  const [allReps, setAllReps] = useState<SalesRep[]>([]);
+  const [directMessageUnsubscribers, setDirectMessageUnsubscribers] = useState<Map<string, () => void>>(new Map());
+  
+  // Ref to always have the latest notified message IDs (prevents stale closure)
+  const notifiedMessageIdsRef = useRef<Set<string>>(new Set());
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    notifiedMessageIdsRef.current = notifiedMessageIds;
+    // Persist to localStorage so we don't re-notify old messages on app reload
+    localStorage.setItem('notifiedMessageIds', JSON.stringify(Array.from(notifiedMessageIds)));
+  }, [notifiedMessageIds]);
+
+  // Restore notified message IDs from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('notifiedMessageIds');
+    if (saved) {
+      try {
+        const ids = new Set(JSON.parse(saved));
+        setNotifiedMessageIds(ids);
+        notifiedMessageIdsRef.current = ids;
+      } catch (error) {
+        console.error('Error restoring notified message IDs:', error);
+      }
+    }
+  }, []);
+
+  // Handle tab change and clear unread count for direct messages
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'direct-message') {
+      setUnreadMessageCount(0);
+    }
+  };
 
   // Restore user session on app mount
   useEffect(() => {
@@ -95,6 +134,64 @@ const App: React.FC = () => {
     // Mark popup as shown for this session
     sessionStorage.setItem('popup_shown_this_session', 'true');
   };
+
+  // Subscribe to all direct messages from all reps
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const subscribeToAllMessages = async () => {
+      try {
+        const reps = await getSalesReps();
+        const otherReps = reps.filter(r => r.id !== currentUser.id);
+        setAllReps(otherReps);
+
+        // Subscribe to each rep's messages
+        const newUnsubscribers = new Map<string, () => void>();
+
+        for (const rep of otherReps) {
+          try {
+            const dmId = await getOrCreateDirectMessage(currentUser.id, rep.id);
+            const unsubscribe = subscribeToDirectMessages(dmId, (messages) => {
+              // Count unread messages from this rep (incoming only, not sent by current user)
+              // Use ref to get latest notified IDs (prevents stale closure)
+              const unread = messages.filter(
+                m => m.senderId !== currentUser.id && !notifiedMessageIdsRef.current.has(m.id)
+              );
+
+              // Show notification for each new message
+              unread.forEach(message => {
+                if (!notifiedMessageIdsRef.current.has(message.id)) {
+                  showNotification(
+                    `New message from ${message.senderName}`,
+                    message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
+                    'message'
+                  );
+                  setNotifiedMessageIds(prev => new Set([...prev, message.id]));
+                }
+              });
+
+              // Update unread count
+              setUnreadMessageCount(prev => prev + unread.length);
+            });
+            newUnsubscribers.set(rep.id, unsubscribe);
+          } catch (error) {
+            console.error(`Error subscribing to messages for ${rep.name}:`, error);
+          }
+        }
+
+        setDirectMessageUnsubscribers(newUnsubscribers);
+
+        // Cleanup function
+        return () => {
+          newUnsubscribers.forEach(unsub => unsub());
+        };
+      } catch (error) {
+        console.error('Error subscribing to all messages:', error);
+      }
+    };
+
+    subscribeToAllMessages();
+  }, [currentUser]);
 
   // Fetch schools on mount or when user changes
   useEffect(() => {
@@ -293,7 +390,7 @@ const App: React.FC = () => {
       case 'tools': return <Resources type="tools" currentUser={currentUser} />;
       case 'training': return <Resources type="training" currentUser={currentUser} />;
       case 'crew': return <CrewDirectoryModule currentUser={currentUser} />;
-      case 'direct-message': return <DirectMessageModule currentUser={currentUser} onMessageReceived={showNotification} />;
+      case 'direct-message': return <DirectMessageModule currentUser={currentUser} />;
       case 'incentives': return <IncentivesModule currentUser={currentUser} />;
       case 'payment': return <PaymentInfo currentUser={currentUser} onUpdate={setCurrentUser} />;
       default: return <Dashboard currentUser={currentUser} schools={schools} />;
@@ -305,9 +402,10 @@ const App: React.FC = () => {
       <div className="hidden md:block">
         <Sidebar 
           activeTab={activeTab === 'school_detail' ? 'schools' : (activeTab === 'reps' ? 'reps' : activeTab)} 
-          setActiveTab={setActiveTab} 
+          setActiveTab={handleTabChange} 
           currentUser={currentUser}
           onLogout={handleLogout}
+          unreadMessageCount={unreadMessageCount}
         />
       </div>
 
@@ -331,7 +429,7 @@ const App: React.FC = () => {
 
       <MobileNav 
         activeTab={activeTab === 'school_detail' ? 'schools' : activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={handleTabChange} 
       />
 
       {showAddModal && (

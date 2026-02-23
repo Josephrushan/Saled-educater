@@ -9,9 +9,10 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   currentUser: SalesRep | null;
   onLogout: () => void;
+  unreadMessageCount?: number;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser, onLogout, unreadMessageCount = 0 }) => {
   const isAdmin = currentUser?.role === 'admin';
 
   const menuItems = [
@@ -37,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 text-sm font-bold tracking-tight ${
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 text-sm font-bold tracking-tight relative ${
               activeTab === item.id 
                 ? 'bg-brand text-slate-900 shadow-lg shadow-brand/20' 
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
@@ -45,6 +46,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
           >
             {item.icon}
             {item.label}
+            {item.id === 'direct-message' && unreadMessageCount > 0 && (
+              <div className="absolute right-4 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            )}
           </button>
         ))}
       </nav>
