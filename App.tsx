@@ -62,17 +62,19 @@ const App: React.FC = () => {
   
   // Ref to always have the latest notified message IDs (prevents stale closure)
   // Initialize with the same data as the state
-  const notifiedMessageIdsRef = useRef<Set<string>>(() => {
-    try {
-      const saved = localStorage.getItem('notifiedMessageIds');
-      if (saved) {
-        return new Set(JSON.parse(saved));
+  const notifiedMessageIdsRef = useRef<Set<string>>(
+    (() => {
+      try {
+        const saved = localStorage.getItem('notifiedMessageIds');
+        if (saved) {
+          return new Set(JSON.parse(saved));
+        }
+      } catch (error) {
+        console.error('Error restoring notified message IDs to ref:', error);
       }
-    } catch (error) {
-      console.error('Error restoring notified message IDs to ref:', error);
-    }
-    return new Set();
-  }());
+      return new Set();
+    })()
+  );
   
   // Keep ref in sync with state and persist to localStorage
   useEffect(() => {
