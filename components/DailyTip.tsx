@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, Lightbulb } from 'lucide-react';
+import { X } from 'lucide-react';
 import { DAILY_SALES_TIPS } from '../constants';
 
 interface DailyTipProps {
@@ -39,7 +39,17 @@ const DailyTip: React.FC<DailyTipProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="bg-gradient-to-r from-brand/10 via-brand/5 to-transparent border-l-4 border-brand rounded-lg p-4 mb-6 relative">
+    <div className="bg-gradient-to-r from-brand/10 via-brand/5 to-transparent rounded-lg p-4 mb-6 relative flex items-center gap-4">
+      {/* Speech Bubble Icon */}
+      <img 
+        src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/speech%20bubble_200x200.webp?alt=media&token=25c10f21-477c-4028-8217-fe815cfd540e"
+        alt="Daily Tip"
+        className="w-12 h-12 flex-shrink-0"
+      />
+
+      {/* Vertical Line Separator */}
+      <div className="w-1 h-16 bg-gradient-to-b from-brand/30 to-brand/10 rounded-full"></div>
+
       {/* Close button */}
       <button
         onClick={handleDismiss}
@@ -50,16 +60,11 @@ const DailyTip: React.FC<DailyTipProps> = ({ onClose }) => {
       </button>
 
       {/* Content */}
-      <div className="flex gap-3 pr-8">
-        <div className="flex-shrink-0 mt-1">
-          <Lightbulb size={20} className="text-brand" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-black text-sm text-slate-900 mb-1">💡 Daily Sales Tip</h3>
-          <p className="text-sm text-slate-700 leading-relaxed">
-            {todaysTip}
-          </p>
-        </div>
+      <div className="flex-1">
+        <h3 className="font-black text-sm text-slate-900 mb-1">💡 Daily Sales Tip</h3>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          {todaysTip}
+        </p>
       </div>
     </div>
   );

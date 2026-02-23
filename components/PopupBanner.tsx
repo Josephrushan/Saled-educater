@@ -26,8 +26,18 @@ const PopupBanner: React.FC<PopupBannerProps> = ({
           <X size={24} className="text-slate-400 hover:text-slate-600" />
         </button>
 
+        {/* Speech Bubble Icon with Line */}
+        <div className="flex items-start gap-4">
+          <img 
+            src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/speech%20bubble_200x200.webp?alt=media&token=25c10f21-477c-4028-8217-fe815cfd540e"
+            alt="Message"
+            className="w-16 h-16 flex-shrink-0"
+          />
+          <div className="w-1 h-20 bg-gradient-to-b from-brand/40 to-brand/10 rounded-full"></div>
+        </div>
+
         {/* Content */}
-        <div className="text-center space-y-3">
+        <div className="text-left space-y-3">
           <h2 className="text-2xl font-black text-slate-900">{title}</h2>
           <p className="text-slate-600 text-sm leading-relaxed">{message}</p>
         </div>
