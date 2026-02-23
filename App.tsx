@@ -167,6 +167,8 @@ const App: React.FC = () => {
                     'message',
                     message.id
                   );
+                  // Immediately add to ref to prevent duplicate notifications in rapid callbacks
+                  notifiedMessageIdsRef.current.add(message.id);
                   setNotifiedMessageIds(prev => new Set([...prev, message.id]));
                 }
               });
@@ -283,10 +285,14 @@ const App: React.FC = () => {
   };
 
   const markMessageAsRead = (messageId: string) => {
+    // Immediately add to ref
+    notifiedMessageIdsRef.current.add(messageId);
     // Mark message as notified so it doesn't notify again
     setNotifiedMessageIds(prev => new Set([...prev, messageId]));
     // Remove notification if still displayed
     setNotifications(prev => prev.filter(n => n.messageId !== messageId));
+    // Decrement unread count
+    setUnreadMessageCount(prev => Math.max(0, prev - 1));
   };
 
   const handleSchoolSelect = (school: School) => {
