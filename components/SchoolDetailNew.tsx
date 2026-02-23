@@ -514,7 +514,8 @@ const SchoolDetailNew: React.FC<SchoolDetailNewProps> = ({
             );
           })}
         </div>
-        <div className="flex justify-between text-xs font-bold mt-2 text-slate-600">
+        {/* Stage Labels - Hidden on mobile */}
+        <div className="hidden md:flex justify-between text-xs font-bold mt-2 text-slate-600">
           <span>Available</span>
           <span>Communication</span>
           <span>Appointment</span>
@@ -527,10 +528,16 @@ const SchoolDetailNew: React.FC<SchoolDetailNewProps> = ({
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-2xl">
-          {/* Current Stage Info */}
-          <div className="bg-brand/10 border border-brand/30 rounded-lg p-4 mb-6">
-            <p className="text-xs font-bold text-brand uppercase tracking-widest">Current Stage</p>
-            <p className="text-lg font-black text-slate-900">{getMappedStage()}</p>
+          {/* Current Stage Info & Student Count */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-brand/10 border border-brand/30 rounded-lg p-4">
+              <p className="text-xs font-bold text-brand uppercase tracking-widest">Current Stage</p>
+              <p className="text-lg font-black text-slate-900">{getMappedStage()}</p>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Active Students</p>
+              <p className="text-lg font-black text-slate-900">{school.studentCount || 0}</p>
+            </div>
           </div>
 
           {renderStageContent()}
