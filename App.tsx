@@ -45,33 +45,40 @@ const App: React.FC = () => {
   const [activePopup, setActivePopup] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; type?: 'message' | 'alert'; messageId?: string }>>([]);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-  const [notifiedMessageIds, setNotifiedMessageIds] = useState<Set<string>>(new Set());
+  const [notifiedMessageIds, setNotifiedMessageIds] = useState<Set<string>>(() => {
+    // Initialize from localStorage immediately
+    try {
+      const saved = localStorage.getItem('notifiedMessageIds');
+      if (saved) {
+        return new Set(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Error restoring notified message IDs:', error);
+    }
+    return new Set();
+  });
   const [allReps, setAllReps] = useState<SalesRep[]>([]);
   const [directMessageUnsubscribers, setDirectMessageUnsubscribers] = useState<Map<string, () => void>>(new Map());
   
   // Ref to always have the latest notified message IDs (prevents stale closure)
-  const notifiedMessageIdsRef = useRef<Set<string>>(new Set());
+  // Initialize with the same data as the state
+  const notifiedMessageIdsRef = useRef<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('notifiedMessageIds');
+      if (saved) {
+        return new Set(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Error restoring notified message IDs to ref:', error);
+    }
+    return new Set();
+  }());
   
-  // Keep ref in sync with state
+  // Keep ref in sync with state and persist to localStorage
   useEffect(() => {
     notifiedMessageIdsRef.current = notifiedMessageIds;
-    // Persist to localStorage so we don't re-notify old messages on app reload
     localStorage.setItem('notifiedMessageIds', JSON.stringify(Array.from(notifiedMessageIds)));
   }, [notifiedMessageIds]);
-
-  // Restore notified message IDs from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('notifiedMessageIds');
-    if (saved) {
-      try {
-        const ids = new Set(JSON.parse(saved));
-        setNotifiedMessageIds(ids);
-        notifiedMessageIdsRef.current = ids;
-      } catch (error) {
-        console.error('Error restoring notified message IDs:', error);
-      }
-    }
-  }, []);
 
   // Handle tab change and clear unread count for direct messages
   const handleTabChange = (tab: string) => {
@@ -158,23 +165,33 @@ const App: React.FC = () => {
                 m => m.senderId !== currentUser.id && !notifiedMessageIdsRef.current.has(m.id)
               );
 
-              // Show notification for each new message
-              unread.forEach(message => {
-                if (!notifiedMessageIdsRef.current.has(message.id)) {
-                  showNotification(
-                    `New message from ${message.senderName}`,
-                    message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
-                    'message',
-                    message.id
-                  );
-                  // Immediately add to ref to prevent duplicate notifications in rapid callbacks
-                  notifiedMessageIdsRef.current.add(message.id);
-                  setNotifiedMessageIds(prev => new Set([...prev, message.id]));
-                }
-              });
-
-              // Update unread count
-              setUnreadMessageCount(prev => prev + unread.length);
+              // Show notification and track each new message only once
+              if (unread.length > 0) {
+                unread.forEach(message => {
+                  // Extra safety check - ensure we haven't already notified this message
+                  if (!notifiedMessageIdsRef.current.has(message.id)) {
+                    // Immediately add to ref BEFORE showing notification to prevent race conditions
+                    notifiedMessageIdsRef.current.add(message.id);
+                    
+                    showNotification(
+                      `New message from ${message.senderName}`,
+                      message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
+                      'message',
+                      message.id
+                    );
+                    
+                    // Update state to persist to localStorage
+                    setNotifiedMessageIds(prev => {
+                      const newSet = new Set(prev);
+                      newSet.add(message.id);
+                      return newSet;
+                    });
+                    
+                    // Increment unread count only once per message
+                    setUnreadMessageCount(prev => prev + 1);
+                  }
+                });
+              }
             });
             newUnsubscribers.set(rep.id, unsubscribe);
           } catch (error) {
