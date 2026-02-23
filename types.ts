@@ -1,13 +1,31 @@
 
 export enum SalesStage {
-  COLD_LEAD = 'Cold Lead',
-  EMAIL_SENT = 'Email Sent',
-  MORE_INFO_REQUESTED = 'More Info Requested',
-  APPOINTMENT_BOOKED = 'Appointment Booked',
-  FINALIZING = 'Finalizing',
-  LETTER_DISTRIBUTION = 'Letter Distribution',
-  COMPLETED = 'Completed',
-  NOT_INTERESTED = 'Not Interested'
+  AVAILABLE = 'Available',
+  COMMUNICATION = 'Communication',
+  APPOINTMENT = 'Appointment',
+  OUTCOME_REACHED = 'Outcome Reached',
+  DISTRIBUTE_LETTER = 'Distribute Letter',
+  COMPLETED = 'Completed'
+}
+
+export enum CommunicationType {
+  PHONE_CALL = 'Phone Call',
+  EMAIL = 'Email'
+}
+
+export enum OutcomeType {
+  SIGNED_UP = 'Signed Up',
+  FAILED = 'Failed'
+}
+
+export interface AttemptRecord {
+  id: string;
+  timestamp: string;
+  repId: string;
+  repName: string;
+  communicationType?: CommunicationType;
+  outcome?: OutcomeType;
+  reason?: string;
 }
 
 export enum TrackType {
@@ -32,6 +50,8 @@ export interface School {
   notes: string;
   lastEditedBy?: string;
   lastEditedAt?: string;
+  attempts?: AttemptRecord[];
+  letterDistributedDate?: string;
 }
 
 export interface SalesRep {

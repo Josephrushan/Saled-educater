@@ -15,7 +15,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
   const [searchTerm, setSearchTerm] = useState('');
   // Admin users default to 'Team' view, regular reps default to 'Mine'
   const [repFilter, setRepFilter] = useState<'all' | 'mine'>(currentUser?.role === 'admin' ? 'all' : 'mine');
-  const [stageFilter, setStageFilter] = useState<'all' | 'fresh' | 'email' | 'appointment' | 'completed'>('fresh');
+  const [stageFilter, setStageFilter] = useState<'all' | 'available' | 'communication' | 'appointment' | 'completed'>('available');
   const [hideNoEmail, setHideNoEmail] = useState(true);
 
   // Debug log
@@ -23,18 +23,46 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
     console.log('🏫 SchoolList received schools:', allSchools.length, 'Filter:', repFilter, 'Stage:', stageFilter);
   }, [allSchools, repFilter, stageFilter]);
 
-  // Only show schools assigned to current user in "Mine" view
+  // Map old stage values to new ones for backwards compatibility
+  const getMappedStage = (stage: string): string => {
+    const stageMap: Record<string, string> = {
+      'Available': SalesStage.AVAILABLE,
+      'Cold Lead': SalesStage.AVAILABLE,
+      'Fresh': SalesStage.AVAILABLE,
+      'Communication': SalesStage.COMMUNICATION,
+      'Email Sent': SalesStage.COMMUNICATION,
+      'Email': SalesStage.COMMUNICATION,
+      'More Info': SalesStage.COMMUNICATION,
+      'More Info Requested': SalesStage.COMMUNICATION,
+      'Appointment': SalesStage.APPOINTMENT,
+      'Appointment Booked': SalesStage.APPOINTMENT,
+      'Outcome Reached': SalesStage.OUTCOME_REACHED,
+      'Finalizing': SalesStage.OUTCOME_REACHED,
+      'Distribute Letter': SalesStage.DISTRIBUTE_LETTER,
+      'Letter Distribution': SalesStage.DISTRIBUTE_LETTER,
+      'Completed': SalesStage.COMPLETED,
+      'Not Interested': SalesStage.AVAILABLE
+    };
+    
+    return stageMap[stage] || stage;
+  };
+
+  // Rep filtering logic: 
+  // - "Mine" view: Show schools assigned to user + Available schools (available to all)
+  // - "Team" view: Show all schools
   const repFilteredSchools = repFilter === 'mine' 
-    ? allSchools.filter(s => s.salesRepId === currentUser?.id)
+    ? allSchools.filter(s => s.salesRepId === currentUser?.id || getMappedStage(s.stage) === SalesStage.AVAILABLE)
     : allSchools;
 
   // Apply stage filter
   const stageFilteredSchools = repFilteredSchools.filter(s => {
+    const mappedStage = getMappedStage(s.stage);
     if (stageFilter === 'all') return true;
-    if (stageFilter === 'fresh') return s.stage === SalesStage.COLD_LEAD;
-    if (stageFilter === 'email') return s.stage === SalesStage.EMAIL_SENT;
-    if (stageFilter === 'appointment') return s.stage === SalesStage.APPOINTMENT_BOOKED;
-    if (stageFilter === 'completed') return s.stage === SalesStage.COMPLETED;
+    // 'available' = any school before appointment (Available or Communication stages)
+    if (stageFilter === 'available') return mappedStage === SalesStage.AVAILABLE || mappedStage === SalesStage.COMMUNICATION;
+    if (stageFilter === 'communication') return mappedStage === SalesStage.COMMUNICATION;
+    if (stageFilter === 'appointment') return mappedStage === SalesStage.APPOINTMENT;
+    if (stageFilter === 'completed') return mappedStage === SalesStage.COMPLETED;
     return true;
   });
 
@@ -53,11 +81,12 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
 
   // Helper function to determine if school should display a rep
   const shouldShowRep = (school: School) => {
+    const mappedStage = getMappedStage(school.stage);
     return school.salesRepId && school.salesRepName && 
-      (school.stage === SalesStage.APPOINTMENT_BOOKED || 
-       school.stage === SalesStage.FINALIZING || 
-       school.stage === SalesStage.LETTER_DISTRIBUTION || 
-       school.stage === SalesStage.COMPLETED);
+      (mappedStage === SalesStage.APPOINTMENT || 
+       mappedStage === SalesStage.OUTCOME_REACHED || 
+       mappedStage === SalesStage.DISTRIBUTE_LETTER || 
+       mappedStage === SalesStage.COMPLETED);
   };
 
   const getRepDisplay = (school: School) => {
@@ -110,10 +139,10 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
               All Stages
             </button>
             <button 
-              onClick={() => setStageFilter('fresh')}
-              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'fresh' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-500'}`}
+              onClick={() => setStageFilter('available')}
+              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'available' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-500'}`}
             >
-              Fresh
+              Available
             </button>
             <button 
               onClick={() => setStageFilter('appointment')}
@@ -128,10 +157,10 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
               Completed
             </button>
             <button 
-              onClick={() => setStageFilter('email')}
-              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'email' ? 'bg-amber-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-amber-500'}`}
+              onClick={() => setStageFilter('communication')}
+              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'communication' ? 'bg-amber-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-amber-500'}`}
             >
-              Email Sent
+              Communication
             </button>
           </div>
 
@@ -175,8 +204,8 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                   <span className="text-[10px] font-black text-brand">{school.engagementRate}%</span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest ${STAGE_CONFIG[school.stage]?.color || 'bg-gray-100 text-gray-500'}`}>
-                    {school.stage?.split('(')[0] || 'Unknown'}
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest ${STAGE_CONFIG[getMappedStage(school.stage)]?.color || 'bg-gray-100 text-gray-500'}`}>
+                    {getMappedStage(school.stage)?.split('(')[0] || 'Unknown'}
                   </span>
                   <span className={`text-[10px] font-bold ${shouldShowRep(school) ? 'text-slate-600' : 'text-slate-400'}`}>
                     {getRepDisplay(school)}
@@ -224,9 +253,9 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${STAGE_CONFIG[school.stage]?.color || 'bg-slate-100 text-slate-600'}`}>
-                      {STAGE_CONFIG[school.stage]?.icon || null}
-                      {school.stage}
+                    <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${STAGE_CONFIG[getMappedStage(school.stage)]?.color || 'bg-slate-100 text-slate-600'}`}>
+                      {STAGE_CONFIG[getMappedStage(school.stage)]?.icon || null}
+                      {getMappedStage(school.stage)}
                     </span>
                   </td>
                   <td className="px-8 py-6">

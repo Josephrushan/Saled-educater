@@ -1,21 +1,19 @@
 
 import React from 'react';
 import { 
-  Clock, Mail, Users, AlertCircle, CheckCircle2, TrendingUp, XCircle, FileText, Calendar, CheckSquare
+  Clock, Mail, Users, AlertCircle, CheckCircle2, TrendingUp, XCircle, FileText, Calendar, CheckSquare, Phone, FileCheck
 } from 'lucide-react';
 
 export const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75";
 export const SIDEBAR_LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/icon.png?alt=media&token=0963de99-0e33-4484-8bc9-1d14c3adb1ce";
 
 export const STAGE_CONFIG: Record<string, { color: string; icon: React.ReactNode }> = {
-  'Cold Lead': { color: 'bg-slate-100 text-slate-600', icon: <Clock className="w-4 h-4" /> },
-  'Email Sent': { color: 'bg-blue-50 text-blue-600', icon: <Mail className="w-4 h-4" /> },
-  'More Info Requested': { color: 'bg-amber-50 text-amber-600', icon: <FileText className="w-4 h-4" /> },
-  'Appointment Booked': { color: 'bg-purple-50 text-purple-600', icon: <Calendar className="w-4 h-4" /> },
-  'Finalizing': { color: 'bg-slate-800 text-white', icon: <Users className="w-4 h-4" /> },
-  'Letter Distribution': { color: 'bg-brand/20 text-slate-900 border border-brand/30', icon: <TrendingUp className="w-4 h-4" /> },
-  'Completed': { color: 'bg-brand text-slate-900 shadow-sm shadow-brand/20', icon: <CheckCircle2 className="w-4 h-4" /> },
-  'Not Interested': { color: 'bg-rose-50 text-rose-600', icon: <XCircle className="w-4 h-4" /> }
+  'Available': { color: 'bg-slate-100 text-slate-600', icon: <Clock className="w-4 h-4" /> },
+  'Communication': { color: 'bg-blue-50 text-blue-600', icon: <Phone className="w-4 h-4" /> },
+  'Appointment': { color: 'bg-purple-50 text-purple-600', icon: <Calendar className="w-4 h-4" /> },
+  'Outcome Reached': { color: 'bg-amber-50 text-amber-600', icon: <AlertCircle className="w-4 h-4" /> },
+  'Distribute Letter': { color: 'bg-brand/20 text-slate-900 border border-brand/30', icon: <FileCheck className="w-4 h-4" /> },
+  'Completed': { color: 'bg-brand text-slate-900 shadow-sm shadow-brand/20', icon: <CheckCircle2 className="w-4 h-4" /> }
 };
 
 export const EMAIL_TEMPLATES = [
@@ -59,7 +57,7 @@ export const MOCK_SCHOOLS = [
     principalEmail: 'a.miller@greenwood.edu',
     salesRepId: 'rep1',
     salesRepName: 'John Smith',
-    stage: 'Cold Lead',
+    stage: 'Available',
     track: 'Acquisition Track',
     studentCount: 850,
     lastContactDate: '2024-05-15',

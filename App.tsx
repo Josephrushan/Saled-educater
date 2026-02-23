@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import SchoolList from './components/SchoolList';
-import SchoolDetail from './components/SchoolDetail';
+import SchoolDetailNew from './components/SchoolDetailNew';
 import AddSchoolModal from './components/AddSchoolModal';
 import Login from './components/Login';
 import EmailTemplates from './components/EmailTemplates';
@@ -18,7 +18,7 @@ import IncentivesModule from './components/IncentivesModule';
 import PopupBanner from './components/PopupBanner';
 import DailyTip from './components/DailyTip';
 import NotificationToast from './components/NotificationToast';
-import { School, SalesRep, SalesStage, TrackType, Message } from './types';
+import { School, SalesRep, SalesStage, TrackType, Message, AttemptRecord } from './types';
 import { 
   getSchoolsFromFirebase, 
   addSchoolToFirebase, 
@@ -29,7 +29,9 @@ import {
   updateSalesRepLastSeen,
   getSalesReps,
   getOrCreateDirectMessage,
-  subscribeToDirectMessages
+  subscribeToDirectMessages,
+  addAttemptToSchool,
+  resetSchoolProgress
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
 import PWAControls from './components/PWAControls';
@@ -226,9 +228,9 @@ const App: React.FC = () => {
         // Data cleanup: Migrate old "Super Admin" to "Keagan Smith" and fix rep assignments
         firebaseSchools = firebaseSchools.map(school => {
           const isAppointmentOrLater = 
-            school.stage === SalesStage.APPOINTMENT_BOOKED ||
-            school.stage === SalesStage.FINALIZING ||
-            school.stage === SalesStage.LETTER_DISTRIBUTION ||
+            school.stage === SalesStage.APPOINTMENT ||
+            school.stage === SalesStage.OUTCOME_REACHED ||
+            school.stage === SalesStage.DISTRIBUTE_LETTER ||
             school.stage === SalesStage.COMPLETED;
           
           let updated = { ...school };
@@ -324,16 +326,17 @@ const App: React.FC = () => {
       name: data.name,
       principalName: data.principalName,
       principalEmail: data.principalEmail,
-      // Don't assign to a rep on creation - do it when appointment stage is reached
+      // Don't assign to a rep on creation - do it when communication stage is reached
       salesRepId: undefined,
       salesRepName: undefined,
-      stage: SalesStage.COLD_LEAD,
+      stage: SalesStage.AVAILABLE,
       track: TrackType.ACQUISITION,
       studentCount: parseInt(data.studentCount) || 0,
       lastContactDate: new Date().toISOString().split('T')[0],
       commissionEarned: 0,
       engagementRate: 0,
-      notes: ''
+      notes: '',
+      attempts: []
     };
 
     const newId = await addSchoolToFirebase(schoolData);
@@ -343,20 +346,49 @@ const App: React.FC = () => {
     setShowAddModal(false);
   };
 
-  const handleUpdateStage = async (schoolId: string, newStage: SalesStage) => {
-    // Assign school to current user when appointment stage is reached
+  const handleUpdateStage = async (schoolId: string, newStage: SalesStage, data?: any) => {
+    // Assign school to current user when communication stage is reached
     const repId = currentUser?.id;
     const repName = `${currentUser?.name} ${currentUser?.surname || ''}`.trim();
     
-    const success = await updateSchoolStageInFirebase(schoolId, newStage, repId, repName);
+    console.log('🔵 handleUpdateStage called for school:', schoolId, 'new stage:', newStage);
+    console.log('🔵 Current rep:', repName, 'ID:', repId);
+    
+    const success = await updateSchoolStageInFirebase(schoolId, newStage, repId, repName, data);
+    console.log('🔵 Firebase update result:', success);
+    
     if (success) {
+      console.log('🔵 Updating local state for stage:', newStage);
+      setSchools(schools.map(s => {
+        if (s.id === schoolId) {
+          const updated = {
+            ...s,
+            stage: newStage,
+            lastContactDate: new Date().toISOString().split('T')[0],
+            letterDistributedDate: data?.letterDistributedDate || s.letterDistributedDate,
+            // Assign to current user when communication stage is reached
+            salesRepId: newStage === SalesStage.COMMUNICATION ? repId : s.salesRepId,
+            salesRepName: newStage === SalesStage.COMMUNICATION ? repName : s.salesRepName
+          };
+          console.log('🔵 Updated school object:', updated);
+          return updated;
+        }
+        return s;
+      }));
+    } else {
+      console.error('🔴 FAILED to update stage in Firebase!');
+    }
+  };
+
+  const handleAddAttempt = async (schoolId: string, attempt: AttemptRecord) => {
+    console.log('🟡 handleAddAttempt called for school:', schoolId, 'attempt:', attempt);
+    const success = await addAttemptToSchool(schoolId, attempt);
+    console.log('🟡 Add attempt result:', success);
+    if (success) {
+      console.log('🟡 Updating local state with attempt');
       setSchools(schools.map(s => s.id === schoolId ? { 
         ...s, 
-        stage: newStage, 
-        lastContactDate: new Date().toISOString().split('T')[0],
-        // Assign to current user when appointment stage is reached
-        salesRepId: newStage === SalesStage.APPOINTMENT_BOOKED ? repId : s.salesRepId,
-        salesRepName: newStage === SalesStage.APPOINTMENT_BOOKED ? repName : s.salesRepName
+        attempts: [...(s.attempts || []), attempt]
       } : s));
     }
   };
@@ -373,6 +405,27 @@ const App: React.FC = () => {
         lastEditedBy: editorName,
         lastEditedAt: new Date().toISOString()
       } : s));
+    }
+  };
+
+  const handleResetProgress = async (schoolId: string) => {
+    console.log('🔄 Admin resetting progress for school:', schoolId);
+    const success = await resetSchoolProgress(schoolId);
+    if (success) {
+      console.log('✅ Progress reset successfully');
+      setSchools(schools.map(s => s.id === schoolId ? { 
+        ...s,
+        stage: SalesStage.AVAILABLE,
+        attempts: [],
+        lastContactDate: null,
+        letterDistributedDate: null,
+        salesRepId: null,
+        salesRepName: null
+      } : s));
+      alert('✅ School progress reset to AVAILABLE');
+    } else {
+      console.error('❌ Failed to reset progress');
+      alert('❌ Failed to reset school progress');
     }
   };
 
@@ -402,15 +455,17 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (activeTab === 'school_detail' && selectedSchool) {
       return (
-        <SchoolDetail 
+        <SchoolDetailNew 
           school={selectedSchool} 
+          currentUser={currentUser}
           onBack={() => {
             setSelectedSchoolId(null);
             setActiveTab('schools');
           }}
           onUpdateStage={handleUpdateStage}
-          onUpdateContactInfo={handleUpdateSchoolContactInfo}
+          onUpdateAttempt={handleAddAttempt}
           onDeleteSchool={handleDeleteSchool}
+          onResetProgress={handleResetProgress}
         />
       );
     }

@@ -469,7 +469,7 @@ export async function addSchoolToFirebase(school: Omit<School, 'id'>): Promise<s
 /**
  * Updates a school's stage in Firestore and optionally assigns it to a rep.
  */
-export async function updateSchoolStageInFirebase(schoolId: string, newStage: SalesStage, repId?: string, repName?: string) {
+export async function updateSchoolStageInFirebase(schoolId: string, newStage: SalesStage, repId?: string, repName?: string, data?: any) {
   try {
     const schoolRef = doc(db, SCHOOLS_COLLECTION, schoolId);
     const updateData: any = {
@@ -477,16 +477,27 @@ export async function updateSchoolStageInFirebase(schoolId: string, newStage: Sa
       lastContactDate: new Date().toISOString().split('T')[0]
     };
     
-    // If appointment stage is reached and rep info provided, assign to rep
-    if (newStage === SalesStage.APPOINTMENT_BOOKED && repId && repName) {
+    console.log('🟢 Firebase: Updating school', schoolId, 'to stage:', newStage);
+    
+    // If communication stage is reached and rep info provided, assign to rep
+    if (newStage === SalesStage.COMMUNICATION && repId && repName) {
       updateData.salesRepId = repId;
       updateData.salesRepName = repName;
+      console.log('🟢 Firebase: Assigning rep:', repName);
+    }
+
+    // Add additional data if provided (e.g., letterDistributedDate)
+    if (data) {
+      Object.assign(updateData, data);
+      console.log('🟢 Firebase: Adding data:', data);
     }
     
+    console.log('🟢 Firebase: Final update data:', updateData);
     await updateDoc(schoolRef, updateData);
+    console.log('🟢 Firebase: Update successful!');
     return true;
   } catch (error) {
-    console.error("Error updating school stage:", error);
+    console.error("❌ Error updating school stage:", error);
     return false;
   }
 }
@@ -690,9 +701,9 @@ export async function migrateOldAdminData(): Promise<void> {
       const schoolId = docSnap.id;
       
       const isAppointmentOrLater = 
-        school.stage === SalesStage.APPOINTMENT_BOOKED ||
-        school.stage === SalesStage.FINALIZING ||
-        school.stage === SalesStage.LETTER_DISTRIBUTION ||
+        school.stage === SalesStage.APPOINTMENT ||
+        school.stage === SalesStage.OUTCOME_REACHED ||
+        school.stage === SalesStage.DISTRIBUTE_LETTER ||
         school.stage === SalesStage.COMPLETED;
       
       // Check if this school has old admin data
@@ -1011,3 +1022,59 @@ export function subscribeToDirectMessages(dmId: string, callback: (messages: Mes
  * Alias for getAllReps for convenience
  */
 export const getSalesReps = getAllReps;
+
+/**
+ * Adds an attempt record to a school's attempts array
+ */
+export async function addAttemptToSchool(schoolId: string, attempt: any) {
+  try {
+    const schoolRef = doc(db, SCHOOLS_COLLECTION, schoolId);
+    const schoolSnap = await getDoc(schoolRef);
+    
+    if (!schoolSnap.exists()) {
+      console.error('School not found');
+      return false;
+    }
+
+    const currentAttempts = schoolSnap.data().attempts || [];
+    const updatedAttempts = [...currentAttempts, attempt];
+
+    await updateDoc(schoolRef, {
+      attempts: updatedAttempts
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error adding attempt to school:', error);
+    return false;
+  }
+}
+
+export async function resetSchoolProgress(schoolId: string) {
+  try {
+    console.log('🔄 Admin: Resetting progress for school:', schoolId);
+    const schoolRef = doc(db, SCHOOLS_COLLECTION, schoolId);
+    const schoolSnap = await getDoc(schoolRef);
+    
+    if (!schoolSnap.exists()) {
+      console.error('❌ School not found');
+      return false;
+    }
+
+    // Reset: Set stage to AVAILABLE, clear attempts, and clear any date fields
+    await updateDoc(schoolRef, {
+      stage: 'AVAILABLE',
+      attempts: [],
+      lastContactDate: null,
+      letterDistributedDate: null,
+      salesRepId: null,
+      salesRepName: null
+    });
+
+    console.log('✅ Admin: School progress reset successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error resetting school progress:', error);
+    return false;
+  }
+}
