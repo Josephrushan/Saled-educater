@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -18,6 +17,7 @@ import DirectMessageModule from './components/DirectMessageModule';
 import IncentivesModule from './components/IncentivesModule';
 import PopupBanner from './components/PopupBanner';
 import DailyTip from './components/DailyTip';
+import NotificationToast from './components/NotificationToast';
 import { School, SalesRep, SalesStage, TrackType } from './types';
 import { 
   getSchoolsFromFirebase, 
@@ -40,6 +40,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<SalesRep | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activePopup, setActivePopup] = useState<boolean>(false);
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; type?: 'message' | 'alert' }>>([]);
 
   // Restore user session on app mount
   useEffect(() => {
@@ -174,6 +175,15 @@ const App: React.FC = () => {
     localStorage.removeItem('educater_currentUser');
   };
 
+  const showNotification = (title: string, message: string, type: 'message' | 'alert' = 'message') => {
+    const id = Math.random().toString(36).substring(2, 11);
+    setNotifications(prev => [...prev, { id, title, message, type }]);
+  };
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
   const handleSchoolSelect = (school: School) => {
     setSelectedSchoolId(school.id);
     setActiveTab('school_detail');
@@ -283,7 +293,7 @@ const App: React.FC = () => {
       case 'tools': return <Resources type="tools" currentUser={currentUser} />;
       case 'training': return <Resources type="training" currentUser={currentUser} />;
       case 'crew': return <CrewDirectoryModule currentUser={currentUser} />;
-      case 'direct-message': return <DirectMessageModule currentUser={currentUser} />;
+      case 'direct-message': return <DirectMessageModule currentUser={currentUser} onMessageReceived={showNotification} />;
       case 'incentives': return <IncentivesModule currentUser={currentUser} />;
       case 'payment': return <PaymentInfo currentUser={currentUser} onUpdate={setCurrentUser} />;
       default: return <Dashboard currentUser={currentUser} schools={schools} />;
@@ -337,6 +347,20 @@ const App: React.FC = () => {
           onClose={handleClosePopup}
         />
       )}
+
+      {/* Notification Toast Container */}
+      <div className="fixed bottom-6 right-6 z-50 space-y-3">
+        {notifications.map(notification => (
+          <NotificationToast
+            key={notification.id}
+            id={notification.id}
+            title={notification.title}
+            message={notification.message}
+            type={notification.type}
+            onClose={removeNotification}
+          />
+        ))}
+      </div>
     </div>
   );
 };

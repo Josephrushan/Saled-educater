@@ -5,9 +5,10 @@ import { getSalesReps, getOrCreateDirectMessage, addDirectMessage, getDirectMess
 
 interface DirectMessageModuleProps {
   currentUser: SalesRep | null;
+  onMessageReceived?: (title: string, message: string, type: 'message' | 'alert') => void;
 }
 
-const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }) => {
+const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, onMessageReceived }) => {
   const [allReps, setAllReps] = useState<SalesRep[]>([]);
   const [conversations, setConversations] = useState<Map<string, { rep: SalesRep; messages: Message[] }>>(new Map());
   const [selectedRepId, setSelectedRepId] = useState<string | null>(null);
@@ -16,6 +17,7 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewingConversation, setViewingConversation] = useState(false);
+  const [notifiedMessageIds, setNotifiedMessageIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchInitialData();
@@ -55,6 +57,28 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser }
       const unsubscribe = subscribeToDirectMessages(dmId, (messages) => {
         const rep = allReps.find(r => r.id === repId);
         if (rep) {
+          // Check for new incoming messages to notify about
+          const oldConversation = conversations.get(repId);
+          const oldMessageIds = new Set(oldConversation?.messages.map(m => m.id) || []);
+          
+          // Find new messages from other users
+          messages.forEach(message => {
+            if (!oldMessageIds.has(message.id) && 
+                message.senderId !== currentUser?.id && 
+                !notifiedMessageIds.has(message.id) &&
+                onMessageReceived) {
+              // New message from another user - trigger notification
+              onMessageReceived(
+                `New message from ${message.senderName}`,
+                message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
+                'message'
+              );
+              
+              // Mark this message as notified
+              setNotifiedMessageIds(prev => new Set([...prev, message.id]));
+            }
+          });
+          
           setConversations(new Map(conversations).set(repId, { rep, messages }));
         }
       });
