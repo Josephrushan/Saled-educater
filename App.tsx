@@ -39,7 +39,7 @@ const App: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<SalesRep | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activePopup, setActivePopup] = useState<'morning' | 'afternoon' | null>(null);
+  const [activePopup, setActivePopup] = useState<boolean>(false);
 
   // Restore user session on app mount
   useEffect(() => {
@@ -72,7 +72,7 @@ const App: React.FC = () => {
     }
   }, [currentUser?.id]);
 
-  // Check and display daily popups
+  // Check and display popup once per session
   useEffect(() => {
     if (currentUser) {
       checkAndShowPopup();
@@ -80,36 +80,19 @@ const App: React.FC = () => {
   }, [currentUser]);
 
   const checkAndShowPopup = () => {
-    // Get current time in South African timezone (UTC+2)
-    const now = new Date();
-    const saTime = new Date(now.toLocaleString('en-US', { timeZone: 'Africa/Johannesburg' }));
-    const currentHour = saTime.getHours();
+    // Only show popup once per session using sessionStorage
+    const popupShownThisSession = sessionStorage.getItem('popup_shown_this_session');
     
-    // Get today's date as string (YYYY-MM-DD)
-    const today = saTime.toISOString().split('T')[0];
-    const popupKey = `popup_${today}`;
-    const shownPopups = JSON.parse(localStorage.getItem(popupKey) || '{}');
-
-    // Morning popup: 7 AM to 11:59 AM
-    if (currentHour >= 7 && currentHour < 12 && !shownPopups.morning) {
-      setActivePopup('morning');
-    }
-    // Afternoon popup: 12 PM onwards
-    else if (currentHour >= 12 && !shownPopups.afternoon) {
-      setActivePopup('afternoon');
+    if (!popupShownThisSession) {
+      setActivePopup(true);
     }
   };
 
-  const handleClosePopup = (type: 'morning' | 'afternoon') => {
-    setActivePopup(null);
+  const handleClosePopup = () => {
+    setActivePopup(false);
     
-    // Mark this popup as shown today
-    const saTime = new Date();
-    const today = saTime.toLocaleString('en-US', { timeZone: 'Africa/Johannesburg' }).split('T')[0];
-    const popupKey = `popup_${today}`;
-    const shownPopups = JSON.parse(localStorage.getItem(popupKey) || '{}');
-    shownPopups[type] = true;
-    localStorage.setItem(popupKey, JSON.stringify(shownPopups));
+    // Mark popup as shown for this session
+    sessionStorage.setItem('popup_shown_this_session', 'true');
   };
 
   // Fetch schools on mount or when user changes
@@ -349,12 +332,9 @@ const App: React.FC = () => {
 
       {activePopup && (
         <PopupBanner
-          title={activePopup === 'morning' ? '🌅 Good Morning' : '☀️ Afternoon Reminder'}
-          message={activePopup === 'morning' 
-            ? 'Start your day off right! Check your daily tasks and priorities.' 
-            : 'Remember to update your progress and follow up on leads!'}
-          onClose={() => handleClosePopup(activePopup)}
-          type={activePopup}
+          title="Welcome Back!"
+          message="Ready to close some deals today? You've got this! 💪"
+          onClose={handleClosePopup}
         />
       )}
     </div>
