@@ -217,14 +217,12 @@ const RepManagement: React.FC = () => {
                   <span className="flex items-center gap-1"><Mail size={12} /> {rep.email}</span>
                   <span className="text-[10px] bg-slate-50 px-2 py-0.5 rounded-lg uppercase tracking-widest">{rep.role}</span>
                 </div>
-                {rep.lastSeen && (
-                  <div className="text-[10px] text-slate-400 mt-2">
-                    Last seen: {new Date(rep.lastSeen).toLocaleString('en-US', { 
-                      dateStyle: 'short', 
-                      timeStyle: 'short'
-                    })}
-                  </div>
-                )}
+                <div className="text-[10px] text-slate-400 mt-2">
+                  Last seen: {rep.lastSeen ? new Date(rep.lastSeen).toLocaleString('en-US', { 
+                    dateStyle: 'short', 
+                    timeStyle: 'short'
+                  }) : 'Never logged in'}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <button 
