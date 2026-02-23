@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
+import AnalyticsStrategy from './components/AnalyticsStrategy';
 import SchoolList from './components/SchoolList';
 import SchoolDetailNew from './components/SchoolDetailNew';
 import AddSchoolModal from './components/AddSchoolModal';
@@ -478,7 +479,7 @@ const App: React.FC = () => {
     }
 
     switch (activeTab) {
-      case 'dashboard': return <Dashboard currentUser={currentUser} schools={schools} />;
+      case 'dashboard': return <Dashboard currentUser={currentUser} schools={schools} onNavigate={setActiveTab} />;
       case 'reps': return <RepManagement />;
       case 'schools': return <SchoolList onSelectSchool={handleSchoolSelect} onAddSchool={() => setShowAddModal(true)} currentUser={currentUser} schools={schools} />;
       case 'templates': return <EmailTemplates />;
@@ -488,6 +489,7 @@ const App: React.FC = () => {
       case 'direct-message': return <DirectMessageModule currentUser={currentUser} onMarkMessageAsRead={markMessageAsRead} />;
       case 'incentives': return <IncentivesModule currentUser={currentUser} />;
       case 'payment': return <PaymentInfo currentUser={currentUser} onUpdate={setCurrentUser} />;
+      case 'analytics': return currentUser ? <AnalyticsStrategy currentUser={currentUser} schools={schools} onBack={() => setActiveTab('dashboard')} /> : null;
       case 'team': return currentUser ? <TeamManagement currentUser={currentUser} /> : null;
       case 'approvals': return currentUser?.role === 'admin' ? <AdminApprovalPanel currentUser={currentUser} /> : <Dashboard currentUser={currentUser} schools={schools} />;
       default: return <Dashboard currentUser={currentUser} schools={schools} />;

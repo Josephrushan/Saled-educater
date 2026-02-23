@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area 
@@ -13,9 +13,10 @@ interface DashboardProps {
   currentUser: SalesRep | null;
   schools: School[];
   onSchoolsUpdated?: () => void;
+  onNavigate?: (tab: string) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUpdated }) => {
+const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUpdated, onNavigate }) => {
   const [seeding, setSeeding] = useState(false);
   const [seedMessage, setSeedMessage] = useState<string | null>(null);
   
@@ -137,11 +138,35 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
             <p className="text-slate-400 text-xs font-medium mb-6 md:mb-8">Strategy to maximize commission.</p>
             
             <div className="space-y-5 md:space-y-6">
-              {[
-                { label: 'Acquisition', desc: '5 Leads pending', val: 65 },
-                { label: 'Engagement', desc: 'Onboarding active', val: 32 },
-                { label: 'Commission', desc: 'Target R15k', val: 80 }
-              ].map((item, i) => (
+              {useMemo(() => {
+                const total = mySchools.length;
+                if (total === 0) {
+                  return (
+                    <div className="text-slate-400 text-sm">No schools assigned yet</div>
+                  );
+                }
+
+                // Acquisition: schools in Available + Communication stages
+                const available = mySchools.filter(s => s.stage === 'Available').length;
+                const communication = mySchools.filter(s => s.stage === 'Communication').length;
+                const acquisitionVal = Math.round(((available + communication) / total) * 100);
+
+                // Engagement: schools with attempts > 0
+                const engaged = mySchools.filter(s => s.attempts && s.attempts.length > 0).length;
+                const engagementVal = Math.round((engaged / total) * 100);
+
+                // Commission: earned vs target
+                const earned = mySchools.reduce((acc, s) => acc + ((s.studentCount || 0) * 5), 0);
+                const commissionVal = Math.round((earned / 20000) * 100);
+                const totalAttempts = mySchools.reduce((acc, s) => acc + (s.attempts?.length || 0), 0);
+
+                const items = [
+                  { label: 'Acquisition', desc: `${available + communication} leads pending`, val: acquisitionVal },
+                  { label: 'Engagement', desc: `${totalAttempts} contacts made`, val: engagementVal },
+                  { label: 'Commission', desc: `R${earned.toLocaleString()} of R20k`, val: Math.min(commissionVal, 100) }
+                ];
+
+                return items.map((item, i) => (
                 <div key={i} className="space-y-1.5">
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                     <span>{item.label}</span>
@@ -151,10 +176,14 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
                     <div className="h-full bg-brand rounded-full" style={{width: `${item.val}%`}}></div>
                   </div>
                 </div>
-              ))}
+              ));
+              }, [mySchools])}
             </div>
             
-            <button className="w-full mt-8 md:mt-10 bg-brand hover:bg-brand/90 text-slate-900 py-3.5 md:py-4 rounded-2xl font-black text-[11px] md:text-sm transition-all tracking-widest uppercase shadow-lg shadow-brand/20">
+            <button 
+              onClick={() => onNavigate?.('analytics')}
+              className="w-full mt-8 md:mt-10 bg-brand hover:bg-brand/90 text-slate-900 py-3.5 md:py-4 rounded-2xl font-black text-[11px] md:text-sm transition-all tracking-widest uppercase shadow-lg shadow-brand/20"
+            >
               View Strategy
             </button>
           </div>
