@@ -83,8 +83,14 @@ const EmailTemplates: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      if (!formData.track || !formData.title || !formData.subject || !formData.content) {
-        setSaveMessage({ type: 'error', text: 'All fields are required' });
+      if (!formData.track || !formData.title || !formData.content) {
+        setSaveMessage({ type: 'error', text: 'Track, Title, and Content are required' });
+        setTimeout(() => setSaveMessage(null), 3000);
+        return;
+      }
+      
+      if (formData.templateType === TemplateType.EMAIL && !formData.subject) {
+        setSaveMessage({ type: 'error', text: 'Subject line is required for Email templates' });
         setTimeout(() => setSaveMessage(null), 3000);
         return;
       }
@@ -94,7 +100,7 @@ const EmailTemplates: React.FC = () => {
           track: formData.track,
           title: formData.title,
           templateType: formData.templateType,
-          subject: formData.subject,
+          subject: formData.subject || '',
           content: formData.content,
           isImportant: formData.isImportant || false
         });
@@ -110,7 +116,7 @@ const EmailTemplates: React.FC = () => {
           track: formData.track,
           title: formData.title,
           templateType: formData.templateType,
-          subject: formData.subject,
+          subject: formData.subject || '',
           content: formData.content,
           isImportant: formData.isImportant || false
         });
