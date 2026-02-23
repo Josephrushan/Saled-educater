@@ -17,7 +17,7 @@ import {
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { SalesRep, School, SalesStage, Resource, ResourceCategory, Incentive, Message, DirectMessage } from '../types';
+import { SalesRep, School, SalesStage, Resource, ResourceCategory, Incentive, Message, DirectMessage, TeamSuggestion, TeamMember, Team } from '../types';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -1078,3 +1078,608 @@ export async function resetSchoolProgress(schoolId: string) {
     return false;
   }
 }
+
+// ============ TEAM MANAGEMENT ============
+
+export async function suggestTeamMember(suggestion: any) {
+  try {
+    console.log('👤 Suggesting new team member:', suggestion.firstName, suggestion.surname);
+    
+    const suggestionsRef = collection(db, 'teamSuggestions');
+    const newSuggestion = {
+      ...suggestion,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    
+    const docRef = await addDoc(suggestionsRef, newSuggestion);
+    console.log('✅ Suggestion created with ID:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('❌ Error suggesting team member:', error);
+    return false;
+  }
+}
+
+export async function getTeamSuggestions() {
+  try {
+    const suggestionsRef = collection(db, 'teamSuggestions');
+    const q = query(suggestionsRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    
+    const suggestions = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    console.log('📋 Team suggestions:', suggestions);
+    return suggestions;
+  } catch (error) {
+    console.error('❌ Error fetching team suggestions:', error);
+    return [];
+  }
+}
+
+export async function approveTeamMember(suggestionId: string, adminId: string, adminName: string) {
+  try {
+    console.log('✅ Approving team member suggestion:', suggestionId);
+    
+    // Get the suggestion
+    const suggestionRef = doc(db, 'teamSuggestions', suggestionId);
+    const suggestionSnap = await getDoc(suggestionRef);
+    
+    if (!suggestionSnap.exists()) {
+      console.error('❌ Suggestion not found');
+      return false;
+    }
+    
+    const suggestion = suggestionSnap.data();
+    
+    // Create username: firstname@educater.co.za
+    const username = `${suggestion.firstName.toLowerCase()}@educater.co.za`;
+    // Create password: firstname123
+    const password = `${suggestion.firstName.toLowerCase()}123`;
+    
+    // Create new SalesRep (team member)
+    const newRepRef = doc(collection(db, 'salesReps'));
+    const newRepData = {
+      name: suggestion.firstName,
+      surname: suggestion.surname,
+      email: username,
+      password: password,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${suggestion.firstName}`,
+      totalSchools: 0,
+      activeCommissions: 0,
+      role: 'rep',
+      teamLeadId: suggestion.suggestedBy,
+      teamLeadName: suggestion.suggestedByName,
+      telephoneNumber: suggestion.telephoneNumber,
+      createdAt: new Date().toISOString()
+    };
+    
+    await setDoc(newRepRef, newRepData);
+    console.log('✅ New team member profile created:', newRepRef.id);
+    
+    // Add to TeamMembers collection
+    const teamMembersRef = collection(db, 'teamMembers');
+    const teamMemberData = {
+      id: newRepRef.id,
+      firstName: suggestion.firstName,
+      surname: suggestion.surname,
+      email: username,
+      telephoneNumber: suggestion.telephoneNumber,
+      teamLeadId: suggestion.suggestedBy,
+      teamLeadName: suggestion.suggestedByName,
+      username: username,
+      createdAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString(),
+      approvedBy: adminId
+    };
+    
+    await addDoc(teamMembersRef, teamMemberData);
+    console.log('✅ Team member record created');
+    
+    // Add to team leader's team
+    const teamRef = doc(db, 'teams', suggestion.suggestedBy);
+    const teamSnap = await getDoc(teamRef);
+    
+    if (teamSnap.exists()) {
+      // Update existing team
+      const currentMembers = teamSnap.data().members || [];
+      await updateDoc(teamRef, {
+        members: [...currentMembers, newRepRef.id],
+        updatedAt: new Date().toISOString()
+      });
+      console.log('✅ Added member to team');
+    } else {
+      // Create new team
+      const teamData = {
+        leadId: suggestion.suggestedBy,
+        leadName: suggestion.suggestedByName,
+        members: [newRepRef.id],
+        schoolIds: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      await setDoc(teamRef, teamData);
+      console.log('✅ Team created');
+    }
+    
+    // Update suggestion status
+    await updateDoc(suggestionRef, {
+      status: 'approved',
+      approvedAt: new Date().toISOString(),
+      approvedBy: adminId
+    });
+    
+    console.log('✅ Suggestion marked as approved');
+    return {
+      success: true,
+      memberId: newRepRef.id,
+      username: username,
+      password: password
+    };
+  } catch (error) {
+    console.error('❌ Error approving team member:', error);
+    return false;
+  }
+}
+
+export async function rejectTeamMember(suggestionId: string, adminId: string, rejectionReason: string) {
+  try {
+    console.log('❌ Rejecting team member suggestion:', suggestionId);
+    
+    const suggestionRef = doc(db, 'teamSuggestions', suggestionId);
+    
+    await updateDoc(suggestionRef, {
+      status: 'rejected',
+      rejectionReason: rejectionReason
+    });
+    
+    console.log('✅ Suggestion marked as rejected');
+    return true;
+  } catch (error) {
+    console.error('❌ Error rejecting team member:', error);
+    return false;
+  }
+}
+
+export async function getTeamMembers(teamLeadId: string) {
+  try {
+    const teamMembersRef = collection(db, 'teamMembers');
+    const q = query(teamMembersRef, where('teamLeadId', '==', teamLeadId));
+    const snapshot = await getDocs(q);
+    
+    const members = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    console.log('👥 Team members:', members);
+    return members;
+  } catch (error) {
+    console.error('❌ Error fetching team members:', error);
+    return [];
+  }
+}
+
+export async function getUserTeam(userId: string) {
+  try {
+    const teamRef = doc(db, 'teams', userId);
+    const teamSnap = await getDoc(teamRef);
+    
+    if (!teamSnap.exists()) {
+      console.log('📭 No team found for user:', userId);
+      return null;
+    }
+    
+    return {
+      id: teamSnap.id,
+      ...teamSnap.data()
+    };
+  } catch (error) {
+    console.error('❌ Error fetching user team:', error);
+    return null;
+  }
+}
+
+export async function createTeam(
+  leadId: string,
+  leadName: string,
+  leadEmail: string,
+  teamName: string,
+  teamProfilePictureUrl?: string,
+  leadProfilePictureUrl?: string
+) {
+  try {
+    console.log('🔨 Creating team:', teamName, 'for lead:', leadName);
+    
+    const teamData = {
+      leadId: leadId,
+      leadName: leadName,
+      leadEmail: leadEmail,
+      leadProfilePictureUrl: leadProfilePictureUrl,
+      teamName: teamName,
+      teamProfilePictureUrl: teamProfilePictureUrl,
+      members: [],
+      schoolIds: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    const teamRef = doc(db, 'teams', leadId);
+    await setDoc(teamRef, teamData);
+    
+    console.log('✅ Team created successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error creating team:', error);
+    return false;
+  }
+}
+
+export async function checkIfRepIsTeamLead(repId: string) {
+  try {
+    const teamRef = doc(db, 'teams', repId);
+    const teamSnap = await getDoc(teamRef);
+    
+    return teamSnap.exists();
+  } catch (error) {
+    console.error('❌ Error checking team lead:', error);
+    return false;
+  }
+}
+
+export async function checkIfRepInTeam(repId: string) {
+  try {
+    console.log('🔍 Checking if rep is in any team:', repId);
+    
+    const teamMembersRef = collection(db, 'teamMembers');
+    const q = query(teamMembersRef, where('id', '==', repId));
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.length > 0;
+  } catch (error) {
+    console.error('❌ Error checking rep in team:', error);
+    return false;
+  }
+}
+
+export async function addExistingRepToTeam(teamLeadId: string, repId: string) {
+  try {
+    console.log('➕ Adding existing rep to team:', repId);
+    
+    // Get the rep details
+    const repsRef = collection(db, 'salesReps');
+    const repSnap = await getDocs(query(repsRef, where('id', '==', repId)));
+    
+    if (repSnap.empty) {
+      console.error('❌ Rep not found');
+      return false;
+    }
+    
+    const repData = repSnap.docs[0].data();
+    
+    // Create team member record
+    const teamMembersRef = collection(db, 'teamMembers');
+    const teamMemberData = {
+      id: repId,
+      firstName: repData.name,
+      surname: repData.surname || '',
+      email: repData.email,
+      telephoneNumber: repData.telephoneNumber || '',
+      teamLeadId: teamLeadId,
+      teamLeadName: '', // Will be fetched from team
+      username: repData.email,
+      createdAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString(),
+      approvedBy: 'manual_add'
+    };
+    
+    await addDoc(teamMembersRef, teamMemberData);
+    
+    // Add to team
+    const teamRef = doc(db, 'teams', teamLeadId);
+    const teamSnap = await getDoc(teamRef);
+    
+    if (teamSnap.exists()) {
+      const currentMembers = teamSnap.data().members || [];
+      await updateDoc(teamRef, {
+        members: [...currentMembers, repId],
+        updatedAt: new Date().toISOString()
+      });
+    }
+    
+    console.log('✅ Rep added to team');
+    return true;
+  } catch (error) {
+    console.error('❌ Error adding rep to team:', error);
+    return false;
+  }
+}
+
+export async function getAvailableRepsForTeam() {
+  try {
+    console.log('� Fetching available reps for team');
+    
+    // Get all reps from educater_salesman (NOT salesReps)
+    const repsRef = collection(db, 'educater_salesman');
+    const repsSnapshot = await getDocs(repsRef);
+    
+    console.log('📊 Total reps in database:', repsSnapshot.size);
+    
+    const allReps = repsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      name: doc.data().name,
+      surname: doc.data().surname,
+      email: doc.data().email,
+      role: doc.data().role,
+      ...doc.data()
+    }));
+    
+    console.log('📋 All reps:', allReps.map(r => ({ id: r.id, name: r.name, role: r.role })));
+    
+    // Get all team members
+    const teamMembersRef = collection(db, 'teamMembers');
+    const teamMembersSnapshot = await getDocs(teamMembersRef);
+    
+    const assignedRepIds = new Set();
+    teamMembersSnapshot.docs.forEach(doc => {
+      const id = doc.data().id;
+      assignedRepIds.add(id);
+      console.log('👤 Team member ID:', id);
+    });
+    
+    console.log('👥 Total team members:', assignedRepIds.size);
+    
+    // Get all teams (team leads)
+    const teamsRef = collection(db, 'teams');
+    const teamsSnapshot = await getDocs(teamsRef);
+    const teamLeadIds = new Set();
+    teamsSnapshot.docs.forEach(doc => {
+      const leadId = doc.id;
+      teamLeadIds.add(leadId);
+      console.log('👨‍💼 Team lead ID:', leadId);
+    });
+    
+    console.log('🎯 Total teams:', teamLeadIds.size);
+    
+    // Filter reps
+    const availableReps = allReps.filter(rep => {
+      const isAdmin = rep.role === 'admin' || rep.email?.includes('admin');
+      const isTeamMember = assignedRepIds.has(rep.id);
+      const isTeamLead = teamLeadIds.has(rep.id);
+      
+      const isAvailable = !isAdmin && !isTeamMember && !isTeamLead;
+      
+      console.log(`Rep ${rep.name} (${rep.id}): admin=${isAdmin}, member=${isTeamMember}, lead=${isTeamLead}, available=${isAvailable}`);
+      
+      return isAvailable;
+    });
+    
+    console.log('✅ Available reps:', availableReps.length);
+    availableReps.forEach(rep => console.log('  ✓', rep.name, rep.email));
+    
+    return availableReps;
+  } catch (error) {
+    console.error('❌ Error fetching available reps:', error);
+    return [];
+  }
+}
+
+// Send team invitation to a rep
+export async function sendTeamInvitation(teamLeadId: string, repId: string) {
+  try {
+    console.log('📧 Sending team invitation to rep:', repId);
+    
+    // Get team lead info
+    const teamRef = doc(db, 'teams', teamLeadId);
+    const teamSnap = await getDoc(teamRef);
+    
+    if (!teamSnap.exists()) {
+      console.error('❌ Team not found');
+      return false;
+    }
+    
+    const teamData = teamSnap.data();
+    
+    // Get rep info from educater_salesman collection
+    const repsRef = collection(db, 'educater_salesman');
+    const repSnap = await getDocs(query(repsRef, where('id', '==', repId)));
+    
+    if (repSnap.empty) {
+      console.error('❌ Rep not found');
+      return false;
+    }
+    
+    const repData = repSnap.docs[0].data();
+    
+    // Create invitation
+    const invitationsRef = collection(db, 'teamInvitations');
+    const invitationData = {
+      teamId: teamLeadId,
+      teamLeadId: teamLeadId,
+      teamLeadName: teamData.leadName,
+      teamName: teamData.teamName,
+      repId: repId,
+      repName: repData.name,
+      repEmail: repData.email,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    
+    await addDoc(invitationsRef, invitationData);
+    
+    console.log('✅ Invitation sent to rep');
+    return true;
+  } catch (error) {
+    console.error('❌ Error sending invitation:', error);
+    return false;
+  }
+}
+
+// Get pending invitations for a rep
+export async function getMyPendingInvitations(repId: string) {
+  try {
+    console.log('📬 Fetching pending invitations for:', repId);
+    
+    const invitationsRef = collection(db, 'teamInvitations');
+    const q = query(
+      invitationsRef,
+      where('repId', '==', repId),
+      where('status', '==', 'pending')
+    );
+    
+    const snapshot = await getDocs(q);
+    
+    const invitations = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as any[];
+    
+    console.log('✅ Found', invitations.length, 'pending invitations');
+    return invitations;
+  } catch (error) {
+    console.error('❌ Error fetching invitations:', error);
+    return [];
+  }
+}
+
+// Accept team invitation
+export async function acceptTeamInvitation(invitationId: string, repId: string) {
+  try {
+    console.log('✅ Accepting invitation:', invitationId);
+    
+    // Get invitation details
+    const invitationRef = doc(db, 'teamInvitations', invitationId);
+    const invitationSnap = await getDoc(invitationRef);
+    
+    if (!invitationSnap.exists()) {
+      console.error('❌ Invitation not found');
+      return false;
+    }
+    
+    const invitationData = invitationSnap.data();
+    const teamLeadId = invitationData.teamId;
+    
+    // Get rep info from educater_salesman
+    const repsRef = collection(db, 'educater_salesman');
+    const repSnap = await getDocs(query(repsRef, where('id', '==', repId)));
+    
+    if (repSnap.empty) {
+      console.error('❌ Rep not found');
+      return false;
+    }
+    
+    const repData = repSnap.docs[0].data();
+    
+    // Create team member record
+    const teamMembersRef = collection(db, 'teamMembers');
+    const teamMemberData = {
+      id: repId,
+      firstName: repData.name,
+      surname: repData.surname || '',
+      email: repData.email,
+      telephoneNumber: repData.telephoneNumber || '',
+      teamLeadId: teamLeadId,
+      teamLeadName: invitationData.teamLeadName,
+      username: repData.email,
+      createdAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString(),
+      approvedBy: 'invitation_accepted'
+    };
+    
+    await addDoc(teamMembersRef, teamMemberData);
+    
+    // Add to team members array
+    const teamRef = doc(db, 'teams', teamLeadId);
+    const teamSnap = await getDoc(teamRef);
+    
+    if (teamSnap.exists()) {
+      const currentMembers = teamSnap.data().members || [];
+      if (!currentMembers.includes(repId)) {
+        await updateDoc(teamRef, {
+          members: [...currentMembers, repId],
+          updatedAt: new Date().toISOString()
+        });
+      }
+    }
+    
+    // Update invitation status
+    await updateDoc(invitationRef, {
+      status: 'accepted',
+      respondedAt: new Date().toISOString()
+    });
+    
+    console.log('✅ Invitation accepted');
+    return true;
+  } catch (error) {
+    console.error('❌ Error accepting invitation:', error);
+    return false;
+  }
+}
+
+// Reject team invitation
+export async function rejectTeamInvitation(invitationId: string) {
+  try {
+    console.log('❌ Rejecting invitation:', invitationId);
+    
+    const invitationRef = doc(db, 'teamInvitations', invitationId);
+    
+    await updateDoc(invitationRef, {
+      status: 'rejected',
+      respondedAt: new Date().toISOString()
+    });
+    
+    console.log('✅ Invitation rejected');
+    return true;
+  } catch (error) {
+    console.error('❌ Error rejecting invitation:', error);
+    return false;
+  }
+}
+
+// Leave team
+export async function leaveTeam(repId: string) {
+  try {
+    console.log('👋 Rep leaving team:', repId);
+    
+    // Find and remove from team member record
+    const teamMembersRef = collection(db, 'teamMembers');
+    const q = query(teamMembersRef, where('id', '==', repId));
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      console.error('❌ Team member record not found');
+      return false;
+    }
+    
+    const teamLeadId = snapshot.docs[0].data().teamLeadId;
+    
+    // Delete team member record
+    for (const docSnap of snapshot.docs) {
+      await deleteDoc(doc(db, 'teamMembers', docSnap.id));
+    }
+    
+    // Remove from team members array
+    const teamRef = doc(db, 'teams', teamLeadId);
+    const teamSnap = await getDoc(teamRef);
+    
+    if (teamSnap.exists()) {
+      const currentMembers = teamSnap.data().members || [];
+      await updateDoc(teamRef, {
+        members: currentMembers.filter((id: string) => id !== repId),
+        updatedAt: new Date().toISOString()
+      });
+    }
+    
+    console.log('✅ Rep left team');
+    return true;
+  } catch (error) {
+    console.error('❌ Error leaving team:', error);
+    return false;
+  }
+}
+
+

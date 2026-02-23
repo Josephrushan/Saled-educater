@@ -18,6 +18,8 @@ import IncentivesModule from './components/IncentivesModule';
 import PopupBanner from './components/PopupBanner';
 import DailyTip from './components/DailyTip';
 import NotificationToast from './components/NotificationToast';
+import TeamManagement from './components/TeamManagement';
+import AdminApprovalPanel from './components/AdminApprovalPanel';
 import { School, SalesRep, SalesStage, TrackType, Message, AttemptRecord } from './types';
 import { 
   getSchoolsFromFirebase, 
@@ -31,7 +33,12 @@ import {
   getOrCreateDirectMessage,
   subscribeToDirectMessages,
   addAttemptToSchool,
-  resetSchoolProgress
+  resetSchoolProgress,
+  createTeam,
+  checkIfRepIsTeamLead,
+  checkIfRepInTeam,
+  addExistingRepToTeam,
+  getAvailableRepsForTeam
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
 import PWAControls from './components/PWAControls';
@@ -481,6 +488,8 @@ const App: React.FC = () => {
       case 'direct-message': return <DirectMessageModule currentUser={currentUser} onMarkMessageAsRead={markMessageAsRead} />;
       case 'incentives': return <IncentivesModule currentUser={currentUser} />;
       case 'payment': return <PaymentInfo currentUser={currentUser} onUpdate={setCurrentUser} />;
+      case 'team': return currentUser ? <TeamManagement currentUser={currentUser} /> : null;
+      case 'approvals': return currentUser?.role === 'admin' ? <AdminApprovalPanel currentUser={currentUser} /> : <Dashboard currentUser={currentUser} schools={schools} />;
       default: return <Dashboard currentUser={currentUser} schools={schools} />;
     }
   };

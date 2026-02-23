@@ -244,6 +244,27 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Team Management Collections
+    match /teams/{document=**} {
+      allow read, write: if true;
+    }
+
+    match /teamMembers/{document=**} {
+      allow read, write: if true;
+    }
+
+    match /teamSuggestions/{document=**} {
+      allow read, write: if true;
+    }
+
+    match /teamInvitations/{document=**} {
+      allow read, write: if true;
+    }
+
+    match /salesReps/{document=**} {
+      allow read, write: if true;
+    }
+
     // GLOBAL FALLBACK
     match /{document=**} {
       allow read, write: if isSuperAdmin();

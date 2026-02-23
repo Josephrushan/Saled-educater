@@ -150,3 +150,61 @@ export interface Incentive {
   createdAt: string;
   expiresAt?: string;
 }
+
+// Team Management
+export interface TeamSuggestion {
+  id: string;
+  suggestedBy: string; // Sales rep ID who suggested
+  suggestedByName: string;
+  firstName: string;
+  surname: string;
+  email: string;
+  telephoneNumber: string;
+  status: 'pending' | 'approved' | 'rejected'; // Admin approval status
+  createdAt: string;
+  approvedAt?: string;
+  approvedBy?: string; // Admin ID
+  rejectionReason?: string;
+}
+
+export interface TeamMember {
+  id: string; // Same as SalesRep ID
+  firstName: string;
+  surname: string;
+  email: string; // firstname@educater.co.za
+  telephoneNumber: string;
+  teamLeadId: string; // Sales rep ID they report to
+  teamLeadName: string;
+  username: string; // firstname@educater.co.za
+  createdAt: string;
+  approvedAt: string;
+  approvedBy: string; // Admin ID
+}
+
+export interface TeamInvitation {
+  id: string;
+  teamId: string;
+  teamLeadId: string;
+  teamLeadName: string;
+  teamName: string;
+  repId: string;
+  repName: string;
+  repEmail: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+  respondedAt?: string;
+}
+
+export interface Team {
+  id: string; // Same as Sales Rep ID (team lead)
+  leadId: string; // Sales rep ID
+  leadName: string;
+  leadEmail: string;
+  leadProfilePictureUrl?: string;
+  teamName: string;
+  teamProfilePictureUrl?: string;
+  members: string[]; // Array of TeamMember IDs
+  schoolIds: string[]; // Schools the team can access
+  createdAt: string;
+  updatedAt: string;
+}
