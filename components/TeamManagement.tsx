@@ -1015,3 +1015,5 @@ const ChangeProfilePictureModal: React.FC<ChangeProfilePictureModalProps> = ({ o
   );
 };
 
+export default TeamManagement;
+
