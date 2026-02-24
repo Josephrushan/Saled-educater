@@ -33,11 +33,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
 
   return (
     <div className="w-64 bg-white h-screen border-r border-slate-100 flex flex-col fixed left-0 top-0 z-40">
-      <div className="p-8 pb-4 flex items-center justify-start">
-        <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75" alt="Educater" className="h-10 object-contain" />
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+        <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75" alt="Educater" className="h-8 object-contain" />
+        <button 
+          onClick={onLogout}
+          className="p-2 text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+          title="Sign Out"
+        >
+          <LogOut size={20} />
+        </button>
       </div>
       
-      <nav className="flex-1 p-4 mt-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-auto">
         {menuItems.filter(item => !item.hide).map((item) => (
           <button
             key={item.id}
@@ -60,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
         ))}
       </nav>
 
-      <div className="p-4 border-t border-slate-50 space-y-4">
+      <div className="p-4 border-t border-slate-50">
         {currentUser && (
           <button 
             onClick={() => setActiveTab('payment')}
@@ -84,13 +91,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
             </div>
           </button>
         )}
-        <button 
-          onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all text-sm font-bold border border-red-200"
-        >
-          <LogOut size={18} />
-          Sign Out
-        </button>
       </div>
     </div>
   );
