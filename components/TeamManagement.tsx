@@ -293,33 +293,66 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {teamMembers.map(member => (
-                      <div
-                        key={member.id}
-                        className="bg-white rounded-lg border border-slate-200 p-4 hover:border-brand transition"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-black text-base">
-                              {member.firstName} {member.surname}
-                            </h4>
-                            <div className="space-y-1 mt-2">
-                              <div className="flex items-center gap-2 text-sm text-slate-600">
-                                <Mail size={16} />
-                                {member.email}
+                    {teamMembers.map(member => {
+                      const role = TEAM_ROLES.find(r => r.id === member.role);
+                      return (
+                        <div
+                          key={member.id}
+                          className="bg-white rounded-lg border border-slate-200 p-4 hover:border-brand transition"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            {/* Profile Picture */}
+                            <div className="flex-shrink-0">
+                              {member.profilePicUrl ? (
+                                <img
+                                  src={member.profilePicUrl}
+                                  alt={member.firstName}
+                                  className="w-12 h-12 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-slate-300 flex items-center justify-center text-sm font-bold text-slate-700">
+                                  {member.firstName?.[0]}{member.surname?.[0]}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Member Info */}
+                            <div className="flex-1">
+                              <h4 className="font-black text-base">
+                                {member.firstName} {member.surname}
+                              </h4>
+                              <div className="space-y-1 mt-2">
+                                <div className="flex items-center gap-2 text-sm text-slate-600">
+                                  <Mail size={16} />
+                                  {member.email}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-slate-600">
+                                  <Phone size={16} />
+                                  {member.telephoneNumber}
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 text-sm text-slate-600">
-                                <Phone size={16} />
-                                {member.telephoneNumber}
+
+                              {/* Role Badge */}
+                              <div className="mt-3 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                                {role ? (
+                                  <div className="space-y-1">
+                                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Role</p>
+                                    <p className="text-sm font-black text-slate-900">{role.name}</p>
+                                    <p className="text-xs text-slate-600 mt-1">{role.description}</p>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Role</p>
+                                    <p className="text-sm font-black text-slate-900">Unspecified</p>
+                                    <p className="text-xs text-slate-500 mt-1">No role assigned yet</p>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
-                            <CheckCircle2 size={14} /> Member
-                          </span>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -656,33 +689,66 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
               </div>
             ) : (
               <div className="space-y-3">
-                {teamMembers.map(member => (
-                  <div
-                    key={member.id}
-                    className="bg-white rounded-lg border border-slate-200 p-4 hover:border-brand transition"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-black text-base">
-                          {member.firstName} {member.surname}
-                        </h4>
-                        <div className="space-y-1 mt-2">
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Mail size={16} />
-                            {member.email}
+                {teamMembers.map(member => {
+                  const role = TEAM_ROLES.find(r => r.id === member.role);
+                  return (
+                    <div
+                      key={member.id}
+                      className="bg-white rounded-lg border border-slate-200 p-4 hover:border-brand transition"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        {/* Profile Picture */}
+                        <div className="flex-shrink-0">
+                          {member.profilePicUrl ? (
+                            <img
+                              src={member.profilePicUrl}
+                              alt={member.firstName}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-slate-300 flex items-center justify-center text-sm font-bold text-slate-700">
+                              {member.firstName?.[0]}{member.surname?.[0]}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Member Info */}
+                        <div className="flex-1">
+                          <h4 className="font-black text-base">
+                            {member.firstName} {member.surname}
+                          </h4>
+                          <div className="space-y-1 mt-2">
+                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                              <Mail size={16} />
+                              {member.email}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                              <Phone size={16} />
+                              {member.telephoneNumber}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Phone size={16} />
-                            {member.telephoneNumber}
+
+                          {/* Role Badge */}
+                          <div className="mt-3 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                            {role ? (
+                              <div className="space-y-1">
+                                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Role</p>
+                                <p className="text-sm font-black text-slate-900">{role.name}</p>
+                                <p className="text-xs text-slate-600 mt-1">{role.description}</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Role</p>
+                                <p className="text-sm font-black text-slate-900">Unspecified</p>
+                                <p className="text-xs text-slate-500 mt-1">No role assigned yet</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
-                        <CheckCircle2 size={14} /> Member
-                      </span>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
