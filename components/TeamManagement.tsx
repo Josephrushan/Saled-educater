@@ -655,25 +655,25 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
             )}
             <button
               onClick={() => setShowProfilePictureModal(true)}
-              className="flex items-center gap-2 bg-slate-100 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-200 transition"
+              className="flex items-center gap-2 bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
             >
               <Image size={18} /> Change Picture
             </button>
             <button
               onClick={() => setShowSuggestForm(true)}
-              className="flex items-center gap-2 bg-green-50 text-green-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-100 transition"
+              className="flex items-center gap-2 bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-400 transition"
             >
               <Users size={18} /> Suggest Member
             </button>
             <button
               onClick={() => setShowAddExisting(true)}
-              className="flex items-center gap-2 bg-brand text-slate-900 px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition"
+              className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-black transition"
             >
               <Plus size={18} /> Add Member
             </button>
             <button
               onClick={handleDeleteTeam}
-              className="flex items-center gap-2 bg-rose-50 text-rose-500 px-4 py-2 rounded-lg font-bold text-sm hover:bg-rose-100 transition"
+              className="flex items-center gap-2 bg-slate-400 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-500 transition"
             >
               <Trash2 size={18} /> Delete
             </button>
@@ -730,6 +730,12 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
               <div className="space-y-3">
                 {teamMembers.map(member => {
                   const role = TEAM_ROLES.find(r => r.id === member.role);
+                  console.log('🎯 Rendering member:', member.firstName, 'member.role type:', typeof member.role, 'member.role value:', JSON.stringify(member.role), 'foundRole:', role?.name || 'NOT FOUND');
+                  if (member.firstName === 'Rushan') {
+                    console.log('🔴 RUSHAN DEBUG - member object:', JSON.stringify(member, null, 2));
+                    console.log('🔴 RUSHAN DEBUG - TEAM_ROLES:', TEAM_ROLES.map(r => r.id));
+                    console.log('🔴 RUSHAN DEBUG - member.role === "ghost":', member.role === 'ghost');
+                  }
                   return (
                     <div
                       key={member.id}

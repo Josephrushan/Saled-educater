@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, Calendar, Upload } from 'lucide-react';
+import { Trash2, Plus, Calendar, Upload, Newspaper } from 'lucide-react';
 import { SalesRep } from '../types';
 import { 
   getUpdates, 
@@ -173,7 +173,7 @@ const UpdatesModule: React.FC<UpdatesModuleProps> = ({ currentUser }) => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-black text-slate-900 flex items-center gap-3">
-              📰 Updates
+              <Newspaper size={36} /> Updates
             </h1>
             <p className="text-slate-600 mt-2">Latest announcements and updates</p>
           </div>
