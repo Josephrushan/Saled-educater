@@ -164,61 +164,19 @@ const App: React.FC = () => {
         const otherReps = reps.filter(r => r.id !== currentUser.id);
         setAllReps(otherReps);
 
-        // Subscribe to each rep's messages
-        const newUnsubscribers = new Map<string, () => void>();
+        // ⚠️ DISABLED: DirectMessageModule now handles subscriptions to prevent duplicates
+        // Having subscriptions here AND in DirectMessageModule causes:
+        // 1. Double listeners on the same conversations
+        // 2. Notifications firing twice
+        // 3. Old messages triggering notifications repeatedly
+        // The unread count is now handled by DirectMessageModule
+        
+        console.log('✅ Loaded reps:', otherReps.length);
 
-        for (const rep of otherReps) {
-          try {
-            const dmId = await getOrCreateDirectMessage(currentUser.id, rep.id);
-            const unsubscribe = subscribeToDirectMessages(dmId, (messages) => {
-              // Count unread messages from this rep (incoming only, not sent by current user)
-              // Use ref to get latest notified IDs (prevents stale closure)
-              const unread = messages.filter(
-                m => m.senderId !== currentUser.id && !notifiedMessageIdsRef.current.has(m.id)
-              );
-
-              // Show notification and track each new message only once
-              if (unread.length > 0) {
-                unread.forEach(message => {
-                  // Extra safety check - ensure we haven't already notified this message
-                  if (!notifiedMessageIdsRef.current.has(message.id)) {
-                    // Immediately add to ref BEFORE showing notification to prevent race conditions
-                    notifiedMessageIdsRef.current.add(message.id);
-                    
-                    showNotification(
-                      `New message from ${message.senderName}`,
-                      message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
-                      'message',
-                      message.id
-                    );
-                    
-                    // Update state to persist to localStorage
-                    setNotifiedMessageIds(prev => {
-                      const newSet = new Set(prev);
-                      newSet.add(message.id);
-                      return newSet;
-                    });
-                    
-                    // Increment unread count only once per message
-                    setUnreadMessageCount(prev => prev + 1);
-                  }
-                });
-              }
-            });
-            newUnsubscribers.set(rep.id, unsubscribe);
-          } catch (error) {
-            console.error(`Error subscribing to messages for ${rep.name}:`, error);
-          }
-        }
-
-        setDirectMessageUnsubscribers(newUnsubscribers);
-
-        // Cleanup function
-        return () => {
-          newUnsubscribers.forEach(unsub => unsub());
-        };
+        // Return empty cleanup function
+        return () => {};
       } catch (error) {
-        console.error('Error subscribing to all messages:', error);
+        console.error('Error loading reps:', error);
       }
     };
 
@@ -322,6 +280,28 @@ const App: React.FC = () => {
     setNotifications(prev => prev.filter(n => n.messageId !== messageId));
     // Decrement unread count
     setUnreadMessageCount(prev => Math.max(0, prev - 1));
+  };
+
+  const handleIncomingMessage = (message: Message, fromRep: SalesRep) => {
+    // Only show notification if we haven't already notified about this message
+    if (!notifiedMessageIdsRef.current.has(message.id)) {
+      notifiedMessageIdsRef.current.add(message.id);
+      
+      showNotification(
+        `New message from ${message.senderName}`,
+        message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
+        'message',
+        message.id
+      );
+      
+      setNotifiedMessageIds(prev => {
+        const newSet = new Set(prev);
+        newSet.add(message.id);
+        return newSet;
+      });
+      
+      setUnreadMessageCount(prev => prev + 1);
+    }
   };
 
   const handleSchoolSelect = (school: School) => {
@@ -486,7 +466,7 @@ const App: React.FC = () => {
       case 'tools': return <Resources type="tools" currentUser={currentUser} />;
       case 'training': return <Resources type="training" currentUser={currentUser} />;
       case 'crew': return <CrewDirectoryModule currentUser={currentUser} />;
-      case 'direct-message': return <DirectMessageModule currentUser={currentUser} onMarkMessageAsRead={markMessageAsRead} />;
+      case 'direct-message': return <DirectMessageModule currentUser={currentUser} onMarkMessageAsRead={markMessageAsRead} onNewMessage={handleIncomingMessage} />;
       case 'incentives': return <IncentivesModule currentUser={currentUser} />;
       case 'payment': return <PaymentInfo currentUser={currentUser} onUpdate={setCurrentUser} />;
       case 'analytics': return currentUser ? <AnalyticsStrategy currentUser={currentUser} schools={schools} onBack={() => setActiveTab('dashboard')} /> : null;
@@ -528,7 +508,8 @@ const App: React.FC = () => {
 
       <MobileNav 
         activeTab={activeTab === 'school_detail' ? 'schools' : activeTab} 
-        setActiveTab={handleTabChange} 
+        setActiveTab={handleTabChange}
+        onOpenDrawer={() => setIsDrawerOpen(true)}
       />
 
       {showAddModal && (

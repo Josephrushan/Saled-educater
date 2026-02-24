@@ -6,9 +6,10 @@ import { getSalesReps, getOrCreateDirectMessage, addDirectMessage, getDirectMess
 interface DirectMessageModuleProps {
   currentUser: SalesRep | null;
   onMarkMessageAsRead?: (messageId: string) => void;
+  onNewMessage?: (message: Message, fromRep: SalesRep) => void;
 }
 
-const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, onMarkMessageAsRead }) => {
+const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, onMarkMessageAsRead, onNewMessage }) => {
   const [allReps, setAllReps] = useState<SalesRep[]>([]);
   const [conversations, setConversations] = useState<Map<string, { rep: SalesRep; messages: Message[] }>>(new Map());
   const [selectedRepId, setSelectedRepId] = useState<string | null>(null);
@@ -17,22 +18,98 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, 
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewingConversation, setViewingConversation] = useState(false);
+  const [activeUnsubscribe, setActiveUnsubscribe] = useState<(() => void) | null>(null);
+  const [notifiedMessageIds, setNotifiedMessageIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchInitialData();
   }, []);
 
   useEffect(() => {
-    if (selectedRepId && !conversations.has(selectedRepId)) {
-      let unsubscribe: (() => void) | null = null;
+    if (selectedRepId) {
+      // Unsubscribe from previous conversation
+      if (activeUnsubscribe) {
+        console.log('🔕 Unsubscribing from previous conversation');
+        activeUnsubscribe();
+      }
+
+      let isMounted = true;
+      
       subscribeToConversation(selectedRepId).then(unsub => {
-        unsubscribe = unsub;
+        if (isMounted) {
+          console.log(`📞 Successfully subscribed to ${selectedRepId}`);
+          setActiveUnsubscribe(() => unsub);
+        } else {
+          unsub();
+        }
       });
+      
       return () => {
-        if (unsubscribe) unsubscribe();
+        isMounted = false;
       };
     }
   }, [selectedRepId]);
+
+  // Subscribe to all other conversations (for unread badges)
+  useEffect(() => {
+    if (!currentUser || allReps.length === 0) return;
+
+    console.log(`🔔 Subscribing to ${allReps.length} conversations for unread tracking`);
+    
+    const subscribeToAllConversations = async () => {
+      const unsubscribers: Map<string, () => void> = new Map();
+
+      for (const rep of allReps) {
+        if (rep.id === selectedRepId) continue; // Skip the selected one (already subscribed)
+        
+        try {
+          const dmId = await getOrCreateDirectMessage(currentUser.id, rep.id);
+          const unsubscribe = subscribeToDirectMessages(dmId, (newMessages) => {
+            // Just update conversations, trigger notifications for non-selected conversations
+            const recentMessages = newMessages.filter(msg => {
+              try {
+                const msgTime = new Date(msg.createdAt).getTime();
+                return msgTime > new Date().getTime() - 60000; // 1 minute
+              } catch {
+                return true;
+              }
+            });
+
+            const newUnnotified = recentMessages.filter(msg => 
+              msg.senderId !== currentUser.id && !notifiedMessageIds.has(msg.id)
+            );
+
+            setConversations(prev => {
+              const updated = new Map(prev);
+              updated.set(rep.id, { rep, messages: newMessages });
+              return updated;
+            });
+
+            // Show notification for unread conversations
+            if (newUnnotified.length > 0 && selectedRepId !== rep.id) {
+              newUnnotified.forEach(message => {
+                console.log(`📣 New unread message from ${rep.name}`);
+                setNotifiedMessageIds(prev => new Set([...prev, message.id]));
+                if (onNewMessage) {
+                  onNewMessage(message, rep);
+                }
+              });
+            }
+          });
+          unsubscribers.set(rep.id, unsubscribe);
+        } catch (error) {
+          console.error(`Error subscribing to ${rep.name}:`, error);
+        }
+      }
+
+      return () => {
+        console.log('🔕 Unsubscribing from all background conversations');
+        unsubscribers.forEach(unsub => unsub());
+      };
+    };
+
+    return subscribeToAllConversations();
+  }, [allReps, currentUser, selectedRepId, notifiedMessageIds, onNewMessage]);
 
   // Mark incoming messages as read when viewing conversation
   useEffect(() => {
@@ -68,10 +145,52 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, 
   const subscribeToConversation = async (repId: string) => {
     try {
       const dmId = await getOrCreateDirectMessage(currentUser?.id || '', repId);
-      const unsubscribe = subscribeToDirectMessages(dmId, (messages) => {
+      console.log(`📞 Subscribing to conversation with ${repId}, using dmId: ${dmId}`);
+      
+      const unsubscribe = subscribeToDirectMessages(dmId, (newMessages) => {
         const rep = allReps.find(r => r.id === repId);
         if (rep) {
-          setConversations(new Map(conversations).set(repId, { rep, messages }));
+          // Filter out old messages (older than 1 minute) to avoid re-notifications
+          const now = new Date().getTime();
+          const oneMinuteAgo = now - 60000; // 1 minute
+          
+          const recentMessages = newMessages.filter(msg => {
+            try {
+              const msgTime = new Date(msg.createdAt).getTime();
+              return msgTime > oneMinuteAgo;
+            } catch (e) {
+              return true;
+            }
+          });
+
+          // Find new messages that haven't been notified yet
+          const newUnnotifiedMessages = recentMessages.filter(msg => 
+            msg.senderId !== currentUser?.id && !notifiedMessageIds.has(msg.id)
+          );
+          
+          setConversations(prev => {
+            const updated = new Map(prev);
+            // Update state with ALL messages (for UI), but only trigger notification for recent incoming
+            updated.set(repId, { rep, messages: newMessages });
+            return updated;
+          });
+
+          // Trigger notification callback for each new message (only if user is NOT viewing this conversation)
+          if (newUnnotifiedMessages.length > 0 && selectedRepId !== repId) {
+            newUnnotifiedMessages.forEach(message => {
+              console.log(`📣 Notifying about new message from ${rep.name}: "${message.content.substring(0, 50)}..."`);
+              setNotifiedMessageIds(prev => new Set([...prev, message.id]));
+              if (onNewMessage) {
+                onNewMessage(message, rep);
+              }
+            });
+          } else if (newUnnotifiedMessages.length > 0 && selectedRepId === repId) {
+            // Mark as notified even if user is viewing the conversation
+            console.log(`✅ User viewing conversation, marking messages as read`);
+            newUnnotifiedMessages.forEach(message => {
+              setNotifiedMessageIds(prev => new Set([...prev, message.id]));
+            });
+          }
         }
       });
       return unsubscribe;

@@ -22,7 +22,7 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose, onNavigate
     { id: 'crew', label: 'Crew Directory', icon: <Users size={20} />, hide: false },
     { id: 'direct-message', label: 'Direct Message', icon: <Mail size={20} />, hide: false },
     { id: 'incentives', label: 'Incentives', icon: <Gift size={20} />, hide: false },
-    { id: 'reps', label: 'Sales Members', icon: <Users size={20} />, hide: !isAdmin },
+    { id: 'reps', label: 'Sales Members', icon: <Users size={20} />, hide: false },
   ];
 
   return (

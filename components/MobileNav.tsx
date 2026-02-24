@@ -1,13 +1,14 @@
 
 import React from 'react';
-import { LayoutDashboard, School, FileText, CreditCard } from 'lucide-react';
+import { LayoutDashboard, School, FileText, CreditCard, Menu } from 'lucide-react';
 
 interface MobileNavProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onOpenDrawer?: () => void;
 }
 
-const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab }) => {
+const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, onOpenDrawer }) => {
   const tabs = [
     { id: 'dashboard', label: 'Home', icon: <LayoutDashboard size={20} /> },
     { id: 'schools', label: 'Schools', icon: <School size={20} /> },
@@ -31,6 +32,15 @@ const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab }) => {
           <span className="text-[10px] font-black uppercase tracking-widest">{tab.label}</span>
         </button>
       ))}
+      <button
+        onClick={onOpenDrawer}
+        className={`flex-1 flex flex-col items-center gap-1 transition-all text-slate-400`}
+      >
+        <div className="p-2 rounded-xl transition-all">
+          <Menu size={20} />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-widest">More</span>
+      </button>
     </div>
   );
 };
