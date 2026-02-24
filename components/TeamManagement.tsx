@@ -43,6 +43,14 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
     loadTeamInfo();
   }, [currentUser?.id]);
 
+  // Load available reps when "Add Member" modal opens
+  useEffect(() => {
+    if (showAddExisting && isTeamLead) {
+      console.log('📱 Add Member modal opened, loading available reps for:', currentUser.id);
+      loadAvailableReps();
+    }
+  }, [showAddExisting]);
+
   const loadTeamInfo = async () => {
     setIsLoading(true);
 
@@ -83,8 +91,15 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   };
 
   const loadAvailableReps = async () => {
-    const reps = await getAvailableRepsForTeam(currentUser.id);
-    setAvailableReps(reps);
+    try {
+      console.log('🔍 Loading available reps for team lead:', currentUser.id);
+      const reps = await getAvailableRepsForTeam(currentUser.id);
+      console.log('✅ Loaded available reps:', reps.length, reps);
+      setAvailableReps(reps);
+    } catch (error) {
+      console.error('❌ Error loading available reps:', error);
+      setAvailableReps([]);
+    }
   };
 
   const handleCreateTeam = async (teamName: string, profilePictureUrl?: string) => {
