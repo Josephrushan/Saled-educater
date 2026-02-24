@@ -224,17 +224,28 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
 
   const handleOpenRoleModal = (member: any) => {
     setSelectedMemberForRole(member);
-    setSelectedRole(member.role || 'digital-scout');
+    // Validate role - if invalid, use default
+    const validRoleId = TEAM_ROLES.find(r => r.id === member.role) ? member.role : 'digital-scout';
+    console.log('🔧 Opening role modal for', member.firstName, '- current role:', member.role, '-> validated role:', validRoleId);
+    setSelectedRole(validRoleId);
     setShowRoleModal(true);
   };
 
   const handleAssignRole = async () => {
     if (!selectedMemberForRole) return;
     
+    // Validate selected role
+    const validRole = TEAM_ROLES.find(r => r.id === selectedRole);
+    if (!validRole) {
+      alert('❌ Invalid role selected');
+      return;
+    }
+    
     try {
+      console.log('💾 Saving role for', selectedMemberForRole.firstName, '- role ID:', selectedRole, 'role name:', validRole.name);
       const success = await updateTeamMemberRole(currentUser.id, selectedMemberForRole.id, selectedRole);
       if (success) {
-        alert('✅ Role updated successfully!');
+        alert('✅ Role updated to ' + validRole.name);
         setShowRoleModal(false);
         await loadTeamInfo();
       } else {

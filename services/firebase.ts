@@ -1280,7 +1280,12 @@ export async function getTeamMembers(teamLeadId: string) {
         if (repSnap.exists()) {
           const repData = repSnap.data();
           const memberRole = memberRoles[memberId];
-          console.log('✅ Added member:', repData.name, 'with role from memberRoles:', memberRole, 'roleId full value:', memberRoles[memberId]);
+          const validRoles = ['digital-scout', 'ghost', 'opener', 'scout', 'educater', 'finisher'];
+          const isValidRole = validRoles.includes(memberRole);
+          console.log('✅ Added member:', repData.name, 'with role from memberRoles:', memberRole, 'isValidRole:', isValidRole);
+          if (!isValidRole && memberRole) {
+            console.warn('⚠️ WARNING: Invalid role detected for', repData.name, '- role:', memberRole, 'should be one of:', validRoles);
+          }
           members.push({
             id: memberId,
             firstName: repData.name || '',
