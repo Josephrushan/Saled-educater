@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Mail, Phone, CheckCircle2, XCircle, AlertCircle, Search, Lock, LogOut, Check, X, Trash2 } from 'lucide-react';
 import { SalesRep } from '../types';
+import { TEAM_ROLES, MAX_TEAM_SIZE } from '../utils/teamRoles';
 import { 
   getTeamMembers, 
   suggestTeamMember, 
@@ -38,6 +39,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
   const [myTeamInfo, setMyTeamInfo] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState<string>('digital-scout');
 
   // Fetch team info on mount
   useEffect(() => {
@@ -145,12 +147,19 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   };
 
   const handleAddExistingRep = async (repId: string) => {
+    // Check team size limit
+    if (teamMembers.length >= MAX_TEAM_SIZE) {
+      alert(`❌ Team is at maximum size (${MAX_TEAM_SIZE} members). You cannot add more members.`);
+      return;
+    }
+
     const success = await sendTeamInvitation(currentUser.id, repId);
 
     if (success) {
       alert('📧 Invitation sent! Rep will receive it in their My Team tab.');
       setSearchQuery('');
       setShowAddExisting(false);
+      setSelectedRole('digital-scout');
       await loadTeamInfo();
       setAvailableReps(availableReps.filter(r => r.id !== repId));
     } else {
@@ -243,7 +252,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                       }
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition border border-red-200"
+                  className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-800 transition border border-slate-900"
                 >
                   <LogOut size={18} /> Leave Team
                 </button>
@@ -358,7 +367,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                               alert('❌ Failed to reject invitation');
                             }
                           }}
-                          className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition border border-red-200"
+                          className="flex-1 flex items-center justify-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-800 transition border border-slate-900"
                         >
                           <X size={16} /> Reject
                         </button>
@@ -458,6 +467,8 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             onAddRep={handleAddExistingRep}
+            selectedRole={selectedRole}
+            setSelectedRole={setSelectedRole}
           />
         )}
 
@@ -544,7 +555,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
             </button>
             <button
               onClick={handleDeleteTeam}
-              className="flex items-center gap-2 bg-rose-50 text-rose-500 px-4 py-2 rounded-lg font-bold text-sm hover:bg-rose-100 transition"
+              className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-800 transition"
             >
               <Trash2 size={18} /> Delete
             </button>
@@ -664,6 +675,8 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onAddRep={handleAddExistingRep}
+          selectedRole={selectedRole}
+          setSelectedRole={setSelectedRole}
         />
       )}
     </div>
@@ -796,6 +809,8 @@ interface AddExistingMemberModalProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onAddRep: (repId: string) => Promise<void>;
+  selectedRole?: string;
+  setSelectedRole?: (role: string) => void;
 }
 
 const AddExistingMemberModal: React.FC<AddExistingMemberModalProps> = ({
@@ -803,7 +818,9 @@ const AddExistingMemberModal: React.FC<AddExistingMemberModalProps> = ({
   availableReps,
   searchQuery,
   setSearchQuery,
-  onAddRep
+  onAddRep,
+  selectedRole = 'digital-scout',
+  setSelectedRole
 }) => {
   const [isAdding, setIsAdding] = useState<string | null>(null);
 
@@ -863,7 +880,31 @@ const AddExistingMemberModal: React.FC<AddExistingMemberModalProps> = ({
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-200 sticky bottom-0 bg-white">
+        <div className="p-4 border-t border-slate-200 sticky bottom-0 bg-white space-y-4">
+          <div>
+            <p className="text-xs font-bold text-slate-500 mb-2">SELECT ROLE</p>
+            <div className="space-y-2">
+              {TEAM_ROLES.map(role => (
+                <label
+                  key={role.id}
+                  className="flex items-start gap-3 p-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition"
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={role.id}
+                    checked={selectedRole === role.id}
+                    onChange={(e) => setSelectedRole?.(e.target.value)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">{role.name}</p>
+                    <p className="text-xs text-slate-600">{role.description}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
           <button
             onClick={onClose}
             className="w-full bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
