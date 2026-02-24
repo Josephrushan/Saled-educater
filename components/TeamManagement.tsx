@@ -194,7 +194,18 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
             {/* Team Information Card */}
             {team && (
               <div className="bg-white rounded-lg border border-slate-200 p-6">
-                <h3 className="font-black text-base mb-4">Team Information</h3>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="font-black text-base">Team Information</h3>
+                  </div>
+                  {team.teamProfilePictureUrl && (
+                    <img
+                      src={team.teamProfilePictureUrl}
+                      alt={team.teamName}
+                      className="w-16 h-16 rounded-lg object-cover border-2 border-brand"
+                    />
+                  )}
+                </div>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <p className="text-xs text-slate-500 font-bold mb-1">TEAM NAME</p>
@@ -544,7 +555,18 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
       <div className="flex-1 overflow-auto p-6">
         <div className="space-y-4">
           <div className="bg-white rounded-lg border border-slate-200 p-6">
-            <h3 className="font-black text-base mb-4">Team Information</h3>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-black text-base">Team Information</h3>
+              </div>
+              {team?.teamProfilePictureUrl && (
+                <img
+                  src={team.teamProfilePictureUrl}
+                  alt={team?.teamName}
+                  className="w-16 h-16 rounded-lg object-cover border-2 border-brand"
+                />
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-slate-500 font-bold mb-1">TEAM NAME</p>
