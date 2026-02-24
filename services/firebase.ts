@@ -1541,7 +1541,7 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
     }
     
     const teamData = teamSnap.data();
-    console.log('📋 Current team data:', teamData);
+    console.log('📋 Team data:', teamData?.teamName);
     
     // Get rep info from educater_salesman collection
     const repRef = doc(db, 'educater_salesman', repId);
@@ -1555,28 +1555,7 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
     const repData = repSnap.data();
     console.log('👤 Rep data:', repData?.name, 'ID:', repId);
     
-    // Ensure members array exists and add the rep
-    const currentMembers = Array.isArray(teamData.members) ? [...teamData.members] : [];
-    console.log('📋 Current members:', currentMembers);
-    
-    if (!currentMembers.includes(repId)) {
-      currentMembers.push(repId);
-      console.log('➕ Adding rep to members array:', currentMembers);
-      
-      // Update team with new members array
-      const updateData = {
-        members: currentMembers,
-        updatedAt: new Date().toISOString()
-      };
-      
-      console.log('💾 Updating team with:', updateData);
-      await updateDoc(teamRef, updateData);
-      console.log('✅ Team updated successfully');
-    } else {
-      console.log('⚠️ Rep already in team');
-    }
-    
-    // Create invitation record
+    // Create invitation record ONLY - rep must accept to be added to team
     const invitationsRef = collection(db, 'teamInvitations');
     const invitationData = {
       teamId: teamLeadId,
@@ -1590,34 +1569,17 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
       createdAt: new Date().toISOString()
     };
     
+    console.log('💾 Creating invitation for rep to accept/reject');
     await addDoc(invitationsRef, invitationData);
-    console.log('✅ Invitation created');
+    console.log('✅ Invitation created - rep will see this as pending');
     
-    // Create team member record
-    const teamMembersRef = collection(db, 'teamMembers');
-    const teamMemberData = {
-      id: repId,
-      firstName: repData.name || repData.firstName || '',
-      surname: repData.surname || '',
-      email: repData.email || '',
-      telephoneNumber: repData.telephoneNumber || '',
-      teamLeadId: teamLeadId,
-      teamLeadName: teamData.leadName,
-      username: repData.email || '',
-      createdAt: new Date().toISOString(),
-      approvedAt: new Date().toISOString(),
-      approvedBy: 'team_lead_invite'
-    };
-    
-    await addDoc(teamMembersRef, teamMemberData);
-    console.log('✅ Team member record created');
-    
-    console.log('✅ Invitation sent to rep');
+    console.log('✅ Invitation sent to rep - waiting for them to accept');
     return true;
   } catch (error) {
     console.error('❌ Error sending invitation:', error);
     return false;
   }
+}
 }
 
 // Get pending invitations for a rep
@@ -1665,15 +1627,15 @@ export async function acceptTeamInvitation(invitationId: string, repId: string) 
     const teamLeadId = invitationData.teamId;
     
     // Get rep info from educater_salesman
-    const repsRef = collection(db, 'educater_salesman');
-    const repSnap = await getDocs(query(repsRef, where('id', '==', repId)));
+    const repRef = doc(db, 'educater_salesman', repId);
+    const repSnap = await getDoc(repRef);
     
-    if (repSnap.empty) {
+    if (!repSnap.exists()) {
       console.error('❌ Rep not found');
       return false;
     }
     
-    const repData = repSnap.docs[0].data();
+    const repData = repSnap.data();
     
     // Create team member record
     const teamMembersRef = collection(db, 'teamMembers');
