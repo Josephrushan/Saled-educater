@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Mail, Phone, CheckCircle2, XCircle, AlertCircle, Search, Lock, LogOut, Check, X, Trash2 } from 'lucide-react';
+import { Users, Plus, Mail, Phone, CheckCircle2, XCircle, AlertCircle, Search, Lock, LogOut, Check, X, Trash2, Image } from 'lucide-react';
 import { SalesRep } from '../types';
-import { TEAM_ROLES, MAX_TEAM_SIZE } from '../utils/teamRoles';
 import { 
   getTeamMembers, 
   suggestTeamMember, 
@@ -17,7 +16,8 @@ import {
   acceptTeamInvitation,
   rejectTeamInvitation,
   leaveTeam,
-  deleteTeam
+  deleteTeam,
+  updateTeamProfilePicture
 } from '../services/firebase';
 import SuggestTeamMember from './SuggestTeamMember';
 
@@ -34,12 +34,12 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [showAddExisting, setShowAddExisting] = useState(false);
   const [showCreateTeamPrompt, setShowCreateTeamPrompt] = useState(false);
+  const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
   const [availableReps, setAvailableReps] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
   const [myTeamInfo, setMyTeamInfo] = useState<any>(null);
-  const [selectedRole, setSelectedRole] = useState<string>('digital-scout');
 
   // Fetch team info on mount
   useEffect(() => {
@@ -147,19 +147,12 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   };
 
   const handleAddExistingRep = async (repId: string) => {
-    // Check team size limit
-    if (teamMembers.length >= MAX_TEAM_SIZE) {
-      alert(`❌ Team is at maximum size (${MAX_TEAM_SIZE} members). You cannot add more members.`);
-      return;
-    }
-
     const success = await sendTeamInvitation(currentUser.id, repId);
 
     if (success) {
       alert('📧 Invitation sent! Rep will receive it in their My Team tab.');
       setSearchQuery('');
       setShowAddExisting(false);
-      setSelectedRole('digital-scout');
       await loadTeamInfo();
       setAvailableReps(availableReps.filter(r => r.id !== repId));
     } else {
@@ -184,6 +177,18 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
     }
   };
 
+  const handleUpdateTeamProfilePicture = async (profilePictureUrl: string) => {
+    const success = await updateTeamProfilePicture(currentUser.id, profilePictureUrl);
+
+    if (success) {
+      alert('✅ Team profile picture updated!');
+      setShowProfilePictureModal(false);
+      await loadTeamInfo();
+    } else {
+      alert('❌ Failed to update profile picture');
+    }
+  };
+
   const filteredReps = availableReps.filter(rep => 
     rep.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (rep.surname && rep.surname.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -203,18 +208,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
             {/* Team Information Card */}
             {team && (
               <div className="bg-white rounded-lg border border-slate-200 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="font-black text-base">Team Information</h3>
-                  </div>
-                  {team.teamProfilePictureUrl && (
-                    <img
-                      src={team.teamProfilePictureUrl}
-                      alt={team.teamName}
-                      className="w-16 h-16 rounded-lg object-cover border-2 border-brand"
-                    />
-                  )}
-                </div>
+                <h3 className="font-black text-base mb-4">Team Information</h3>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <p className="text-xs text-slate-500 font-bold mb-1">TEAM NAME</p>
@@ -234,10 +228,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                       {new Date(team.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-slate-500 font-bold mb-1">SCHOOLS COVERED</p>
-                    <p className="text-base font-bold text-slate-900">{team.schoolIds?.length || 0}</p>
-                  </div>
                 </div>
                 <button
                   onClick={async () => {
@@ -252,7 +242,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                       }
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-800 transition border border-slate-900"
+                  className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition border border-red-200"
                 >
                   <LogOut size={18} /> Leave Team
                 </button>
@@ -280,27 +270,18 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                         className="bg-white rounded-lg border border-slate-200 p-4 hover:border-brand transition"
                       >
                         <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-4 flex-1">
-                            {member.profilePicUrl && (
-                              <img
-                                src={member.profilePicUrl}
-                                alt={member.firstName}
-                                className="w-12 h-12 rounded-full object-cover border border-slate-200 flex-shrink-0"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <h4 className="font-black text-base">
-                                {member.firstName} {member.surname}
-                              </h4>
-                              <div className="space-y-1 mt-2">
-                                <div className="flex items-center gap-2 text-sm text-slate-600">
-                                  <Mail size={16} />
-                                  {member.email}
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-slate-600">
-                                  <Phone size={16} />
-                                  {member.telephoneNumber}
-                                </div>
+                          <div className="flex-1">
+                            <h4 className="font-black text-base">
+                              {member.firstName} {member.surname}
+                            </h4>
+                            <div className="space-y-1 mt-2">
+                              <div className="flex items-center gap-2 text-sm text-slate-600">
+                                <Mail size={16} />
+                                {member.email}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-slate-600">
+                                <Phone size={16} />
+                                {member.telephoneNumber}
                               </div>
                             </div>
                           </div>
@@ -314,18 +295,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                 )}
               </div>
             )}
-
-            {/* Suggest New Recruit */}
-            <div className="bg-white rounded-lg border border-slate-200 p-6">
-              <h3 className="font-black text-base mb-4">Recommend a Recruit</h3>
-              <p className="text-sm text-slate-600 mb-4">Know someone talented? Suggest them to your team lead</p>
-              <button
-                onClick={() => setShowSuggestForm(true)}
-                className="w-full flex items-center justify-center gap-2 bg-brand text-slate-900 px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition"
-              >
-                <Plus size={18} /> Suggest Recruit
-              </button>
-            </div>
 
             {/* Pending Invitations */}
             {pendingInvitations.length > 0 && (
@@ -367,7 +336,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                               alert('❌ Failed to reject invitation');
                             }
                           }}
-                          className="flex-1 flex items-center justify-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-800 transition border border-slate-900"
+                          className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition border border-red-200"
                         >
                           <X size={16} /> Reject
                         </button>
@@ -433,22 +402,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                 </p>
               </div>
             </button>
-
-            {/* Suggest New Member */}
-            <button
-              onClick={() => setShowSuggestForm(true)}
-              className="w-full flex items-center gap-4 bg-white border border-slate-200 p-4 rounded-lg hover:border-green-500 hover:bg-green-50 transition group"
-            >
-              <div className="w-12 h-12 rounded-lg bg-slate-900 flex items-center justify-center group-hover:bg-slate-800 transition flex-shrink-0">
-                <Users size={24} className="text-white" />
-              </div>
-              <div className="text-left flex-1">
-                <h3 className="font-black text-base">Suggest New Member</h3>
-                <p className="text-sm text-slate-600">
-                  Suggest an applicant to your admin for approval
-                </p>
-              </div>
-            </button>
           </div>
         </div>
 
@@ -467,31 +420,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             onAddRep={handleAddExistingRep}
-            selectedRole={selectedRole}
-            setSelectedRole={setSelectedRole}
           />
-        )}
-
-        {showSuggestForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-auto">
-              <div className="p-6 border-b border-slate-200">
-                <h2 className="font-black text-xl">Suggest New Team Member</h2>
-                <p className="text-sm text-slate-600 mt-1">
-                  Suggest an applicant to join your team. The admin will review and approve.
-                </p>
-              </div>
-              <SuggestTeamMember onSubmit={handleSuggestionSubmitted} />
-              <div className="p-4 border-t border-slate-200 flex justify-end">
-                <button
-                  onClick={() => setShowSuggestForm(false)}
-                  className="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
         )}
 
         {showCreateTeamPrompt && (
@@ -548,6 +477,18 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
               />
             )}
             <button
+              onClick={() => setShowProfilePictureModal(true)}
+              className="flex items-center gap-2 bg-slate-100 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-200 transition"
+            >
+              <Image size={18} /> Change Picture
+            </button>
+            <button
+              onClick={() => setShowSuggestForm(true)}
+              className="flex items-center gap-2 bg-green-50 text-green-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-100 transition"
+            >
+              <Users size={18} /> Suggest Member
+            </button>
+            <button
               onClick={() => setShowAddExisting(true)}
               className="flex items-center gap-2 bg-brand text-slate-900 px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition"
             >
@@ -555,7 +496,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
             </button>
             <button
               onClick={handleDeleteTeam}
-              className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-800 transition"
+              className="flex items-center gap-2 bg-rose-50 text-rose-500 px-4 py-2 rounded-lg font-bold text-sm hover:bg-rose-100 transition"
             >
               <Trash2 size={18} /> Delete
             </button>
@@ -566,18 +507,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
       <div className="flex-1 overflow-auto p-6">
         <div className="space-y-4">
           <div className="bg-white rounded-lg border border-slate-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="font-black text-base">Team Information</h3>
-              </div>
-              {team?.teamProfilePictureUrl && (
-                <img
-                  src={team.teamProfilePictureUrl}
-                  alt={team?.teamName}
-                  className="w-16 h-16 rounded-lg object-cover border-2 border-brand"
-                />
-              )}
-            </div>
+            <h3 className="font-black text-base mb-4">Team Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-slate-500 font-bold mb-1">TEAM NAME</p>
@@ -598,10 +528,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                 <p className="text-base font-bold text-green-700 flex items-center gap-1">
                   <CheckCircle2 size={14} /> Active
                 </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 font-bold mb-1">SCHOOLS COVERED</p>
-                <p className="text-base font-bold text-slate-900">{team?.schoolIds?.length || 0}</p>
               </div>
             </div>
           </div>
@@ -631,27 +557,18 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                     className="bg-white rounded-lg border border-slate-200 p-4 hover:border-brand transition"
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4 flex-1">
-                        {member.profilePicUrl && (
-                          <img
-                            src={member.profilePicUrl}
-                            alt={member.firstName}
-                            className="w-12 h-12 rounded-full object-cover border border-slate-200 flex-shrink-0"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <h4 className="font-black text-base">
-                            {member.firstName} {member.surname}
-                          </h4>
-                          <div className="space-y-1 mt-2">
-                            <div className="flex items-center gap-2 text-sm text-slate-600">
-                              <Mail size={16} />
-                              {member.email}
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-slate-600">
-                              <Phone size={16} />
-                              {member.telephoneNumber}
-                            </div>
+                      <div className="flex-1">
+                        <h4 className="font-black text-base">
+                          {member.firstName} {member.surname}
+                        </h4>
+                        <div className="space-y-1 mt-2">
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <Mail size={16} />
+                            {member.email}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <Phone size={16} />
+                            {member.telephoneNumber}
                           </div>
                         </div>
                       </div>
@@ -675,8 +592,37 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onAddRep={handleAddExistingRep}
-          selectedRole={selectedRole}
-          setSelectedRole={setSelectedRole}
+        />
+      )}
+
+      {/* Suggest New Member Modal */}
+      {showSuggestForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-auto">
+            <div className="p-6 border-b border-slate-200">
+              <h2 className="font-black text-xl">Suggest New Team Member</h2>
+              <p className="text-sm text-slate-600 mt-1">
+                Suggest an applicant to join your team. The admin will review and approve.
+              </p>
+            </div>
+            <SuggestTeamMember onSubmit={handleSuggestionSubmitted} />
+            <div className="p-4 border-t border-slate-200 flex justify-end">
+              <button
+                onClick={() => setShowSuggestForm(false)}
+                className="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Profile Picture Modal */}
+      {showProfilePictureModal && (
+        <ChangeProfilePictureModal
+          onClose={() => setShowProfilePictureModal(false)}
+          onSubmit={handleUpdateTeamProfilePicture}
         />
       )}
     </div>
@@ -809,8 +755,6 @@ interface AddExistingMemberModalProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onAddRep: (repId: string) => Promise<void>;
-  selectedRole?: string;
-  setSelectedRole?: (role: string) => void;
 }
 
 const AddExistingMemberModal: React.FC<AddExistingMemberModalProps> = ({
@@ -818,9 +762,7 @@ const AddExistingMemberModal: React.FC<AddExistingMemberModalProps> = ({
   availableReps,
   searchQuery,
   setSearchQuery,
-  onAddRep,
-  selectedRole = 'digital-scout',
-  setSelectedRole
+  onAddRep
 }) => {
   const [isAdding, setIsAdding] = useState<string | null>(null);
 
@@ -880,31 +822,7 @@ const AddExistingMemberModal: React.FC<AddExistingMemberModalProps> = ({
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-200 sticky bottom-0 bg-white space-y-4">
-          <div>
-            <p className="text-xs font-bold text-slate-500 mb-2">SELECT ROLE</p>
-            <div className="space-y-2">
-              {TEAM_ROLES.map(role => (
-                <label
-                  key={role.id}
-                  className="flex items-start gap-3 p-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition"
-                >
-                  <input
-                    type="radio"
-                    name="role"
-                    value={role.id}
-                    checked={selectedRole === role.id}
-                    onChange={(e) => setSelectedRole?.(e.target.value)}
-                    className="mt-1"
-                  />
-                  <div className="flex-1">
-                    <p className="font-bold text-sm">{role.name}</p>
-                    <p className="text-xs text-slate-600">{role.description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
+        <div className="p-4 border-t border-slate-200 sticky bottom-0 bg-white">
           <button
             onClick={onClose}
             className="w-full bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
@@ -917,4 +835,121 @@ const AddExistingMemberModal: React.FC<AddExistingMemberModalProps> = ({
   );
 };
 
-export default TeamManagement;
+// Change Profile Picture Modal
+interface ChangeProfilePictureModalProps {
+  onClose: () => void;
+  onSubmit: (profilePictureUrl: string) => Promise<void>;
+}
+
+const ChangeProfilePictureModal: React.FC<ChangeProfilePictureModalProps> = ({ onClose, onSubmit }) => {
+  const [profilePicture, setProfilePicture] = useState<string>('');
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('❌ File size must be less than 2MB');
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        alert('❌ Please select an image file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64String = event.target?.result as string;
+        setProfilePicture(base64String);
+        setProfilePicturePreview(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!profilePicture) {
+      alert('❌ Please select an image');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit(profilePicture);
+    } catch (error) {
+      console.error('Error submitting:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-auto">
+        <div className="p-6 border-b border-slate-200">
+          <h2 className="font-black text-xl">Change Team Profile Picture</h2>
+          <p className="text-sm text-slate-600 mt-1">
+            Upload a new profile picture for your team
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label htmlFor="profile-pic-upload" className="block text-sm font-bold text-slate-700 mb-2">
+              <Image size={16} className="inline mr-1" />
+              Profile Picture
+            </label>
+            <input
+              type="file"
+              id="profile-pic-upload"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <label
+              htmlFor="profile-pic-upload"
+              className="flex-1 block bg-[#072432] hover:bg-[#0d3a47] text-white px-4 py-2 rounded-xl font-bold text-sm cursor-pointer transition-all text-center"
+            >
+              Choose File
+            </label>
+          </div>
+
+          {profilePicturePreview && (
+            <div>
+              <p className="text-xs text-slate-500 font-bold mb-2">Preview:</p>
+              <img 
+                src={profilePicturePreview} 
+                alt="Preview" 
+                className="w-full h-32 rounded-lg object-cover border border-slate-200"
+              />
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-4">
+            <button
+              type="submit"
+              disabled={isSubmitting || !profilePicture}
+              className="flex-1 bg-[#072432] hover:bg-[#0d3a47] text-white px-4 py-2 rounded-lg font-bold text-sm transition disabled:opacity-50"
+            >
+              {isSubmitting ? 'Updating...' : 'Update Picture'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+

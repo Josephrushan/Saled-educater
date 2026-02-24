@@ -1427,6 +1427,24 @@ export async function deleteTeam(teamLeadId: string) {
   }
 }
 
+export async function updateTeamProfilePicture(teamLeadId: string, profilePictureUrl: string) {
+  try {
+    console.log('🖼️ Updating team profile picture for:', teamLeadId);
+    
+    const teamRef = doc(db, 'teams', teamLeadId);
+    await updateDoc(teamRef, {
+      teamProfilePictureUrl: profilePictureUrl,
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log('✅ Team profile picture updated');
+    return true;
+  } catch (error) {
+    console.error('❌ Error updating team profile picture:', error);
+    return false;
+  }
+}
+
 export async function checkIfRepIsTeamLead(repId: string) {
   try {
     const teamRef = doc(db, 'teams', repId);
