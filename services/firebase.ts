@@ -1279,6 +1279,8 @@ export async function getTeamMembers(teamLeadId: string) {
         
         if (repSnap.exists()) {
           const repData = repSnap.data();
+          const memberRole = memberRoles[memberId];
+          console.log('✅ Added member:', repData.name, 'with role from memberRoles:', memberRole, 'roleId full value:', memberRoles[memberId]);
           members.push({
             id: memberId,
             firstName: repData.name || '',
@@ -1286,10 +1288,9 @@ export async function getTeamMembers(teamLeadId: string) {
             email: repData.email || '',
             telephoneNumber: repData.telephoneNumber || '',
             profilePicUrl: repData.profilePicUrl || '',
-            role: memberRoles[memberId] || 'digital-scout',
+            role: memberRole || undefined,
             ...repData
           });
-          console.log('✅ Added member:', repData.name, 'with role:', memberRoles[memberId]);
         } else {
           console.warn('⚠️ Member not found in educater_salesman:', memberId);
         }
@@ -1737,13 +1738,20 @@ export async function acceptTeamInvitation(invitationId: string, repId: string) 
       const currentMembers = teamSnap.data().members || [];
       const memberRoles = teamSnap.data().memberRoles || {};
       
+      console.log('💾 Current memberRoles before update:', memberRoles);
+      console.log('💾 Adding role for', repId, 'with role:', role);
+      
       if (!currentMembers.includes(repId)) {
         memberRoles[repId] = role;
+        console.log('💾 Updated memberRoles after assignment:', memberRoles);
         await updateDoc(teamRef, {
           members: [...currentMembers, repId],
           memberRoles: memberRoles,
           updatedAt: new Date().toISOString()
         });
+        console.log('✅ Team document updated with role:', role);
+      } else {
+        console.warn('⚠️ Member already in team, skipping add');
       }
     }
     
@@ -1954,6 +1962,37 @@ export async function getUnreadUpdatesCount(userId: string): Promise<number> {
   } catch (error) {
     console.error('❌ Error getting unread updates count:', error);
     return 0;
+  }
+}
+
+/**
+ * Update a team member's role (for fixing missing roles)
+ */
+export async function updateTeamMemberRole(teamLeadId: string, memberId: string, role: string): Promise<boolean> {
+  try {
+    console.log('🔄 Updating member role:', memberId, 'to:', role);
+    const teamRef = doc(db, 'teams', teamLeadId);
+    const teamSnap = await getDoc(teamRef);
+    
+    if (!teamSnap.exists()) {
+      console.error('❌ Team not found');
+      return false;
+    }
+    
+    const memberRoles = teamSnap.data().memberRoles || {};
+    memberRoles[memberId] = role;
+    
+    console.log('💾 Updated memberRoles:', memberRoles);
+    await updateDoc(teamRef, {
+      memberRoles: memberRoles,
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log('✅ Member role updated successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error updating member role:', error);
+    return false;
   }
 }
 

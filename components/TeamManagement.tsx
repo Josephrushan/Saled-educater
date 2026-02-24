@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Mail, Phone, CheckCircle2, XCircle, AlertCircle, Search, Lock, LogOut, Check, X, Trash2, Image } from 'lucide-react';
+import { Users, Plus, Mail, Phone, CheckCircle2, XCircle, AlertCircle, Search, Lock, LogOut, Check, X, Trash2, Image, Edit2 } from 'lucide-react';
 import { SalesRep } from '../types';
 import { 
   getTeamMembers, 
@@ -17,7 +17,8 @@ import {
   rejectTeamInvitation,
   leaveTeam,
   deleteTeam,
-  updateTeamProfilePicture
+  updateTeamProfilePicture,
+  updateTeamMemberRole
 } from '../services/firebase';
 import SuggestTeamMember from './SuggestTeamMember';
 
@@ -45,6 +46,9 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   const [showAddExisting, setShowAddExisting] = useState(false);
   const [showCreateTeamPrompt, setShowCreateTeamPrompt] = useState(false);
   const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [selectedMemberForRole, setSelectedMemberForRole] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState('digital-scout');
   const [availableReps, setAvailableReps] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -215,6 +219,30 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
       await loadTeamInfo();
     } else {
       alert('❌ Failed to update profile picture');
+    }
+  };
+
+  const handleOpenRoleModal = (member: any) => {
+    setSelectedMemberForRole(member);
+    setSelectedRole(member.role || 'digital-scout');
+    setShowRoleModal(true);
+  };
+
+  const handleAssignRole = async () => {
+    if (!selectedMemberForRole) return;
+    
+    try {
+      const success = await updateTeamMemberRole(currentUser.id, selectedMemberForRole.id, selectedRole);
+      if (success) {
+        alert('✅ Role updated successfully!');
+        setShowRoleModal(false);
+        await loadTeamInfo();
+      } else {
+        alert('❌ Failed to update role');
+      }
+    } catch (error) {
+      console.error('Error updating role:', error);
+      alert('❌ Error updating role');
     }
   };
 
@@ -729,20 +757,29 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                           </div>
 
                           {/* Role Badge */}
-                          <div className="mt-3 p-2 bg-slate-50 rounded-lg border border-slate-200">
-                            {role ? (
-                              <div className="space-y-1">
-                                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Role</p>
-                                <p className="text-sm font-black text-slate-900">{role.name}</p>
-                                <p className="text-xs text-slate-600 mt-1">{role.description}</p>
-                              </div>
-                            ) : (
-                              <div className="space-y-1">
-                                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Role</p>
-                                <p className="text-sm font-black text-slate-900">Unspecified</p>
-                                <p className="text-xs text-slate-500 mt-1">No role assigned yet</p>
-                              </div>
-                            )}
+                          <div className="mt-3 p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              {role ? (
+                                <div className="space-y-1">
+                                  <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Role</p>
+                                  <p className="text-sm font-black text-slate-900">{role.name}</p>
+                                  <p className="text-xs text-slate-600 mt-1">{role.description}</p>
+                                </div>
+                              ) : (
+                                <div className="space-y-1">
+                                  <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Role</p>
+                                  <p className="text-sm font-black text-slate-900">Unspecified</p>
+                                  <p className="text-xs text-slate-500 mt-1">No role assigned yet</p>
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => handleOpenRoleModal(member)}
+                              className="flex-shrink-0 p-1 hover:bg-slate-200 rounded transition text-slate-600 hover:text-slate-900"
+                              title="Edit role"
+                            >
+                              <Edit2 size={16} />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -795,6 +832,66 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
           onClose={() => setShowProfilePictureModal(false)}
           onSubmit={handleUpdateTeamProfilePicture}
         />
+      )}
+
+      {/* Role Assignment Modal */}
+      {showRoleModal && selectedMemberForRole && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-auto">
+            <div className="p-6 border-b border-slate-200">
+              <h2 className="font-black text-xl">Assign Role</h2>
+              <p className="text-sm text-slate-600 mt-1">
+                {selectedMemberForRole.firstName} {selectedMemberForRole.surname}
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Select Role</label>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand"
+                >
+                  {TEAM_ROLES.map(role => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Role Preview */}
+              {TEAM_ROLES.find(r => r.id === selectedRole) && (
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <p className="text-xs font-bold text-slate-600 uppercase mb-2">Preview</p>
+                  <div className="space-y-2">
+                    <p className="text-sm font-black text-slate-900">
+                      {TEAM_ROLES.find(r => r.id === selectedRole)?.name}
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      {TEAM_ROLES.find(r => r.id === selectedRole)?.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowRoleModal(false)}
+                className="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignRole}
+                className="bg-brand text-slate-900 px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition"
+              >
+                Save Role
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
