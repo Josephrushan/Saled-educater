@@ -454,6 +454,7 @@ const App: React.FC = () => {
           onUpdateAttempt={handleAddAttempt}
           onDeleteSchool={handleDeleteSchool}
           onResetProgress={handleResetProgress}
+          onUpdateContactInfo={handleUpdateSchoolContactInfo}
         />
       );
     }

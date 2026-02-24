@@ -14,6 +14,7 @@ interface SchoolDetailNewProps {
   onUpdateAttempt: (schoolId: string, attempt: AttemptRecord) => void;
   onDeleteSchool: (schoolId: string) => void;
   onResetProgress: (schoolId: string) => void;
+  onUpdateContactInfo: (schoolId: string, contactData: any) => Promise<void>;
 }
 
 const SchoolDetailNew: React.FC<SchoolDetailNewProps> = ({
@@ -23,7 +24,8 @@ const SchoolDetailNew: React.FC<SchoolDetailNewProps> = ({
   onUpdateStage,
   onUpdateAttempt,
   onDeleteSchool,
-  onResetProgress
+  onResetProgress,
+  onUpdateContactInfo
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
@@ -119,15 +121,21 @@ const SchoolDetailNew: React.FC<SchoolDetailNewProps> = ({
     setLetterDistributed(true);
   };
 
-  const handleSaveContactDetails = () => {
-    // In a real app, you'd call onUpdateSchool or similar
-    // For now, we're just closing the edit mode
-    setEditingDetails(false);
-    console.log('Save contact details:', {
-      principalEmail: editPrincipalEmail,
-      secretaryEmail: editSecretaryEmail,
-      studentCount: parseInt(editStudentCount)
-    });
+  const handleSaveContactDetails = async () => {
+    try {
+      const contactData = {
+        principalEmail: editPrincipalEmail,
+        secretaryEmail: editSecretaryEmail,
+        studentCount: editStudentCount ? parseInt(editStudentCount) : undefined
+      };
+      console.log('Saving contact details:', contactData);
+      await onUpdateContactInfo(school.id, contactData);
+      setEditingDetails(false);
+      console.log('Contact details saved successfully');
+    } catch (error) {
+      console.error('Error saving contact details:', error);
+      alert('Error saving contact information. Please try again.');
+    }
   };
 
   const handleDeleteSchool = () => {

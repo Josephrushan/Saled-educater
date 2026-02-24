@@ -55,13 +55,18 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   useEffect(() => {
     loadTeamInfo();
     
-    // Auto-refresh pending invitations every 5 seconds
+    // Auto-refresh pending invitations every 5 seconds ONLY if waiting for invitations
+    // (not a team lead and not yet in a team)
     const interval = setInterval(() => {
-      loadTeamInfo();
+      // Only refresh if we're actively waiting for invitations
+      if (!isTeamLead && !isInTeam && pendingInvitations.length === 0) {
+        console.log('🔄 Auto-refreshing to check for new invitations...');
+        loadTeamInfo();
+      }
     }, 5000);
     
     return () => clearInterval(interval);
-  }, [currentUser?.id]);
+  }, [currentUser?.id, isTeamLead, isInTeam, pendingInvitations.length]);
 
   // Load available reps when "Add Member" modal opens
   useEffect(() => {
