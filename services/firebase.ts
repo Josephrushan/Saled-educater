@@ -1326,6 +1326,21 @@ export async function createTeam(
   }
 }
 
+export async function deleteTeam(teamLeadId: string) {
+  try {
+    console.log('🗑️ Deleting team for lead:', teamLeadId);
+    
+    const teamRef = doc(db, 'teams', teamLeadId);
+    await deleteDoc(teamRef);
+    
+    console.log('✅ Team deleted successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error deleting team:', error);
+    return false;
+  }
+}
+
 export async function checkIfRepIsTeamLead(repId: string) {
   try {
     const teamRef = doc(db, 'teams', repId);
@@ -1406,11 +1421,11 @@ export async function addExistingRepToTeam(teamLeadId: string, repId: string) {
   }
 }
 
-export async function getAvailableRepsForTeam() {
+export async function getAvailableRepsForTeam(currentTeamLeadId?: string) {
   try {
-    console.log('� Fetching available reps for team');
+    console.log('🔍 Fetching available reps for team');
     
-    // Get all reps from educater_salesman (NOT salesReps)
+    // Get all reps from educater_salesman
     const repsRef = collection(db, 'educater_salesman');
     const repsSnapshot = await getDocs(repsRef);
     
@@ -1440,27 +1455,32 @@ export async function getAvailableRepsForTeam() {
     
     console.log('👥 Total team members:', assignedRepIds.size);
     
-    // Get all teams (team leads)
+    // Get all teams (team leads) - but exclude the current team lead
     const teamsRef = collection(db, 'teams');
     const teamsSnapshot = await getDocs(teamsRef);
     const teamLeadIds = new Set();
     teamsSnapshot.docs.forEach(doc => {
       const leadId = doc.id;
-      teamLeadIds.add(leadId);
-      console.log('👨‍💼 Team lead ID:', leadId);
+      // Only exclude OTHER team leads, not the current user
+      if (leadId !== currentTeamLeadId) {
+        teamLeadIds.add(leadId);
+      }
+      console.log('👨‍💼 Team lead ID:', leadId, leadId === currentTeamLeadId ? '(current user - NOT excluded)' : '(excluded)');
     });
     
-    console.log('🎯 Total teams:', teamLeadIds.size);
+    console.log('🎯 Total other teams:', teamLeadIds.size);
     
-    // Filter reps
+    // Filter reps - exclude: admins, team members, and OTHER team leads (not the current user)
     const availableReps = allReps.filter(rep => {
       const isAdmin = rep.role === 'admin' || rep.email?.includes('admin');
       const isTeamMember = assignedRepIds.has(rep.id);
-      const isTeamLead = teamLeadIds.has(rep.id);
+      const isOtherTeamLead = teamLeadIds.has(rep.id);
+      const isSelf = rep.id === currentTeamLeadId;
       
-      const isAvailable = !isAdmin && !isTeamMember && !isTeamLead;
+      // Available if: NOT admin, NOT already in a team, NOT another team lead, and self is excluded
+      const isAvailable = !isAdmin && !isTeamMember && !isOtherTeamLead && !isSelf;
       
-      console.log(`Rep ${rep.name} (${rep.id}): admin=${isAdmin}, member=${isTeamMember}, lead=${isTeamLead}, available=${isAvailable}`);
+      console.log(`Rep ${rep.name} (${rep.id}): admin=${isAdmin}, member=${isTeamMember}, otherLead=${isOtherTeamLead}, self=${isSelf}, available=${isAvailable}`);
       
       return isAvailable;
     });

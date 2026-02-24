@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Mail, Phone, CheckCircle2, XCircle, AlertCircle, Search, Lock, LogOut, Check, X } from 'lucide-react';
+import { Users, Plus, Mail, Phone, CheckCircle2, XCircle, AlertCircle, Search, Lock, LogOut, Check, X, Trash2 } from 'lucide-react';
 import { SalesRep } from '../types';
 import { 
   getTeamMembers, 
@@ -14,7 +14,8 @@ import {
   getMyPendingInvitations,
   acceptTeamInvitation,
   rejectTeamInvitation,
-  leaveTeam
+  leaveTeam,
+  deleteTeam
 } from '../services/firebase';
 import SuggestTeamMember from './SuggestTeamMember';
 
@@ -82,7 +83,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   };
 
   const loadAvailableReps = async () => {
-    const reps = await getAvailableRepsForTeam();
+    const reps = await getAvailableRepsForTeam(currentUser.id);
     setAvailableReps(reps);
   };
 
@@ -104,6 +105,24 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
       await loadTeamInfo();
     } else {
       alert('❌ Failed to create team');
+    }
+  };
+
+  const handleDeleteTeam = async () => {
+    if (!team) return;
+    
+    const confirmed = window.confirm('⚠️ Are you sure you want to delete this team? This action cannot be undone.');
+    if (!confirmed) return;
+
+    const success = await deleteTeam(currentUser.id);
+    
+    if (success) {
+      alert('✅ Team deleted successfully');
+      setTeam(null);
+      setTeamMembers([]);
+      await loadTeamInfo();
+    } else {
+      alert('❌ Failed to delete team');
     }
   };
 
@@ -423,6 +442,12 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
               className="flex items-center gap-2 bg-brand text-slate-900 px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition"
             >
               <Plus size={18} /> Add Member
+            </button>
+            <button
+              onClick={handleDeleteTeam}
+              className="flex items-center gap-2 bg-rose-50 text-rose-500 px-4 py-2 rounded-lg font-bold text-sm hover:bg-rose-100 transition"
+            >
+              <Trash2 size={18} /> Delete
             </button>
           </div>
         </div>
