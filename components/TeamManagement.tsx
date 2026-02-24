@@ -340,6 +340,9 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                           {invitation.teamLeadName} invited you to join <span className="text-brand">{invitation.teamName}</span>
                         </p>
                         <p className="text-xs text-slate-500 mt-1">
+                          Role: <span className="font-bold">{TEAM_ROLES.find(r => r.id === invitation.role)?.name || invitation.role}</span>
+                        </p>
+                        <p className="text-xs text-slate-500">
                           Received on {new Date(invitation.createdAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -395,45 +398,110 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
         </div>
 
         <div className="flex-1 overflow-auto p-6">
-          <div className="space-y-3 max-w-2xl">
-            {/* Add Existing Members */}
-            <button
-              onClick={() => {
-                if (!team) {
-                  setShowCreateTeamPrompt(true);
-                } else {
-                  setShowAddExisting(true);
-                  loadAvailableReps();
-                }
-              }}
-              className="w-full flex items-center gap-4 bg-white border border-slate-200 p-4 rounded-lg hover:border-brand hover:bg-brand/5 transition group"
-            >
-              <div className="w-12 h-12 rounded-lg bg-slate-900 flex items-center justify-center group-hover:bg-slate-800 transition flex-shrink-0">
-                <Search size={24} className="text-white" />
+          <div className="space-y-4 max-w-2xl">
+            {/* Pending Invitations - Show even if not in a team yet */}
+            {pendingInvitations.length > 0 && (
+              <div className="bg-white rounded-lg border border-slate-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-black text-base">📬 Pending Invitations</h3>
+                  <button
+                    onClick={loadTeamInfo}
+                    className="text-xs text-brand hover:opacity-70 transition font-bold"
+                  >
+                    ↻ Refresh
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {pendingInvitations.map(invitation => (
+                    <div key={invitation.id} className="border border-slate-200 rounded-lg p-4">
+                      <div className="mb-4">
+                        <p className="text-sm font-bold text-slate-900">
+                          {invitation.teamLeadName} invited you to join <span className="text-brand">{invitation.teamName}</span>
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Role: <span className="font-bold">{TEAM_ROLES.find(r => r.id === invitation.role)?.name || invitation.role}</span>
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Received on {new Date(invitation.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={async () => {
+                            const success = await acceptTeamInvitation(invitation.id, currentUser.id);
+                            if (success) {
+                              alert('✅ Invitation accepted! You are now part of the team.');
+                              await loadTeamInfo();
+                            } else {
+                              alert('❌ Failed to accept invitation');
+                            }
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 bg-green-50 text-green-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-100 transition border border-green-200"
+                        >
+                          <Check size={16} /> Accept
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const success = await rejectTeamInvitation(invitation.id);
+                            if (success) {
+                              alert('✅ Invitation rejected');
+                              await loadTeamInfo();
+                            } else {
+                              alert('❌ Failed to reject invitation');
+                            }
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-100 transition border border-red-200"
+                        >
+                          <X size={16} /> Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="text-left flex-1">
-                <h3 className="font-black text-base">Search Members</h3>
-                <p className="text-sm text-slate-600">
-                  Find and add existing sales reps to your team
-                </p>
-              </div>
-            </button>
+            )}
 
-            {/* Create New Team */}
-            <button
-              onClick={() => setShowCreateTeam(true)}
-              className="w-full flex items-center gap-4 bg-white border border-slate-200 p-4 rounded-lg hover:border-brand hover:bg-brand/5 transition group"
-            >
-              <div className="w-12 h-12 rounded-lg bg-slate-900 flex items-center justify-center group-hover:bg-slate-800 transition flex-shrink-0">
-                <Plus size={24} className="text-white" />
-              </div>
-              <div className="text-left flex-1">
-                <h3 className="font-black text-base">Create Team</h3>
-                <p className="text-sm text-slate-600">
-                  Create a new team with custom name and profile picture
-                </p>
-              </div>
-            </button>
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              {/* Add Existing Members */}
+              <button
+                onClick={() => {
+                  if (!team) {
+                    setShowCreateTeamPrompt(true);
+                  } else {
+                    setShowAddExisting(true);
+                    loadAvailableReps();
+                  }
+                }}
+                className="w-full flex items-center gap-4 bg-white border border-slate-200 p-4 rounded-lg hover:border-brand hover:bg-brand/5 transition group"
+              >
+                <div className="w-12 h-12 rounded-lg bg-slate-900 flex items-center justify-center group-hover:bg-slate-800 transition flex-shrink-0">
+                  <Search size={24} className="text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="font-black text-base">Search Members</h3>
+                  <p className="text-sm text-slate-600">
+                    Find and add existing sales reps to your team
+                  </p>
+                </div>
+              </button>
+
+              {/* Create New Team */}
+              <button
+                onClick={() => setShowCreateTeam(true)}
+                className="w-full flex items-center gap-4 bg-white border border-slate-200 p-4 rounded-lg hover:border-brand hover:bg-brand/5 transition group"
+              >
+                <div className="w-12 h-12 rounded-lg bg-slate-900 flex items-center justify-center group-hover:bg-slate-800 transition flex-shrink-0">
+                  <Plus size={24} className="text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="font-black text-base">Create Team</h3>
+                  <p className="text-sm text-slate-600">
+                    Create a new team with custom name and profile picture
+                  </p>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 
