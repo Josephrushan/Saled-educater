@@ -87,7 +87,7 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
         if (memberTeam) {
           setTeam(memberTeam);
           setTeamMembers(memberTeam.members || []);
-          console.log('✅ Team loaded:', memberTeam.teamName);
+          console.log('✅ Team loaded');
         }
       }
     }
