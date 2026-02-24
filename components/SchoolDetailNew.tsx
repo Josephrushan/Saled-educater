@@ -479,15 +479,17 @@ const SchoolDetailNew: React.FC<SchoolDetailNewProps> = ({
                     🔄 Reset Progress
                   </button>
                 )}
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(true);
-                    setShowMoreMenu(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 font-bold text-sm flex items-center gap-2 rounded-lg"
-                >
-                  <Trash2 size={16} /> Delete School
-                </button>
+                {currentUser?.role === 'admin' && (
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(true);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 font-bold text-sm flex items-center gap-2 rounded-lg"
+                  >
+                    <Trash2 size={16} /> Delete School
+                  </button>
+                )}
               </div>
             )}
           </div>
