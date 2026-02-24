@@ -54,6 +54,13 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   // Fetch team info on mount
   useEffect(() => {
     loadTeamInfo();
+    
+    // Auto-refresh pending invitations every 5 seconds
+    const interval = setInterval(() => {
+      loadTeamInfo();
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, [currentUser?.id]);
 
   // Load available reps when "Add Member" modal opens
@@ -309,7 +316,15 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
             {/* Pending Invitations */}
             {pendingInvitations.length > 0 && (
               <div className="bg-white rounded-lg border border-slate-200 p-6">
-                <h3 className="font-black text-base mb-4">Pending Invitations</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-black text-base">Pending Invitations</h3>
+                  <button
+                    onClick={loadTeamInfo}
+                    className="text-xs text-brand hover:opacity-70 transition font-bold"
+                  >
+                    ↻ Refresh
+                  </button>
+                </div>
                 <div className="space-y-3">
                   {pendingInvitations.map(invitation => (
                     <div key={invitation.id} className="border border-slate-200 rounded-lg p-4">
