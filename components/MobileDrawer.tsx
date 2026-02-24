@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Download, BookOpen, LogOut, ChevronRight, Users, LayoutDashboard, School, FileText, Mail, Gift } from 'lucide-react';
+import { X, Download, BookOpen, LogOut, ChevronRight, Users, LayoutDashboard, School, FileText, Mail, Gift, Briefcase } from 'lucide-react';
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -22,6 +22,7 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose, onNavigate
     { id: 'crew', label: 'Crew Directory', icon: <Users size={20} />, hide: false },
     { id: 'direct-message', label: 'Direct Message', icon: <Mail size={20} />, hide: false },
     { id: 'incentives', label: 'Incentives', icon: <Gift size={20} />, hide: false },
+    { id: 'team', label: 'Team', icon: <Briefcase size={20} />, hide: false },
     { id: 'reps', label: 'Sales Members', icon: <Users size={20} />, hide: false },
   ];
 
@@ -32,14 +33,14 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose, onNavigate
         onClick={onClose}
       />
       <div className="absolute top-0 left-0 bottom-0 w-72 bg-white shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
-        <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+        <div className="p-6 border-b border-slate-50 flex items-center justify-between flex-shrink-0">
           <span className="text-lg font-black text-slate-900 uppercase tracking-widest">Menu</span>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-900">
             <X size={24} />
           </button>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {items.filter(i => !i.hide).map((item) => (
             <button
               key={item.id}
@@ -58,7 +59,7 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose, onNavigate
           ))}
         </nav>
 
-        <div className="p-6 border-t border-slate-50">
+        <div className="p-6 border-t border-slate-50 flex-shrink-0">
           <button 
             onClick={onLogout}
             className="w-full flex items-center justify-center gap-2 py-4 text-rose-500 bg-rose-50 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
