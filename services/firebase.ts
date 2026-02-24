@@ -1269,27 +1269,30 @@ export async function getTeamMembers(teamLeadId: string) {
     }
     
     // Fetch details for each member from educater_salesman collection
-    const repsRef = collection(db, 'educater_salesman');
     const members = [];
     
     for (const memberId of memberIds) {
-      const q = query(repsRef, where('id', '==', memberId));
-      const snapshot = await getDocs(q);
-      
-      if (!snapshot.empty) {
-        const repData = snapshot.docs[0].data();
-        members.push({
-          id: memberId,
-          firstName: repData.name || '',
-          surname: repData.surname || '',
-          email: repData.email || '',
-          telephoneNumber: repData.telephoneNumber || '',
-          profilePicUrl: repData.profilePicUrl || '',
-          ...repData
-        });
-        console.log('✅ Added member:', repData.name);
-      } else {
-        console.warn('⚠️ Member not found in educater_salesman:', memberId);
+      try {
+        const repRef = doc(db, 'educater_salesman', memberId);
+        const repSnap = await getDoc(repRef);
+        
+        if (repSnap.exists()) {
+          const repData = repSnap.data();
+          members.push({
+            id: memberId,
+            firstName: repData.name || '',
+            surname: repData.surname || '',
+            email: repData.email || '',
+            telephoneNumber: repData.telephoneNumber || '',
+            profilePicUrl: repData.profilePicUrl || '',
+            ...repData
+          });
+          console.log('✅ Added member:', repData.name);
+        } else {
+          console.warn('⚠️ Member not found in educater_salesman:', memberId);
+        }
+      } catch (err) {
+        console.error('Error fetching member:', memberId, err);
       }
     }
     
@@ -1477,52 +1480,43 @@ export async function getAvailableRepsForTeam(currentTeamLeadId?: string) {
       ...doc.data()
     }));
     
-    console.log('📋 All reps:', allReps.map(r => ({ id: r.id, name: r.name, role: r.role })));
+    console.log('📋 All reps fetched:', allReps.length, allReps.map(r => ({ id: r.id, name: r.name, role: r.role })));
     
-    // Get all team members
-    const teamMembersRef = collection(db, 'teamMembers');
-    const teamMembersSnapshot = await getDocs(teamMembersRef);
+    // Get the current team's members
+    if (!currentTeamLeadId) {
+      console.log('⚠️ No team lead ID provided, returning empty');
+      return [];
+    }
     
-    const assignedRepIds = new Set();
-    teamMembersSnapshot.docs.forEach(doc => {
-      const id = doc.data().id;
-      assignedRepIds.add(id);
-      console.log('👤 Team member ID:', id);
-    });
+    const teamRef = doc(db, 'teams', currentTeamLeadId);
+    const teamSnap = await getDoc(teamRef);
     
-    console.log('👥 Total team members:', assignedRepIds.size);
+    if (!teamSnap.exists()) {
+      console.log('⚠️ Team not found for:', currentTeamLeadId);
+      return [];
+    }
     
-    // Get all teams (team leads) - but exclude the current team lead
-    const teamsRef = collection(db, 'teams');
-    const teamsSnapshot = await getDocs(teamsRef);
-    const teamLeadIds = new Set();
-    teamsSnapshot.docs.forEach(doc => {
-      const leadId = doc.id;
-      // Only exclude OTHER team leads, not the current user
-      if (leadId !== currentTeamLeadId) {
-        teamLeadIds.add(leadId);
-      }
-      console.log('👨‍💼 Team lead ID:', leadId, leadId === currentTeamLeadId ? '(current user - NOT excluded)' : '(excluded)');
-    });
+    const teamData = teamSnap.data();
+    const currentTeamMembers = Array.isArray(teamData.members) ? new Set(teamData.members) : new Set();
     
-    console.log('🎯 Total other teams:', teamLeadIds.size);
+    console.log('👥 Current team members:', Array.from(currentTeamMembers));
     
-    // Filter reps - exclude: admins, team members, and OTHER team leads (not the current user)
+    // Filter reps: exclude admins, team members, and self
     const availableReps = allReps.filter(rep => {
       const isAdmin = rep.role === 'admin' || rep.email?.includes('admin');
-      const isTeamMember = assignedRepIds.has(rep.id);
-      const isOtherTeamLead = teamLeadIds.has(rep.id);
+      const isAlreadyInTeam = currentTeamMembers.has(rep.id);
       const isSelf = rep.id === currentTeamLeadId;
       
-      // Available if: NOT admin, NOT already in a team, NOT another team lead, and self is excluded
-      const isAvailable = !isAdmin && !isTeamMember && !isOtherTeamLead && !isSelf;
+      const isAvailable = !isAdmin && !isAlreadyInTeam && !isSelf;
       
-      console.log(`Rep ${rep.name} (${rep.id}): admin=${isAdmin}, member=${isTeamMember}, otherLead=${isOtherTeamLead}, self=${isSelf}, available=${isAvailable}`);
+      if (!isAvailable) {
+        console.log(`❌ Excluding ${rep.name}: admin=${isAdmin}, inTeam=${isAlreadyInTeam}, self=${isSelf}`);
+      }
       
       return isAvailable;
     });
     
-    console.log('✅ Available reps:', availableReps.length);
+    console.log(`✅ Available reps: ${availableReps.length}`);
     availableReps.forEach(rep => console.log('  ✓', rep.name, rep.email));
     
     return availableReps;
@@ -1550,16 +1544,16 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
     console.log('📋 Current team data:', teamData);
     
     // Get rep info from educater_salesman collection
-    const repsRef = collection(db, 'educater_salesman');
-    const repSnap = await getDocs(query(repsRef, where('id', '==', repId)));
+    const repRef = doc(db, 'educater_salesman', repId);
+    const repSnap = await getDoc(repRef);
     
-    if (repSnap.empty) {
-      console.error('❌ Rep not found');
+    if (!repSnap.exists()) {
+      console.error('❌ Rep not found with ID:', repId);
       return false;
     }
     
-    const repData = repSnap.docs[0].data();
-    console.log('👤 Rep data:', repData.name);
+    const repData = repSnap.data();
+    console.log('👤 Rep data:', repData?.name, 'ID:', repId);
     
     // Ensure members array exists and add the rep
     const currentMembers = Array.isArray(teamData.members) ? [...teamData.members] : [];
