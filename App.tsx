@@ -39,9 +39,9 @@ import {
   createTeam,
   checkIfRepIsTeamLead,
   checkIfRepInTeam,
-  addExistingRepToTeam,,
+  addExistingRepToTeam,
   getUnreadUpdatesCount,
-  getUpdates
+  getUpdates,
   getAvailableRepsForTeam
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
