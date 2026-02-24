@@ -1295,18 +1295,25 @@ export async function createTeam(
   try {
     console.log('🔨 Creating team:', teamName, 'for lead:', leadName);
     
-    const teamData = {
+    // Build team data object, only including defined values (Firestore rejects undefined)
+    const teamData: any = {
       leadId: leadId,
       leadName: leadName,
       leadEmail: leadEmail,
-      leadProfilePictureUrl: leadProfilePictureUrl,
       teamName: teamName,
-      teamProfilePictureUrl: teamProfilePictureUrl,
       members: [],
       schoolIds: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+    
+    // Only add optional fields if they're defined
+    if (leadProfilePictureUrl) {
+      teamData.leadProfilePictureUrl = leadProfilePictureUrl;
+    }
+    if (teamProfilePictureUrl) {
+      teamData.teamProfilePictureUrl = teamProfilePictureUrl;
+    }
     
     const teamRef = doc(db, 'teams', leadId);
     await setDoc(teamRef, teamData);
