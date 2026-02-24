@@ -1260,6 +1260,7 @@ export async function getTeamMembers(teamLeadId: string) {
     
     const teamData = teamSnap.data();
     const memberIds = teamData.members || [];
+    const memberRoles = teamData.memberRoles || {};
     
     console.log('📋 Member IDs:', memberIds);
     
@@ -1285,9 +1286,10 @@ export async function getTeamMembers(teamLeadId: string) {
             email: repData.email || '',
             telephoneNumber: repData.telephoneNumber || '',
             profilePicUrl: repData.profilePicUrl || '',
+            role: memberRoles[memberId] || 'digital-scout',
             ...repData
           });
-          console.log('✅ Added member:', repData.name);
+          console.log('✅ Added member:', repData.name, 'with role:', memberRoles[memberId]);
         } else {
           console.warn('⚠️ Member not found in educater_salesman:', memberId);
         }
@@ -1591,9 +1593,9 @@ export async function getAvailableRepsForTeam(currentTeamLeadId?: string) {
 }
 
 // Send team invitation to a rep
-export async function sendTeamInvitation(teamLeadId: string, repId: string) {
+export async function sendTeamInvitation(teamLeadId: string, repId: string, role: string = 'digital-scout') {
   try {
-    console.log('📧 Sending team invitation to rep:', repId, 'for team lead:', teamLeadId);
+    console.log('📧 Sending team invitation to rep:', repId, 'for team lead:', teamLeadId, 'with role:', role);
     
     // Get team lead info
     const teamRef = doc(db, 'teams', teamLeadId);
@@ -1629,6 +1631,7 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
       repId: repId,
       repName: repData.name,
       repEmail: repData.email,
+      role: role,
       status: 'pending',
       createdAt: new Date().toISOString()
     };
@@ -1688,6 +1691,7 @@ export async function acceptTeamInvitation(invitationId: string, repId: string) 
     
     const invitationData = invitationSnap.data();
     const teamLeadId = invitationData.teamId;
+    const role = invitationData.role || 'digital-scout';
     
     // Get rep info from educater_salesman
     const repRef = doc(db, 'educater_salesman', repId);
@@ -1700,7 +1704,7 @@ export async function acceptTeamInvitation(invitationId: string, repId: string) 
     
     const repData = repSnap.data();
     
-    // Create team member record
+    // Create team member record with role
     const teamMembersRef = collection(db, 'teamMembers');
     const teamMemberData = {
       id: repId,
@@ -1710,6 +1714,7 @@ export async function acceptTeamInvitation(invitationId: string, repId: string) 
       telephoneNumber: repData.telephoneNumber || '',
       teamLeadId: teamLeadId,
       teamLeadName: invitationData.teamLeadName,
+      role: role,
       username: repData.email,
       createdAt: new Date().toISOString(),
       approvedAt: new Date().toISOString(),
@@ -1718,15 +1723,19 @@ export async function acceptTeamInvitation(invitationId: string, repId: string) 
     
     await addDoc(teamMembersRef, teamMemberData);
     
-    // Add to team members array
+    // Add to team members array and store role
     const teamRef = doc(db, 'teams', teamLeadId);
     const teamSnap = await getDoc(teamRef);
     
     if (teamSnap.exists()) {
       const currentMembers = teamSnap.data().members || [];
+      const memberRoles = teamSnap.data().memberRoles || {};
+      
       if (!currentMembers.includes(repId)) {
+        memberRoles[repId] = role;
         await updateDoc(teamRef, {
           members: [...currentMembers, repId],
+          memberRoles: memberRoles,
           updatedAt: new Date().toISOString()
         });
       }
@@ -1738,7 +1747,7 @@ export async function acceptTeamInvitation(invitationId: string, repId: string) 
       respondedAt: new Date().toISOString()
     });
     
-    console.log('✅ Invitation accepted');
+    console.log('✅ Invitation accepted with role:', role);
     return true;
   } catch (error) {
     console.error('❌ Error accepting invitation:', error);

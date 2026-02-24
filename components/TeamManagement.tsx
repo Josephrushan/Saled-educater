@@ -21,6 +21,16 @@ import {
 } from '../services/firebase';
 import SuggestTeamMember from './SuggestTeamMember';
 
+// Team Roles Definition
+const TEAM_ROLES = [
+  { id: 'digital-scout', name: '🎯 The Digital Scout', description: 'Finds leads and builds relationships online' },
+  { id: 'ghost', name: '👻 The Ghost', description: 'Works behind the scenes on research and prep' },
+  { id: 'opener', name: '⚡ The Opener', description: 'Makes first contact and breaks the ice' },
+  { id: 'scout', name: '🔍 The Scout', description: 'Diligently explores and gathers intel' },
+  { id: 'educater', name: '📚 The Educater', description: 'Educates and demonstrates value' },
+  { id: 'finisher', name: '✍️ The Finisher', description: 'Closes deals and seals the contract' }
+];
+
 interface TeamManagementProps {
   currentUser: SalesRep;
 }
@@ -146,8 +156,8 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
     }
   };
 
-  const handleAddExistingRep = async (repId: string) => {
-    const success = await sendTeamInvitation(currentUser.id, repId);
+  const handleAddExistingRep = async (repId: string, role: string) => {
+    const success = await sendTeamInvitation(currentUser.id, repId, role);
 
     if (success) {
       alert('📧 Invitation sent! Rep will receive it in their My Team tab.');
@@ -754,7 +764,7 @@ interface AddExistingMemberModalProps {
   availableReps: any[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  onAddRep: (repId: string) => Promise<void>;
+  onAddRep: (repId: string, role: string) => Promise<void>;
 }
 
 const AddExistingMemberModal: React.FC<AddExistingMemberModalProps> = ({
@@ -764,72 +774,124 @@ const AddExistingMemberModal: React.FC<AddExistingMemberModalProps> = ({
   setSearchQuery,
   onAddRep
 }) => {
+  const [stage, setStage] = useState<'role' | 'rep'>('role');
+  const [selectedRole, setSelectedRole] = useState<string>('');
   const [isAdding, setIsAdding] = useState<string | null>(null);
+
+  const handleSelectRole = (roleId: string) => {
+    setSelectedRole(roleId);
+    setStage('rep');
+  };
 
   const handleAdd = async (repId: string) => {
     setIsAdding(repId);
-    await onAddRep(repId);
+    await onAddRep(repId, selectedRole);
     setIsAdding(null);
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-auto flex flex-col">
-        <div className="p-6 border-b border-slate-200 sticky top-0 bg-white">
-          <h2 className="font-black text-xl mb-4">Add Team Member</h2>
-          <div className="relative">
-            <Search size={18} className="absolute left-3 top-3 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name or email..."
-              className="w-full pl-10 p-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-            />
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-auto p-4">
-          {availableReps.length === 0 ? (
-            <div className="text-center py-8">
-              <Users size={32} className="mx-auto text-slate-300 mb-2" />
-              <p className="text-slate-600 font-bold">No available reps</p>
-              <p className="text-sm text-slate-500 mt-1">All sales reps are already in teams</p>
+        {/* Stage 1: Role Selection */}
+        {stage === 'role' && (
+          <>
+            <div className="p-6 border-b border-slate-200">
+              <h2 className="font-black text-xl mb-1">Select Team Role</h2>
+              <p className="text-sm text-slate-600">Choose which role the new member will have</p>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {availableReps.map(rep => (
-                <div
-                  key={rep.id}
-                  className="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:border-brand transition"
+
+            <div className="flex-1 overflow-auto p-4 space-y-2">
+              {TEAM_ROLES.map(role => (
+                <button
+                  key={role.id}
+                  onClick={() => handleSelectRole(role.id)}
+                  className="w-full text-left p-4 border-2 border-slate-200 rounded-lg hover:border-brand hover:bg-brand/5 transition"
                 >
-                  <div className="flex-1">
-                    <p className="font-bold text-sm">
-                      {rep.name} {rep.surname || ''}
-                    </p>
-                    <p className="text-xs text-slate-500">{rep.email}</p>
-                  </div>
-                  <button
-                    onClick={() => handleAdd(rep.id)}
-                    disabled={isAdding === rep.id}
-                    className="px-3 py-1 bg-green-600 text-white rounded-lg font-bold text-xs hover:bg-green-700 transition disabled:opacity-50"
-                  >
-                    {isAdding === rep.id ? 'Adding...' : '+'}
-                  </button>
-                </div>
+                  <p className="font-black text-base">{role.name}</p>
+                  <p className="text-xs text-slate-600 mt-1">{role.description}</p>
+                </button>
               ))}
             </div>
-          )}
-        </div>
 
-        <div className="p-4 border-t border-slate-200 sticky bottom-0 bg-white">
-          <button
-            onClick={onClose}
-            className="w-full bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
-          >
-            Close
-          </button>
-        </div>
+            <div className="p-4 border-t border-slate-200 sticky bottom-0 bg-white">
+              <button
+                onClick={onClose}
+                className="w-full bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Stage 2: Rep Selection */}
+        {stage === 'rep' && (
+          <>
+            <div className="p-6 border-b border-slate-200 sticky top-0 bg-white">
+              <button
+                onClick={() => setStage('role')}
+                className="text-brand font-bold text-sm mb-3 hover:opacity-70 transition"
+              >
+                ← Back to Roles
+              </button>
+              <h2 className="font-black text-xl mb-2">
+                {TEAM_ROLES.find(r => r.id === selectedRole)?.name}
+              </h2>
+              <div className="relative">
+                <Search size={18} className="absolute left-3 top-3 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by name or email..."
+                  className="w-full pl-10 p-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4">
+              {availableReps.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users size={32} className="mx-auto text-slate-300 mb-2" />
+                  <p className="text-slate-600 font-bold">No available reps</p>
+                  <p className="text-sm text-slate-500 mt-1">All sales reps are already in teams</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {availableReps.map(rep => (
+                    <div
+                      key={rep.id}
+                      className="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:border-brand transition"
+                    >
+                      <div className="flex-1">
+                        <p className="font-bold text-sm">
+                          {rep.name} {rep.surname || ''}
+                        </p>
+                        <p className="text-xs text-slate-500">{rep.email}</p>
+                      </div>
+                      <button
+                        onClick={() => handleAdd(rep.id)}
+                        disabled={isAdding === rep.id}
+                        className="px-3 py-1 bg-green-600 text-white rounded-lg font-bold text-xs hover:bg-green-700 transition disabled:opacity-50"
+                      >
+                        {isAdding === rep.id ? 'Adding...' : '+'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-200 sticky bottom-0 bg-white">
+              <button
+                onClick={() => setStage('role')}
+                className="w-full bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-300 transition"
+              >
+                Back
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
