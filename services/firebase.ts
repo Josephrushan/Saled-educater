@@ -1368,10 +1368,6 @@ export async function getMyTeamAsMember(repId: string) {
     console.error('❌ Error getting team as member:', error);
     return null;
   }
-  } catch (error) {
-    console.error('❌ Error fetching user team:', error);
-    return null;
-  }
 }
 
 export async function createTeam(
