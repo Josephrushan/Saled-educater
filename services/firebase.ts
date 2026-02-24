@@ -1537,6 +1537,36 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
     };
     
     await addDoc(invitationsRef, invitationData);
+    console.log('✅ Invitation created');
+    
+    // Also add to team's members array immediately so team lead sees them
+    const currentMembers = teamData.members || [];
+    if (!currentMembers.includes(repId)) {
+      await updateDoc(teamRef, {
+        members: [...currentMembers, repId],
+        updatedAt: new Date().toISOString()
+      });
+      console.log('✅ Member added to team');
+    }
+    
+    // Create team member record
+    const teamMembersRef = collection(db, 'teamMembers');
+    const teamMemberData = {
+      id: repId,
+      firstName: repData.name || repData.firstName || '',
+      surname: repData.surname || '',
+      email: repData.email || '',
+      telephoneNumber: repData.telephoneNumber || '',
+      teamLeadId: teamLeadId,
+      teamLeadName: teamData.leadName,
+      username: repData.email || '',
+      createdAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString(),
+      approvedBy: 'team_lead_invite'
+    };
+    
+    await addDoc(teamMembersRef, teamMemberData);
+    console.log('✅ Team member record created');
     
     console.log('✅ Invitation sent to rep');
     return true;
