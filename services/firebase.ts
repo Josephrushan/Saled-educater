@@ -1595,33 +1595,35 @@ export async function getAvailableRepsForTeam(currentTeamLeadId?: string) {
 // Send team invitation to a rep
 export async function sendTeamInvitation(teamLeadId: string, repId: string, role: string = 'digital-scout') {
   try {
-    console.log('📧 Sending team invitation to rep:', repId, 'for team lead:', teamLeadId, 'with role:', role);
+    console.log('📧 [sendTeamInvitation] START - teamLeadId:', teamLeadId, 'repId:', repId, 'role:', role);
     
     // Get team lead info
+    console.log('📧 [sendTeamInvitation] Getting team document...');
     const teamRef = doc(db, 'teams', teamLeadId);
     const teamSnap = await getDoc(teamRef);
     
     if (!teamSnap.exists()) {
-      console.error('❌ Team not found');
+      console.error('❌ [sendTeamInvitation] Team not found with ID:', teamLeadId);
       return false;
     }
     
     const teamData = teamSnap.data();
-    console.log('📋 Team data:', teamData?.teamName);
+    console.log('📧 [sendTeamInvitation] Team found:', teamData?.teamName);
     
     // Get rep info from educater_salesman collection
+    console.log('📧 [sendTeamInvitation] Getting rep document...');
     const repRef = doc(db, 'educater_salesman', repId);
     const repSnap = await getDoc(repRef);
     
     if (!repSnap.exists()) {
-      console.error('❌ Rep not found with ID:', repId);
+      console.error('❌ [sendTeamInvitation] Rep not found with ID:', repId);
       return false;
     }
     
     const repData = repSnap.data();
-    console.log('👤 Rep data:', repData?.name, 'ID:', repId);
+    console.log('📧 [sendTeamInvitation] Rep found:', repData?.name);
     
-    // Create invitation record ONLY - rep must accept to be added to team
+    // Create invitation record
     const invitationsRef = collection(db, 'teamInvitations');
     const invitationData = {
       teamId: teamLeadId,
@@ -1636,14 +1638,18 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string, role
       createdAt: new Date().toISOString()
     };
     
-    console.log('💾 Creating invitation for rep to accept/reject');
-    await addDoc(invitationsRef, invitationData);
-    console.log('✅ Invitation created - rep will see this as pending');
+    console.log('📧 [sendTeamInvitation] Creating invitation document with data:', invitationData);
+    const docRef = await addDoc(invitationsRef, invitationData);
+    console.log('✅ [sendTeamInvitation] Invitation created with ID:', docRef.id);
     
-    console.log('✅ Invitation sent to rep - waiting for them to accept');
+    console.log('✅ [sendTeamInvitation] SUCCESS - Invitation sent');
     return true;
   } catch (error) {
-    console.error('❌ Error sending invitation:', error);
+    console.error('❌ [sendTeamInvitation] ERROR:', error);
+    if (error instanceof Error) {
+      console.error('❌ [sendTeamInvitation] Error message:', error.message);
+      console.error('❌ [sendTeamInvitation] Error stack:', error.stack);
+    }
     return false;
   }
 }

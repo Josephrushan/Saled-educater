@@ -164,16 +164,23 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
   };
 
   const handleAddExistingRep = async (repId: string, role: string) => {
-    const success = await sendTeamInvitation(currentUser.id, repId, role);
+    try {
+      console.log('🤝 handleAddExistingRep called - repId:', repId, 'role:', role, 'teamLeadId:', currentUser.id);
+      const success = await sendTeamInvitation(currentUser.id, repId, role);
+      console.log('✅ sendTeamInvitation returned:', success);
 
-    if (success) {
-      alert('📧 Invitation sent! Rep will receive it in their My Team tab.');
-      setSearchQuery('');
-      setShowAddExisting(false);
-      await loadTeamInfo();
-      setAvailableReps(availableReps.filter(r => r.id !== repId));
-    } else {
-      alert('❌ Failed to send invitation');
+      if (success) {
+        alert('📧 Invitation sent! Rep will receive it in their My Team tab.');
+        setSearchQuery('');
+        setShowAddExisting(false);
+        await loadTeamInfo();
+        setAvailableReps(availableReps.filter(r => r.id !== repId));
+      } else {
+        alert('❌ Failed to send invitation');
+      }
+    } catch (error) {
+      console.error('❌ Error in handleAddExistingRep:', error);
+      alert('❌ Error sending invitation: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
