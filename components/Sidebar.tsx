@@ -86,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
         )}
         <button 
           onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 text-slate-400 hover:text-brand hover:bg-brand/10 rounded-xl transition-all text-sm font-bold"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-all text-sm font-bold border border-red-200"
         >
           <LogOut size={18} />
           Sign Out
