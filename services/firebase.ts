@@ -1823,4 +1823,138 @@ export async function leaveTeam(repId: string) {
   }
 }
 
+// ============ UPDATES MANAGEMENT ============
+
+const UPDATES_COLLECTION = 'updates';
+const USER_READ_UPDATES_COLLECTION = 'updateReadStatus';
+
+export interface Update {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+/**
+ * Subscribe to all updates in real-time
+ */
+export function getUpdates(callback: (updates: Update[]) => void): () => void {
+  const q = query(collection(db, UPDATES_COLLECTION), orderBy('createdAt', 'desc'));
+  
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const updates: Update[] = [];
+    snapshot.forEach(doc => {
+      updates.push({ id: doc.id, ...doc.data() } as Update);
+    });
+    callback(updates);
+  }, (error) => {
+    console.error('Error fetching updates:', error);
+    callback([]);
+  });
+
+  return unsubscribe;
+}
+
+/**
+ * Add a new update (admin only)
+ */
+export async function addUpdate(data: {
+  title: string;
+  description: string;
+  imageUrl?: string;
+  createdBy: string;
+}): Promise<boolean> {
+  try {
+    console.log('📰 Adding update:', data.title);
+    const docRef = await addDoc(collection(db, UPDATES_COLLECTION), {
+      ...data,
+      createdAt: new Date().toISOString()
+    });
+    console.log('✅ Update created with ID:', docRef.id);
+    return true;
+  } catch (error) {
+    console.error('❌ Error adding update:', error);
+    return false;
+  }
+}
+
+/**
+ * Delete an update (admin only)
+ */
+export async function deleteUpdate(updateId: string): Promise<boolean> {
+  try {
+    console.log('🗑️ Deleting update:', updateId);
+    await deleteDoc(doc(db, UPDATES_COLLECTION, updateId));
+    console.log('✅ Update deleted');
+    return true;
+  } catch (error) {
+    console.error('❌ Error deleting update:', error);
+    return false;
+  }
+}
+
+/**
+ * Upload an image for an update
+ */
+export async function uploadUpdateImage(file: File, userId: string): Promise<string> {
+  try {
+    console.log('📸 Uploading update image');
+    const timestamp = new Date().getTime();
+    const filename = `updates/${userId}/${timestamp}_${file.name}`;
+    const storageRef = ref(storage, filename);
+    
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    
+    console.log('✅ Update image uploaded:', url);
+    return url;
+  } catch (error) {
+    console.error('❌ Error uploading update image:', error);
+    throw error;
+  }
+}
+
+/**
+ * Mark an update as read by a user
+ */
+export async function markUpdateAsRead(userId: string, updateId: string): Promise<boolean> {
+  try {
+    const docId = `${userId}_${updateId}`;
+    await setDoc(doc(db, USER_READ_UPDATES_COLLECTION, docId), {
+      userId,
+      updateId,
+      readAt: new Date().toISOString()
+    });
+    console.log('✅ Update marked as read');
+    return true;
+  } catch (error) {
+    console.error('❌ Error marking update as read:', error);
+    return false;
+  }
+}
+
+/**
+ * Get unread updates count for a user
+ */
+export async function getUnreadUpdatesCount(userId: string): Promise<number> {
+  try {
+    const updatesSnapshot = await getDocs(collection(db, UPDATES_COLLECTION));
+    const readSnapshot = await getDocs(query(
+      collection(db, USER_READ_UPDATES_COLLECTION),
+      where('userId', '==', userId)
+    ));
+    
+    const readUpdateIds = new Set(readSnapshot.docs.map(doc => doc.data().updateId));
+    const unreadCount = updatesSnapshot.docs.filter(doc => !readUpdateIds.has(doc.id)).length;
+    
+    console.log('📊 Unread updates count:', unreadCount);
+    return unreadCount;
+  } catch (error) {
+    console.error('❌ Error getting unread updates count:', error);
+    return 0;
+  }
+}
+
 

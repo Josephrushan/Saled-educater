@@ -10,9 +10,10 @@ interface SidebarProps {
   currentUser: SalesRep | null;
   onLogout: () => void;
   unreadMessageCount?: number;
+  unreadUpdatesCount?: number;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser, onLogout, unreadMessageCount = 0 }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser, onLogout, unreadMessageCount = 0, unreadUpdatesCount = 0 }) => {
   const isAdmin = currentUser?.role === 'admin';
 
   const menuItems = [
@@ -26,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
     { id: 'training', label: 'Training', icon: <BookOpen size={20} />, hide: false },
     { id: 'crew', label: 'Crew Directory', icon: <Users size={20} />, hide: false },
     { id: 'direct-message', label: 'Direct Message', icon: <Mail size={20} />, hide: false },
+    { id: 'updates', label: 'Updates', icon: <span>📰</span>, hide: false },
     { id: 'incentives', label: 'Incentives', icon: <Gift size={20} />, hide: false },
   ];
 
@@ -50,6 +52,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
             {item.label}
             {item.id === 'direct-message' && unreadMessageCount > 0 && (
               <div className="absolute right-4 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            )}
+            {item.id === 'updates' && unreadUpdatesCount > 0 && (
+              <div className="absolute right-4 w-3 h-3 bg-brand rounded-full animate-pulse"></div>
             )}
           </button>
         ))}

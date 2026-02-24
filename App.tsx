@@ -21,6 +21,7 @@ import DailyTip from './components/DailyTip';
 import NotificationToast from './components/NotificationToast';
 import TeamManagement from './components/TeamManagement';
 import AdminApprovalPanel from './components/AdminApprovalPanel';
+import UpdatesModule from './components/UpdatesModule';
 import { School, SalesRep, SalesStage, TrackType, Message, AttemptRecord } from './types';
 import { 
   getSchoolsFromFirebase, 
@@ -38,7 +39,9 @@ import {
   createTeam,
   checkIfRepIsTeamLead,
   checkIfRepInTeam,
-  addExistingRepToTeam,
+  addExistingRepToTeam,,
+  getUnreadUpdatesCount,
+  getUpdates
   getAvailableRepsForTeam
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
@@ -55,6 +58,7 @@ const App: React.FC = () => {
   const [activePopup, setActivePopup] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; type?: 'message' | 'alert'; messageId?: string }>>([]);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [unreadUpdatesCount, setUnreadUpdatesCount] = useState(0);
   const [notifiedMessageIds, setNotifiedMessageIds] = useState<Set<string>>(() => {
     // Initialize from localStorage immediately
     try {
@@ -182,6 +186,33 @@ const App: React.FC = () => {
 
     subscribeToAllMessages();
   }, [currentUser]);
+
+  // Subscribe to updates for unread count
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    console.log('📰 Subscribing to updates');
+    const unsubscribe = getUpdates((updates) => {
+      // Load read updates from localStorage
+      const readUpdates = (() => {
+        try {
+          const stored = localStorage.getItem(`updates_read_${currentUser.id}`);
+          return stored ? new Set(JSON.parse(stored)) : new Set();
+        } catch {
+          return new Set();
+        }
+      })();
+      
+      const unread = updates.filter(u => !readUpdates.has(u.id)).length;
+      setUnreadUpdatesCount(unread);
+      console.log('📰 Unread updates:', unread);
+    });
+
+    return () => {
+      console.log('📰 Unsubscribing from updates');
+      unsubscribe();
+    };
+  }, [currentUser?.id]);
 
   // Fetch schools on mount or when user changes
   useEffect(() => {
@@ -472,6 +503,7 @@ const App: React.FC = () => {
       case 'payment': return <PaymentInfo currentUser={currentUser} onUpdate={setCurrentUser} />;
       case 'analytics': return currentUser ? <AnalyticsStrategy currentUser={currentUser} schools={schools} onBack={() => setActiveTab('dashboard')} /> : null;
       case 'team': return currentUser ? <TeamManagement currentUser={currentUser} /> : null;
+      case 'updates': return currentUser ? <UpdatesModule currentUser={currentUser} /> : null;
       case 'approvals': return currentUser?.role === 'admin' ? <AdminApprovalPanel currentUser={currentUser} /> : <Dashboard currentUser={currentUser} schools={schools} />;
       default: return <Dashboard currentUser={currentUser} schools={schools} />;
     }
@@ -486,6 +518,7 @@ const App: React.FC = () => {
           currentUser={currentUser}
           onLogout={handleLogout}
           unreadMessageCount={unreadMessageCount}
+          unreadUpdatesCount={unreadUpdatesCount}
         />
       </div>
 
