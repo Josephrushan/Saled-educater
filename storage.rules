@@ -90,6 +90,12 @@ service firebase.storage {
       allow read: if true;
       allow write: if isSignedIn();
     }
+
+    // Updates - Admin posts with images
+    match /updates/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
     
     // Default fallback - Deny all other paths
     match /{allPaths=**} {
