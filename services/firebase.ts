@@ -1535,7 +1535,7 @@ export async function getAvailableRepsForTeam(currentTeamLeadId?: string) {
 // Send team invitation to a rep
 export async function sendTeamInvitation(teamLeadId: string, repId: string) {
   try {
-    console.log('📧 Sending team invitation to rep:', repId);
+    console.log('📧 Sending team invitation to rep:', repId, 'for team lead:', teamLeadId);
     
     // Get team lead info
     const teamRef = doc(db, 'teams', teamLeadId);
@@ -1547,6 +1547,7 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
     }
     
     const teamData = teamSnap.data();
+    console.log('📋 Current team data:', teamData);
     
     // Get rep info from educater_salesman collection
     const repsRef = collection(db, 'educater_salesman');
@@ -1558,8 +1559,30 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
     }
     
     const repData = repSnap.docs[0].data();
+    console.log('👤 Rep data:', repData.name);
     
-    // Create invitation
+    // Ensure members array exists and add the rep
+    const currentMembers = Array.isArray(teamData.members) ? [...teamData.members] : [];
+    console.log('📋 Current members:', currentMembers);
+    
+    if (!currentMembers.includes(repId)) {
+      currentMembers.push(repId);
+      console.log('➕ Adding rep to members array:', currentMembers);
+      
+      // Update team with new members array
+      const updateData = {
+        members: currentMembers,
+        updatedAt: new Date().toISOString()
+      };
+      
+      console.log('💾 Updating team with:', updateData);
+      await updateDoc(teamRef, updateData);
+      console.log('✅ Team updated successfully');
+    } else {
+      console.log('⚠️ Rep already in team');
+    }
+    
+    // Create invitation record
     const invitationsRef = collection(db, 'teamInvitations');
     const invitationData = {
       teamId: teamLeadId,
@@ -1575,16 +1598,6 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
     
     await addDoc(invitationsRef, invitationData);
     console.log('✅ Invitation created');
-    
-    // Also add to team's members array immediately so team lead sees them
-    const currentMembers = teamData.members || [];
-    if (!currentMembers.includes(repId)) {
-      await updateDoc(teamRef, {
-        members: [...currentMembers, repId],
-        updatedAt: new Date().toISOString()
-      });
-      console.log('✅ Member added to team');
-    }
     
     // Create team member record
     const teamMembersRef = collection(db, 'teamMembers');
