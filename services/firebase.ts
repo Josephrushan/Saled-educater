@@ -1626,7 +1626,6 @@ export async function sendTeamInvitation(teamLeadId: string, repId: string) {
     return false;
   }
 }
-}
 
 // Get pending invitations for a rep
 export async function getMyPendingInvitations(repId: string) {
