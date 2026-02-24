@@ -1319,6 +1319,56 @@ export async function getUserTeam(userId: string) {
       ...teamSnap.data()
     };
   } catch (error) {
+    console.error('❌ Error getting user team:', error);
+    return null;
+  }
+}
+
+// Get team info for a rep who is a MEMBER (not the lead)
+export async function getMyTeamAsMember(repId: string) {
+  try {
+    console.log('👥 Fetching team info for member:', repId);
+    
+    // Find this rep in teamMembers collection to get their team lead
+    const teamMembersRef = collection(db, 'teamMembers');
+    const q = query(teamMembersRef, where('id', '==', repId));
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      console.log('📭 Rep not found in any team');
+      return null;
+    }
+    
+    const memberRecord = snapshot.docs[0].data();
+    const teamLeadId = memberRecord.teamLeadId;
+    
+    console.log('🔍 Found team lead:', teamLeadId);
+    
+    // Get the team document
+    const teamRef = doc(db, 'teams', teamLeadId);
+    const teamSnap = await getDoc(teamRef);
+    
+    if (!teamSnap.exists()) {
+      console.log('📭 Team not found');
+      return null;
+    }
+    
+    const teamData = teamSnap.data();
+    
+    // Get all team members
+    const members = await getTeamMembers(teamLeadId);
+    
+    return {
+      id: teamSnap.id,
+      ...teamData,
+      members: members,
+      teamLeadId: teamLeadId
+    };
+  } catch (error) {
+    console.error('❌ Error getting team as member:', error);
+    return null;
+  }
+  } catch (error) {
     console.error('❌ Error fetching user team:', error);
     return null;
   }

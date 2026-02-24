@@ -6,6 +6,7 @@ import {
   suggestTeamMember, 
   getTeamSuggestions, 
   getUserTeam,
+  getMyTeamAsMember,
   checkIfRepIsTeamLead,
   checkIfRepInTeam,
   createTeam,
@@ -69,11 +70,13 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
       
       // Load my team info if I'm in a team
       if (inTeam) {
-        const teamLeadData = await Promise.all(
-          invitations.map(inv => inv.teamLeadId)
-        );
-        // Try to find team I'm in by checking team members
-        // This would be better with a dedicated function but we'll use this for now
+        console.log('👥 Loading team info for member:', currentUser.id);
+        const memberTeam = await getMyTeamAsMember(currentUser.id);
+        if (memberTeam) {
+          setTeam(memberTeam);
+          setTeamMembers(memberTeam.members || []);
+          console.log('✅ Team loaded:', memberTeam.teamName);
+        }
       }
     }
 
@@ -184,22 +187,32 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
       <div className="flex flex-col h-full bg-slate-50">
         <div className="bg-white border-b border-slate-200 p-6">
           <h1 className="font-black text-2xl">My Team</h1>
-          <p className="text-sm text-slate-600 mt-1">You are a member of a team</p>
+          <p className="text-sm text-slate-600 mt-1">You are a member of {team?.teamName}</p>
         </div>
         <div className="flex-1 overflow-auto p-6">
           <div className="space-y-6 max-w-2xl">
             {/* Team Information Card */}
-            {pendingInvitations.length > 0 && (
+            {team && (
               <div className="bg-white rounded-lg border border-slate-200 p-6">
                 <h3 className="font-black text-base mb-4">Team Information</h3>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
                     <p className="text-xs text-slate-500 font-bold mb-1">TEAM NAME</p>
-                    <p className="text-base font-bold text-slate-900">{pendingInvitations[0]?.teamName}</p>
+                    <p className="text-base font-bold text-slate-900">{team.teamName}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 font-bold mb-1">TEAM LEAD</p>
-                    <p className="text-base font-bold text-slate-900">{pendingInvitations[0]?.teamLeadName}</p>
+                    <p className="text-base font-bold text-slate-900">{team.leadName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 font-bold mb-1">MEMBERS</p>
+                    <p className="text-base font-bold text-slate-900">{teamMembers.length}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 font-bold mb-1">CREATED</p>
+                    <p className="text-base font-bold text-slate-900">
+                      {new Date(team.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -222,10 +235,57 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
               </div>
             )}
 
+            {/* Team Members */}
+            {team && (
+              <div>
+                <h3 className="font-black text-base mb-4">Team Members ({teamMembers.length})</h3>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin h-6 w-6 border-3 border-brand border-t-transparent rounded-full" />
+                  </div>
+                ) : teamMembers.length === 0 ? (
+                  <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+                    <Users size={32} className="mx-auto text-slate-300 mb-3" />
+                    <p className="text-slate-600 font-bold">Just you in this team for now</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {teamMembers.map(member => (
+                      <div
+                        key={member.id}
+                        className="bg-white rounded-lg border border-slate-200 p-4 hover:border-brand transition"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-black text-base">
+                              {member.firstName} {member.surname}
+                            </h4>
+                            <div className="space-y-1 mt-2">
+                              <div className="flex items-center gap-2 text-sm text-slate-600">
+                                <Mail size={16} />
+                                {member.email}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-slate-600">
+                                <Phone size={16} />
+                                {member.telephoneNumber}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+                            <CheckCircle2 size={14} /> Member
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Pending Invitations */}
             {pendingInvitations.length > 0 && (
               <div className="bg-white rounded-lg border border-slate-200 p-6">
-                <h3 className="font-black text-base mb-4">Team Invitations</h3>
+                <h3 className="font-black text-base mb-4">Pending Invitations</h3>
                 <div className="space-y-3">
                   {pendingInvitations.map(invitation => (
                     <div key={invitation.id} className="border border-slate-200 rounded-lg p-4">
@@ -269,18 +329,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
                       </div>
                     </div>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {pendingInvitations.length === 0 && (
-              <div className="flex items-center justify-center p-12">
-                <div className="bg-white rounded-lg border border-slate-200 p-12 text-center max-w-md">
-                  <Users size={32} className="mx-auto text-slate-300 mb-3" />
-                  <p className="text-slate-600 font-bold mb-2">No Pending Invitations</p>
-                  <p className="text-sm text-slate-500">
-                    You don't have any pending team invitations. Ask a team lead to invite you!
-                  </p>
                 </div>
               </div>
             )}
