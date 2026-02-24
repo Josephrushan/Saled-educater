@@ -1247,16 +1247,53 @@ export async function rejectTeamMember(suggestionId: string, adminId: string, re
 
 export async function getTeamMembers(teamLeadId: string) {
   try {
-    const teamMembersRef = collection(db, 'teamMembers');
-    const q = query(teamMembersRef, where('teamLeadId', '==', teamLeadId));
-    const snapshot = await getDocs(q);
+    console.log('👥 Fetching team members for:', teamLeadId);
     
-    const members = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    // Get the team document which has the members array
+    const teamRef = doc(db, 'teams', teamLeadId);
+    const teamSnap = await getDoc(teamRef);
     
-    console.log('👥 Team members:', members);
+    if (!teamSnap.exists()) {
+      console.log('📭 Team not found');
+      return [];
+    }
+    
+    const teamData = teamSnap.data();
+    const memberIds = teamData.members || [];
+    
+    console.log('📋 Member IDs:', memberIds);
+    
+    if (memberIds.length === 0) {
+      console.log('📭 No members in team');
+      return [];
+    }
+    
+    // Fetch details for each member from educater_salesman collection
+    const repsRef = collection(db, 'educater_salesman');
+    const members = [];
+    
+    for (const memberId of memberIds) {
+      const q = query(repsRef, where('id', '==', memberId));
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        const repData = snapshot.docs[0].data();
+        members.push({
+          id: memberId,
+          firstName: repData.name || '',
+          surname: repData.surname || '',
+          email: repData.email || '',
+          telephoneNumber: repData.telephoneNumber || '',
+          profilePicUrl: repData.profilePicUrl || '',
+          ...repData
+        });
+        console.log('✅ Added member:', repData.name);
+      } else {
+        console.warn('⚠️ Member not found in educater_salesman:', memberId);
+      }
+    }
+    
+    console.log('✅ Total members fetched:', members.length);
     return members;
   } catch (error) {
     console.error('❌ Error fetching team members:', error);
