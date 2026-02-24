@@ -21,6 +21,17 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, 
   const [activeUnsubscribe, setActiveUnsubscribe] = useState<(() => void) | null>(null);
   const [notifiedMessageIds, setNotifiedMessageIds] = useState<Set<string>>(new Set());
 
+  // Cleanup all subscriptions on unmount
+  useEffect(() => {
+    return () => {
+      console.log('🧹 DirectMessageModule unmounting - cleaning up all subscriptions');
+      if (activeUnsubscribe) {
+        console.log('🔕 Cleaning up selected conversation subscription');
+        activeUnsubscribe();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -40,12 +51,19 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, 
           console.log(`📞 Successfully subscribed to ${selectedRepId}`);
           setActiveUnsubscribe(() => unsub);
         } else {
+          // Component unmounted, clean up the subscription immediately
           unsub();
         }
+      }).catch(error => {
+        console.error('Error subscribing to conversation:', error);
       });
       
       return () => {
         isMounted = false;
+        if (activeUnsubscribe) {
+          activeUnsubscribe();
+          setActiveUnsubscribe(null);
+        }
       };
     }
   }, [selectedRepId]);
@@ -56,15 +74,21 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, 
 
     console.log(`🔔 Subscribing to ${allReps.length} conversations for unread tracking`);
     
-    const subscribeToAllConversations = async () => {
-      const unsubscribers: Map<string, () => void> = new Map();
+    let isMounted = true;
+    const unsubscribers: Array<() => void> = [];
 
+    const setupSubscriptions = async () => {
       for (const rep of allReps) {
+        if (!isMounted) return; // Component was unmounted, stop setting up
         if (rep.id === selectedRepId) continue; // Skip the selected one (already subscribed)
         
         try {
           const dmId = await getOrCreateDirectMessage(currentUser.id, rep.id);
+          if (!isMounted) return; // Check again after async call
+          
           const unsubscribe = subscribeToDirectMessages(dmId, (newMessages) => {
+            if (!isMounted) return; // Don't update if unmounted
+            
             // Just update conversations, trigger notifications for non-selected conversations
             const recentMessages = newMessages.filter(msg => {
               try {
@@ -96,20 +120,22 @@ const DirectMessageModule: React.FC<DirectMessageModuleProps> = ({ currentUser, 
               });
             }
           });
-          unsubscribers.set(rep.id, unsubscribe);
+          unsubscribers.push(unsubscribe);
         } catch (error) {
           console.error(`Error subscribing to ${rep.name}:`, error);
         }
       }
-
-      return () => {
-        console.log('🔕 Unsubscribing from all background conversations');
-        unsubscribers.forEach(unsub => unsub());
-      };
     };
 
-    return subscribeToAllConversations();
-  }, [allReps, currentUser, selectedRepId, notifiedMessageIds, onNewMessage]);
+    setupSubscriptions();
+
+    // Cleanup: unsubscribe from all conversations when component unmounts or dependencies change
+    return () => {
+      console.log('🔕 Unsubscribing from all background conversations');
+      isMounted = false;
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, [allReps, currentUser?.id, selectedRepId]);
 
   // Mark incoming messages as read when viewing conversation
   useEffect(() => {
