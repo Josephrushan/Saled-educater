@@ -1280,21 +1280,16 @@ export async function getTeamMembers(teamLeadId: string) {
         if (repSnap.exists()) {
           const repData = repSnap.data();
           const memberRole = memberRoles[memberId];
-          const validRoles = ['digital-scout', 'ghost', 'opener', 'scout', 'educater', 'finisher'];
-          const isValidRole = validRoles.includes(memberRole);
-          console.log('✅ Added member:', repData.name, 'with role from memberRoles:', memberRole, 'isValidRole:', isValidRole);
-          if (!isValidRole && memberRole) {
-            console.warn('⚠️ WARNING: Invalid role detected for', repData.name, '- role:', memberRole, 'should be one of:', validRoles);
-          }
+          console.log('✅ Added member:', repData.name, 'with team role:', memberRole);
           members.push({
+            ...repData,
             id: memberId,
             firstName: repData.name || '',
             surname: repData.surname || '',
             email: repData.email || '',
             telephoneNumber: repData.telephoneNumber || '',
             profilePicUrl: repData.profilePicUrl || '',
-            role: memberRole || undefined,
-            ...repData
+            role: memberRole || undefined
           });
         } else {
           console.warn('⚠️ Member not found in educater_salesman:', memberId);

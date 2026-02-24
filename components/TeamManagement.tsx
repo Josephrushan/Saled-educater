@@ -226,7 +226,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
     setSelectedMemberForRole(member);
     // Validate role - if invalid, use default
     const validRoleId = TEAM_ROLES.find(r => r.id === member.role) ? member.role : 'digital-scout';
-    console.log('🔧 Opening role modal for', member.firstName, '- current role:', member.role, '-> validated role:', validRoleId);
     setSelectedRole(validRoleId);
     setShowRoleModal(true);
   };
@@ -242,7 +241,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
     }
     
     try {
-      console.log('💾 Saving role for', selectedMemberForRole.firstName, '- role ID:', selectedRole, 'role name:', validRole.name);
       const success = await updateTeamMemberRole(currentUser.id, selectedMemberForRole.id, selectedRole);
       if (success) {
         alert('✅ Role updated to ' + validRole.name);
@@ -730,12 +728,6 @@ const TeamManagement: React.FC<TeamManagementProps> = ({ currentUser }) => {
               <div className="space-y-3">
                 {teamMembers.map(member => {
                   const role = TEAM_ROLES.find(r => r.id === member.role);
-                  console.log('🎯 Rendering member:', member.firstName, 'member.role type:', typeof member.role, 'member.role value:', JSON.stringify(member.role), 'foundRole:', role?.name || 'NOT FOUND');
-                  if (member.firstName === 'Rushan') {
-                    console.log('🔴 RUSHAN DEBUG - member object:', JSON.stringify(member, null, 2));
-                    console.log('🔴 RUSHAN DEBUG - TEAM_ROLES:', TEAM_ROLES.map(r => r.id));
-                    console.log('🔴 RUSHAN DEBUG - member.role === "ghost":', member.role === 'ghost');
-                  }
                   return (
                     <div
                       key={member.id}
