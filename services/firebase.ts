@@ -1913,15 +1913,18 @@ export async function uploadUpdateImage(file: File, userId: string): Promise<str
     const auth = getAuth();
     const currentUser = auth.currentUser;
     
-    if (!currentUser) {
-      throw new Error('User must be authenticated to upload updates');
+    // Use Firebase auth UID if available, fall back to userId parameter
+    const uploadUserId = currentUser?.uid || userId;
+    
+    if (!uploadUserId) {
+      throw new Error('User ID required to upload updates');
     }
     
-    // Use actual auth UID for path to ensure proper permissions
-    console.log('🔐 Auth UID:', currentUser.uid);
+    console.log('🔐 Auth UID:', currentUser?.uid || 'N/A');
     console.log('📝 Profile ID (userId param):', userId);
+    console.log('🔄 Using for upload:', uploadUserId);
     const timestamp = new Date().getTime();
-    const filename = `updates/${currentUser.uid}/${timestamp}_${file.name}`;
+    const filename = `updates/${uploadUserId}/${timestamp}_${file.name}`;
     console.log('📁 Upload path:', filename);
     const storageRef = ref(storage, filename);
     

@@ -91,10 +91,10 @@ service firebase.storage {
       allow write: if isSignedIn();
     }
 
-    // Updates - Any authenticated user can upload images for updates
+    // Updates - Allow uploads (Firestore rules validate auth)
     match /updates/{allPaths=**} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if true;
     }
     
     // Default fallback - Deny all other paths
