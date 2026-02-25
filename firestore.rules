@@ -265,6 +265,14 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // 11. UPDATES - Allow any authenticated user to create/update
+    match /updates/{updateId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (resource.data.createdBy == request.auth.uid || isSuperAdmin());
+      allow delete: if isSignedIn() && (resource.data.createdBy == request.auth.uid || isSuperAdmin());
+    }
+
     // GLOBAL FALLBACK
     match /{document=**} {
       allow read, write: if isSuperAdmin();

@@ -16,6 +16,7 @@ import {
   onSnapshot
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { SalesRep, School, SalesStage, Resource, ResourceCategory, Incentive, Message, DirectMessage, TeamSuggestion, TeamMember, Team } from '../types';
 
@@ -1909,8 +1910,16 @@ export async function deleteUpdate(updateId: string): Promise<boolean> {
 export async function uploadUpdateImage(file: File, userId: string): Promise<string> {
   try {
     console.log('📸 Uploading update image');
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      throw new Error('User must be authenticated to upload updates');
+    }
+    
+    // Use actual auth UID for path to ensure proper permissions
     const timestamp = new Date().getTime();
-    const filename = `updates/${userId}/${timestamp}_${file.name}`;
+    const filename = `updates/${currentUser.uid}/${timestamp}_${file.name}`;
     const storageRef = ref(storage, filename);
     
     await uploadBytes(storageRef, file);
