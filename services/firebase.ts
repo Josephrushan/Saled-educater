@@ -1918,8 +1918,11 @@ export async function uploadUpdateImage(file: File, userId: string): Promise<str
     }
     
     // Use actual auth UID for path to ensure proper permissions
+    console.log('🔐 Auth UID:', currentUser.uid);
+    console.log('📝 Profile ID (userId param):', userId);
     const timestamp = new Date().getTime();
     const filename = `updates/${currentUser.uid}/${timestamp}_${file.name}`;
+    console.log('📁 Upload path:', filename);
     const storageRef = ref(storage, filename);
     
     await uploadBytes(storageRef, file);
