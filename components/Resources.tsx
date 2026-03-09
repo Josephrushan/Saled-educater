@@ -271,14 +271,14 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
                 setCategoryError('');
                 setShowCategoryModal(true);
               }}
-              className="flex items-center gap-2 bg-slate-600 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 transition-all shadow-xl shadow-slate-600/10"
+              className="flex items-center gap-2 bg-slate-600 text-white px-6 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 transition-all shadow-xl shadow-slate-600/10"
             >
               <FolderPlus size={18} />
               Add Category
             </button>
             <button 
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/10"
+              className="flex items-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/10"
             >
               <Plus size={18} />
               Add Resource
@@ -427,7 +427,7 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
                   />
                   <label 
                     htmlFor="cover-upload"
-                    className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
+                    className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-full cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
                   >
                     <div className="bg-brand/10 p-2 rounded-xl text-brand">
                       <Upload size={20} />
@@ -462,7 +462,7 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
                     />
                     <label 
                       htmlFor="resource-upload"
-                      className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
+                      className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-full cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
                     >
                       <div className="bg-brand/10 p-2 rounded-xl text-brand">
                         <Upload size={20} />
@@ -618,7 +618,7 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
                   />
                   <label 
                     htmlFor="edit-cover-upload"
-                    className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
+                    className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-full cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
                   >
                     <div className="bg-brand/10 p-2 rounded-xl text-brand">
                       <Upload size={20} />
@@ -653,7 +653,7 @@ const Resources: React.FC<ResourcesProps> = ({ type, currentUser }) => {
                     />
                     <label 
                       htmlFor="edit-resource-upload"
-                      className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
+                      className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-full cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
                     >
                       <div className="bg-brand/10 p-2 rounded-xl text-brand">
                         <Upload size={20} />
@@ -799,8 +799,26 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ item, type, isAdmin, onDele
           </div>
         )}
         
-        <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand/10 group-hover:text-brand transition-colors flex-shrink-0">
-          {type === 'tools' ? <FileText size={24} /> : <BookOpen size={24} />}
+        <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-6 group-hover:bg-brand/10 group-hover:text-brand transition-colors flex-shrink-0">
+          {type === 'tools' ? (
+            <FileText 
+              size={24} 
+              style={{
+                WebkitTextStroke: '0.8px currentColor',
+                color: '#00ff8e',
+                filter: 'drop-shadow(0 0 3px rgba(0, 255, 142, 0.4))'
+              }}
+            />
+          ) : (
+            <BookOpen 
+              size={24} 
+              style={{
+                WebkitTextStroke: '0.8px currentColor',
+                color: '#00ff8e',
+                filter: 'drop-shadow(0 0 3px rgba(0, 255, 142, 0.4))'
+              }}
+            />
+          )}
         </div>
         <h3 className="text-lg font-black text-slate-900 tracking-tight pr-8">{item.name}</h3>
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{item.type}</p>
@@ -811,7 +829,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ item, type, isAdmin, onDele
               href={item.url}
               target="_blank"
               rel="noreferrer"
-              className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand hover:text-slate-900 transition-all shadow-lg shadow-slate-900/10"
+              className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-full font-black text-xs uppercase tracking-widest hover:bg-brand hover:text-slate-900 transition-all shadow-lg shadow-slate-900/10"
             >
               <ExternalLink size={16} />
               Open Link
@@ -819,7 +837,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ item, type, isAdmin, onDele
           ) : (
             <button
               onClick={() => onDownload(item.url, item.name)}
-              className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand hover:text-slate-900 transition-all shadow-lg shadow-slate-900/10"
+              className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-full font-black text-xs uppercase tracking-widest hover:bg-brand hover:text-slate-900 transition-all shadow-lg shadow-slate-900/10"
             >
               <Download size={16} />
               Download Asset

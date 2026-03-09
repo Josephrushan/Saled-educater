@@ -16,8 +16,8 @@ export default defineConfig(({ mode }) => {
           registerType: 'autoUpdate',
           includeAssets: ['pwa-192x192.png', 'pwa-512x512.png'],
           manifest: {
-            name: 'Educater Sales Portal',
-            short_name: 'Sales Portal',
+            name: 'Educater Team Hub',
+            short_name: 'Team Hub',
             description: 'Sales CRM for Educater Sales Team',
             theme_color: '#00ff8e',
             background_color: '#f8fafc',

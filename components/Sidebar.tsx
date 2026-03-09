@@ -71,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
         {currentUser && (
           <button 
             onClick={() => setActiveTab('payment')}
-            className={`w-full flex items-center gap-3 p-3 rounded-2xl border transition-all ${
+            className={`w-full flex items-center gap-3 p-3 rounded-full border transition-all ${
               activeTab === 'payment' ? 'border-brand bg-brand/10' : 'border-slate-100 bg-slate-50'
             }`}
           >

@@ -63,7 +63,7 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
                     type="text" 
                     required
                     placeholder="e.g. Westside Primary"
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-full focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
                     value={formData.name}
                     onChange={e => {
                       setFormData({...formData, name: e.target.value});
@@ -75,7 +75,7 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
                   type="button"
                   onClick={handleCheck}
                   disabled={!formData.name || isChecking}
-                  className="px-6 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black disabled:opacity-50 transition-all"
+                  className="px-6 bg-slate-900 text-white rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-black disabled:opacity-50 transition-all"
                 >
                   {isChecking ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Check'}
                 </button>
@@ -102,7 +102,7 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
                     <input 
                       type="text"
                       placeholder="Name"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-full focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
                       value={formData.principalName}
                       onChange={e => setFormData({...formData, principalName: e.target.value})}
                     />
@@ -112,7 +112,7 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
                     <input 
                       type="number"
                       placeholder="800"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-full focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
                       value={formData.studentCount}
                       onChange={e => setFormData({...formData, studentCount: e.target.value})}
                     />
@@ -125,7 +125,7 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
                     <input 
                       type="email"
                       placeholder="principal@school.co.za"
-                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-full focus:ring-4 focus:ring-brand/5 focus:outline-none focus:border-brand transition-all"
                       value={formData.principalEmail}
                       onChange={e => setFormData({...formData, principalEmail: e.target.value})}
                     />
@@ -139,7 +139,7 @@ const AddSchoolModal: React.FC<AddSchoolModalProps> = ({ onClose, onSubmit }) =>
             <button 
               type="submit"
               disabled={checkResult !== 'available'}
-              className="w-full bg-brand text-slate-900 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-brand/90 transition-all shadow-xl shadow-brand/10 flex items-center justify-center gap-2 disabled:opacity-20 disabled:grayscale"
+              className="w-full bg-brand text-slate-900 py-4 rounded-full font-black text-sm uppercase tracking-widest hover:bg-brand/90 transition-all shadow-xl shadow-brand/10 flex items-center justify-center gap-2 disabled:opacity-20 disabled:grayscale"
             >
               Start Acquisition
             </button>

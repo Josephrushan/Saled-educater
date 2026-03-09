@@ -515,7 +515,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                {activeTab === 'activity' && (
                  <>
                    <div className="flex flex-col gap-4">
-                     <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                     <div className="bg-slate-50 p-6 rounded-full border border-slate-100">
                        <h3 className="text-sm font-bold text-slate-900 mb-2">Stage Management</h3>
                        <p className="text-xs text-slate-500 mb-4">Current stage is <span className="font-bold text-slate-900">{school.stage}</span>.</p>
                        
@@ -572,7 +572,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
 
                {activeTab === 'ai_coach' && (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-4 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                    <div className="flex items-center gap-4 p-4 bg-indigo-50 rounded-full border border-indigo-100">
                       <div className="p-3 bg-white rounded-xl text-indigo-500 shadow-sm"><Sparkles size={24} /></div>
                       <div>
                         <h4 className="font-bold text-slate-900">Digital Sales Coach</h4>
@@ -589,7 +589,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                     </div>
 
                     {aiAdvice && (
-                      <div className="p-6 bg-white border border-slate-100 rounded-2xl prose prose-sm max-w-none text-slate-600 leading-relaxed shadow-sm">
+                      <div className="p-6 bg-white border border-slate-100 rounded-full prose prose-sm max-w-none text-slate-600 leading-relaxed shadow-sm">
                         {aiAdvice}
                       </div>
                     )}
@@ -600,7 +600,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                  <div className="grid grid-cols-2 gap-4">
                    <button 
                       onClick={() => handleGenerateEmail('problem')}
-                      className="p-4 border border-slate-200 rounded-2xl hover:border-brand hover:bg-brand/5 hover:shadow-lg transition-all text-left group"
+                      className="p-4 border border-slate-200 rounded-full hover:border-brand hover:bg-brand/5 hover:shadow-lg transition-all text-left group"
                     >
                       <Mail className="text-slate-400 group-hover:text-brand mb-3" size={24} />
                       <h4 className="font-bold text-slate-900 text-sm">Cold Outreach</h4>
@@ -608,7 +608,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                     </button>
                     <button 
                       onClick={() => handleGenerateEmail('nudge')}
-                      className="p-4 border border-slate-200 rounded-2xl hover:border-brand hover:bg-brand/5 hover:shadow-lg transition-all text-left group"
+                      className="p-4 border border-slate-200 rounded-full hover:border-brand hover:bg-brand/5 hover:shadow-lg transition-all text-left group"
                     >
                       <Send className="text-slate-400 group-hover:text-brand mb-3" size={24} />
                       <h4 className="font-bold text-slate-900 text-sm">Follow Up</h4>
@@ -616,7 +616,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
                     </button>
                     
                     {draftEmail && (
-                      <div className="col-span-2 mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="col-span-2 mt-4 p-4 bg-slate-50 rounded-full border border-slate-100">
                         <div className="flex justify-between mb-2">
                           <span className="text-xs font-bold uppercase text-slate-400">Draft Content</span>
                           <button className="text-xs font-bold text-brand">Copy</button>
@@ -635,7 +635,7 @@ const SchoolDetail: React.FC<SchoolDetailProps> = ({ school, onBack, onUpdateSta
         {/* Delete School Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full space-y-6 p-8 animate-in fade-in zoom-in duration-300">
+            <div className="bg-white rounded-full shadow-xl max-w-md w-full space-y-6 p-8 animate-in fade-in zoom-in duration-300">
               <div>
                 <h2 className="text-2xl font-black text-slate-900 mb-2">Delete School?</h2>
                 <p className="text-slate-600 text-sm">

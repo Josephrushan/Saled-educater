@@ -536,7 +536,7 @@ const App: React.FC = () => {
         isAdmin={currentUser.role === 'admin'}
       />
       
-      <main className="flex-1 w-full md:ml-64 p-5 md:p-14 pb-24 md:pb-14 overflow-y-auto max-w-[1400px]">
+      <main className="flex-1 w-full md:ml-64 pt-8 px-5 py-5 md:p-14 pb-24 md:pb-14 overflow-y-auto max-w-[1400px]">
         {renderContent()}
       </main>
 

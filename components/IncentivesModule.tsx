@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gift, Upload, Trash2, X } from 'lucide-react';
+import { Gift, Upload, Trash2, X, Plus } from 'lucide-react';
 import { SalesRep, Incentive } from '../types';
 import { 
   addIncentive, 
@@ -139,15 +139,15 @@ const IncentivesModule: React.FC<IncentivesModuleProps> = ({ currentUser }) => {
         {isAdmin && (
           <button
             onClick={() => setIsCreating(!isCreating)}
-            className="px-6 py-3 bg-brand text-slate-900 rounded-xl font-bold hover:shadow-lg transition-all"
+            className="w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all hover:bg-slate-800"
           >
-            {isCreating ? 'Cancel' : '+ New Incentive'}
+            <Plus size={24} />
           </button>
         )}
       </div>
 
       {isCreating && isAdmin && (
-        <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
+        <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
           <h2 className="text-2xl font-bold text-slate-900 mb-6">Create New Incentive</h2>
           <form onSubmit={handleCreateIncentive} className="space-y-6">
             {/* Title */}
@@ -227,7 +227,7 @@ const IncentivesModule: React.FC<IncentivesModuleProps> = ({ currentUser }) => {
             <div 
               key={incentive.id} 
               onClick={() => setExpandedIncentiveId(incentive.id)}
-              className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-lg transition-all cursor-pointer hover:border-brand"
+              className="bg-white rounded-3xl overflow-hidden border border-slate-100 hover:shadow-lg transition-all cursor-pointer hover:border-brand"
             >
               {/* Image */}
               <img
@@ -268,7 +268,7 @@ const IncentivesModule: React.FC<IncentivesModuleProps> = ({ currentUser }) => {
       {/* Expanded View Modal */}
       {expandedIncentiveId && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
             {/* Header with close button */}
             <div className="sticky top-0 bg-white border-b border-slate-100 p-6 flex items-center justify-between z-10">
               <h2 className="text-2xl font-bold text-slate-900">

@@ -105,7 +105,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
         </div>
         <button 
           onClick={onAddSchool}
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-brand hover:bg-brand/90 text-slate-900 px-6 py-3.5 md:px-8 md:py-4 rounded-2xl md:rounded-[1.5rem] font-black text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl shadow-brand/20"
+          className="w-full md:w-auto flex items-center justify-center gap-2 bg-brand hover:bg-brand/90 text-slate-900 px-6 py-3.5 md:px-8 md:py-4 rounded-full md:rounded-[1.5rem] font-black text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl shadow-brand/20"
         >
           <Plus size={18} />
           New Lead
@@ -115,7 +115,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
       <div className="bg-white rounded-3xl md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-4 md:p-6 border-b border-slate-50 bg-slate-50/30 space-y-4">
           {/* Rep Filter (Mine/Team) */}
-          <div className="flex w-full bg-white p-1 rounded-2xl border border-slate-100">
+          <div className="flex w-full bg-white p-1 rounded-full border border-slate-100">
             <button 
               onClick={() => setRepFilter('mine')}
               className={`flex-1 md:flex-none px-4 md:px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${repFilter === 'mine' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}
@@ -171,7 +171,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 pl-11 pr-4 py-2.5 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-brand/5 transition-all text-sm font-medium"
+              className="flex-1 pl-11 pr-4 py-2.5 bg-white border border-slate-100 rounded-full focus:outline-none focus:ring-4 focus:ring-brand/5 transition-all text-sm font-medium"
             />
             <button
               onClick={() => setHideNoEmail(!hideNoEmail)}
@@ -195,7 +195,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
               className="p-5 active:bg-slate-50 flex items-center gap-4 transition-all"
               onClick={() => onSelectSchool(school as any)}
             >
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+              <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
                 <SchoolIcon size={20} />
               </div>
               <div className="flex-1 min-w-0">
@@ -238,7 +238,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
                 >
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
+                      <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
                         <SchoolIcon size={20} />
                       </div>
                       <div>

@@ -23,24 +23,15 @@ const MobileNav: React.FC<MobileNavProps> = ({ activeTab, setActiveTab, onOpenDr
           key={tab.id}
           onClick={() => setActiveTab(tab.id)}
           className={`flex-1 flex flex-col items-center gap-1 transition-all ${
-            activeTab === tab.id ? 'text-brand' : 'text-slate-400'
+            activeTab === tab.id ? 'text-slate-900' : 'text-slate-400'
           }`}
         >
-          <div className={`p-2 rounded-xl transition-all ${activeTab === tab.id ? 'bg-brand/10' : ''}`}>
+          <div className={`p-2 rounded-full transition-all ${activeTab === tab.id ? 'bg-slate-200' : ''}`}>
             {tab.icon}
           </div>
           <span className="text-[10px] font-black uppercase tracking-widest">{tab.label}</span>
         </button>
       ))}
-      <button
-        onClick={onOpenDrawer}
-        className={`flex-1 flex flex-col items-center gap-1 transition-all text-slate-400`}
-      >
-        <div className="p-2 rounded-xl transition-all">
-          <Menu size={20} />
-        </div>
-        <span className="text-[10px] font-black uppercase tracking-widest">More</span>
-      </button>
     </div>
   );
 };

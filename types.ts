@@ -108,6 +108,7 @@ export interface SalesTemplate {
   subject: string;
   content: string;
   isImportant?: boolean;
+  highlightColor?: string; // CSS class or Tailwind color for title highlight (e.g., 'bg-brand', 'bg-yellow-300')
   createdAt?: string;
   updatedAt?: string;
 }

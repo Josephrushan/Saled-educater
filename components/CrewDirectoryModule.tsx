@@ -79,7 +79,7 @@ const CrewDirectoryModule: React.FC<CrewDirectoryModuleProps> = ({ currentUser }
           filteredReps.map((rep) => (
             <div
               key={rep.id}
-              className="bg-white rounded-2xl border border-slate-100 p-6 text-center hover:shadow-lg transition-all"
+              className="bg-white rounded-full border border-slate-100 p-6 text-center hover:shadow-lg transition-all"
             >
               {/* Avatar */}
               <div className="mb-4 flex justify-center">

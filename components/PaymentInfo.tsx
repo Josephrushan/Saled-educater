@@ -112,7 +112,7 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                 type="text" 
                 value={formData.name}
                 onChange={e => setFormData({...formData, name: e.target.value})}
-                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
                 placeholder="First Name" 
                 required
               />
@@ -123,7 +123,7 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                 type="text" 
                 value={formData.surname}
                 onChange={e => setFormData({...formData, surname: e.target.value})}
-                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
                 placeholder="Surname" 
                 required
               />
@@ -143,7 +143,7 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                   type="text" 
                   value={formData.bankName}
                   onChange={e => setFormData({...formData, bankName: e.target.value})}
-                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
                   placeholder="e.g. FNB, Capitec..."
                   required
                 />
@@ -154,7 +154,7 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                   type="text" 
                   value={formData.branchCode}
                   onChange={e => setFormData({...formData, branchCode: e.target.value})}
-                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
                   placeholder="e.g. 632005"
                   required
                 />
@@ -165,7 +165,7 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                   type="text" 
                   value={formData.accountNumber}
                   onChange={e => setFormData({...formData, accountNumber: e.target.value})}
-                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
                   placeholder="123456789"
                   required
                 />
@@ -176,7 +176,7 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                   type="text" 
                   value={formData.accountHolderName}
                   onChange={e => setFormData({...formData, accountHolderName: e.target.value})}
-                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
                   placeholder="Full Name"
                   required
                 />
@@ -197,7 +197,7 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
                 />
                 <label 
                   htmlFor="bank-proof-input"
-                  className="block w-full px-5 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-center cursor-pointer hover:border-brand hover:bg-brand/5 transition-all"
+                  className="block w-full px-5 py-4 border-2 border-dashed border-slate-200 rounded-full text-center cursor-pointer hover:border-brand hover:bg-brand/5 transition-all"
                 >
                   <div className="flex items-center justify-center gap-2 mb-1">
                     <Upload size={18} className={uploadingProof ? 'text-slate-400 animate-spin' : 'text-slate-400'} />
@@ -220,7 +220,7 @@ const PaymentInfo: React.FC<PaymentInfoProps> = ({ currentUser, onUpdate }) => {
           <button 
             type="submit"
             disabled={isSaving}
-            className={`w-full py-5 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl ${
+            className={`w-full py-5 rounded-full font-black text-xs md:text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-xl ${
               saveSuccess 
               ? 'bg-brand text-slate-900 shadow-brand/20' 
               : 'bg-slate-900 text-white hover:bg-black shadow-slate-900/10'

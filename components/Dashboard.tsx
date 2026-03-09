@@ -93,7 +93,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
         {stats.map((stat, idx) => (
           <div key={idx} className="bg-white p-5 md:p-7 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-brand/5 transition-all duration-300">
             <div className="flex justify-between items-start mb-4 md:mb-6">
-              <div className="p-2.5 md:p-3.5 bg-slate-50 rounded-xl md:rounded-2xl text-slate-900">{stat.icon}</div>
+              <div className="p-2.5 md:p-3.5 bg-slate-50 rounded-xl md:rounded-full text-slate-900">{stat.icon}</div>
               <div className="text-[8px] md:text-[10px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 md:py-1 rounded-full uppercase tracking-widest">Live</div>
             </div>
             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest truncate">{stat.label}</p>
@@ -182,7 +182,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
             
             <button 
               onClick={() => onNavigate?.('analytics')}
-              className="w-full mt-8 md:mt-10 bg-brand hover:bg-brand/90 text-slate-900 py-3.5 md:py-4 rounded-2xl font-black text-[11px] md:text-sm transition-all tracking-widest uppercase shadow-lg shadow-brand/20"
+              className="w-full mt-8 md:mt-10 bg-brand hover:bg-brand/90 text-slate-900 py-3.5 md:py-4 rounded-full font-black text-[11px] md:text-sm transition-all tracking-widest uppercase shadow-lg shadow-brand/20"
             >
               View Strategy
             </button>

@@ -98,7 +98,7 @@ const RepManagement: React.FC = () => {
         </div>
         <button 
           onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/10"
+          className="flex items-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-900/10"
         >
           <UserPlus size={18} />
           Create New Rep
@@ -116,7 +116,7 @@ const RepManagement: React.FC = () => {
                 type="text" 
                 value={newRep.name}
                 onChange={e => setNewRep({...newRep, name: e.target.value})}
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
               />
             </div>
             <div className="space-y-2">
@@ -126,7 +126,7 @@ const RepManagement: React.FC = () => {
                 type="text" 
                 value={newRep.surname}
                 onChange={e => setNewRep({...newRep, surname: e.target.value})}
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
               />
             </div>
             <div className="space-y-2">
@@ -136,7 +136,7 @@ const RepManagement: React.FC = () => {
                 type="email" 
                 value={newRep.email}
                 onChange={e => setNewRep({...newRep, email: e.target.value})}
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
               />
             </div>
             <div className="space-y-2">
@@ -146,7 +146,7 @@ const RepManagement: React.FC = () => {
                 type="text" 
                 value={newRep.password}
                 onChange={e => setNewRep({...newRep, password: e.target.value})}
-                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
               />
             </div>
             <div className="space-y-2 md:col-span-3">
@@ -161,7 +161,7 @@ const RepManagement: React.FC = () => {
                 />
                 <label 
                   htmlFor="profile-upload"
-                  className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
+                  className="flex items-center gap-3 w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-full cursor-pointer hover:bg-slate-100 transition-all border-dashed border-2"
                 >
                   <div className="bg-brand/10 p-2 rounded-xl text-brand">
                     <Upload size={20} />
@@ -176,7 +176,7 @@ const RepManagement: React.FC = () => {
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 bg-brand text-slate-900 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-brand/20 flex items-center justify-center gap-2"
+                className="flex-1 bg-brand text-slate-900 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-lg shadow-brand/20 flex items-center justify-center gap-2"
               >
                 {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle size={18} />}
                 Activate Rep Account
@@ -184,7 +184,7 @@ const RepManagement: React.FC = () => {
               <button 
                 type="button"
                 onClick={() => setShowAddForm(false)}
-                className="px-8 bg-slate-100 text-slate-400 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:text-slate-600 transition-all"
+                className="px-8 bg-slate-100 text-slate-400 py-4 rounded-full font-black text-xs uppercase tracking-widest hover:text-slate-600 transition-all"
               >
                 Cancel
               </button>
@@ -201,7 +201,7 @@ const RepManagement: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {reps.map(rep => (
             <div key={rep.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5 hover:border-brand transition-all group">
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-xl text-slate-900 border-2 border-slate-100 group-hover:bg-brand/10 transition-colors overflow-hidden">
+              <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center font-black text-xl text-slate-900 border-2 border-slate-100 group-hover:bg-brand/10 transition-colors overflow-hidden">
                 {rep.profilePicUrl ? (
                   <img src={rep.profilePicUrl} alt={rep.name} className="w-full h-full object-cover" />
                 ) : (

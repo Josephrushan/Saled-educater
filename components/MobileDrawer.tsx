@@ -48,7 +48,7 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose, onNavigate
                 onNavigate(item.id);
                 onClose();
               }}
-              className="w-full flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 text-slate-600 font-bold transition-all group"
+              className="w-full flex items-center justify-between p-4 rounded-full hover:bg-slate-50 text-slate-600 font-bold transition-all group"
             >
               <div className="flex items-center gap-4">
                 <div className="text-slate-400 group-hover:text-brand">{item.icon}</div>
@@ -59,10 +59,10 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose, onNavigate
           ))}
         </nav>
 
-        <div className="p-6 border-t border-slate-50 flex-shrink-0">
+        <div className="p-6 border-t border-slate-100 bg-white flex-shrink-0 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
           <button 
             onClick={onLogout}
-            className="w-full flex items-center justify-center gap-2 py-4 text-rose-500 bg-rose-50 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-slate-900 rounded-full font-black text-xs uppercase tracking-widest active:scale-95 transition-all hover:bg-black"
           >
             <LogOut size={18} />
             Sign Out

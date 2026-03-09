@@ -12,6 +12,7 @@ interface EmailTemplate {
   subject: string;
   content: string;
   isImportant?: boolean;
+  highlightColor?: string;
 }
 
 const EmailTemplates: React.FC = () => {
@@ -27,7 +28,8 @@ const EmailTemplates: React.FC = () => {
     templateType: TemplateType.EMAIL,
     subject: '',
     content: '',
-    isImportant: false
+    isImportant: false,
+    highlightColor: 'bg-brand'
   });
   const [loading, setLoading] = useState(true);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -77,7 +79,8 @@ const EmailTemplates: React.FC = () => {
       templateType: TemplateType.EMAIL,
       subject: '',
       content: '',
-      isImportant: false
+      isImportant: false,
+      highlightColor: 'bg-brand'
     });
   };
 
@@ -102,7 +105,8 @@ const EmailTemplates: React.FC = () => {
           templateType: formData.templateType,
           subject: formData.subject || '',
           content: formData.content,
-          isImportant: formData.isImportant || false
+          isImportant: formData.isImportant || false,
+          highlightColor: formData.highlightColor || 'bg-brand'
         });
         if (success) {
           setSaveMessage({ type: 'success', text: 'Template updated successfully' });
@@ -118,7 +122,8 @@ const EmailTemplates: React.FC = () => {
           templateType: formData.templateType,
           subject: formData.subject || '',
           content: formData.content,
-          isImportant: formData.isImportant || false
+          isImportant: formData.isImportant || false,
+          highlightColor: formData.highlightColor || 'bg-brand'
         });
         if (id) {
           setSaveMessage({ type: 'success', text: 'Template created successfully' });
@@ -281,6 +286,42 @@ const EmailTemplates: React.FC = () => {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-3">Highlight Color</label>
+            <div className="flex flex-wrap gap-3">
+              {[
+                { name: 'Green', value: 'bg-brand' },
+                { name: 'Yellow', value: 'bg-yellow-300' },
+                { name: 'Blue', value: 'bg-blue-400' },
+                { name: 'Magenta', value: 'bg-fuchsia-400' },
+                { name: 'Orange', value: 'bg-orange-400' },
+                { name: 'Purple', value: 'bg-violet-400' }
+              ].map(color => (
+                <button
+                  key={color.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, highlightColor: color.value })}
+                  className={`px-4 py-2 rounded-full font-bold text-sm transition-all border-2 ${
+                    formData.highlightColor === color.value 
+                      ? 'border-slate-900 shadow-md' 
+                      : 'border-slate-200 hover:border-slate-400'
+                  }`}
+                  style={{
+                    backgroundColor: color.value.replace('bg-', '').includes('brand') ? '#00ff8e' : 
+                                    color.value.replace('bg-', '').includes('yellow') ? '#fcd34d' :
+                                    color.value.replace('bg-', '').includes('blue') ? '#60a5fa' :
+                                    color.value.replace('bg-', '').includes('fuchsia') ? '#e879f9' :
+                                    color.value.replace('bg-', '').includes('orange') ? '#fb923c' :
+                                    '#a78bfa',
+                    color: '#000'
+                  }}
+                >
+                  {color.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -317,7 +358,7 @@ const EmailTemplates: React.FC = () => {
           <input 
             type="text" 
             placeholder="Search scripts..."
-            className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand transition-all text-sm"
+            className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-full focus:outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand transition-all text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -353,49 +394,72 @@ const EmailTemplates: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {sorted.map((template) => (
-            <div key={template.id} className={`bg-white p-8 rounded-[2rem] border ${template.isImportant ? 'border-brand bg-brand/5' : 'border-slate-100'} shadow-sm flex flex-col gap-4 transition-all hover:shadow-md`}>
-              <div className="flex justify-between items-start gap-4">
+            <div key={template.id} className={`bg-white p-4 sm:p-6 md:p-8 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col gap-3 sm:gap-4 transition-all hover:shadow-md`}>
+              <div className="flex justify-between items-start gap-2 sm:gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-black text-slate-900 bg-brand px-2.5 py-1 rounded-full uppercase tracking-widest">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="text-[8px] sm:text-[10px] font-black text-white bg-slate-900 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full uppercase tracking-widest">
                       {template.track}
                     </span>
-                    <span className="text-[10px] font-black text-slate-600 bg-slate-200 px-2.5 py-1 rounded-full uppercase tracking-widest">
+                    <span className="text-[8px] sm:text-[10px] font-black text-slate-600 bg-slate-200 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full uppercase tracking-widest">
                       {template.templateType}
                     </span>
                   </div>
-                  <h3 className="text-xl font-black text-slate-900">{template.title}</h3>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-tight max-w-xs">
+                    {template.title.split(' ').map((word, idx) => {
+                      const rotations = [2, -2, 1];
+                      const rotation = rotations[idx % rotations.length];
+                      return (
+                        <span
+                          key={idx}
+                          className={`${template.highlightColor || 'bg-brand'} bg-opacity-60 rounded-md`}
+                          style={{
+                            WebkitTextStroke: '0.5px currentColor',
+                            opacity: 0.85,
+                            padding: '2px 8px',
+                            display: 'inline-block',
+                            marginRight: '4px',
+                            transform: `rotate(${rotation}deg)`,
+                            transformOrigin: 'center',
+                            transition: 'transform 0.3s ease'
+                          }}
+                        >
+                          {word}
+                        </span>
+                      );
+                    })}
+                  </h3>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
                   <button 
                     onClick={() => handleToggleImportant(template.id || '', template)}
-                    className={`p-3 rounded-xl transition-all ${
+                    className={`p-2 sm:p-3 rounded-xl transition-all ${
                       template.isImportant 
-                        ? 'bg-brand text-slate-900' 
-                        : 'bg-slate-50 text-slate-400 hover:text-amber-500 hover:bg-amber-50'
+                        ? 'bg-slate-900 text-white' 
+                        : 'bg-slate-50 text-slate-400 hover:text-slate-900'
                     }`}
                   >
-                    <Star size={20} fill={template.isImportant ? 'currentColor' : 'none'} />
+                    <Star size={18} fill={template.isImportant ? 'currentColor' : 'none'} />
                   </button>
                   <button 
                     onClick={() => handleCopy(`${template.subject}\n\n${template.content}`, template.id || '')}
-                    className={`p-3 rounded-xl transition-all ${
-                      copiedId === template.id ? 'bg-brand text-slate-900' : 'bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100'
+                    className={`p-2 sm:p-3 rounded-xl transition-all ${
+                      copiedId === template.id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                   >
-                    {copiedId === template.id ? <Check size={20} /> : <Copy size={20} />}
+                    {copiedId === template.id ? <Check size={18} /> : <Copy size={18} />}
                   </button>
                   <button
                     onClick={() => handleEdit(template)}
-                    className="p-3 rounded-xl bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                    className="p-2 sm:p-3 rounded-xl bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all"
                   >
-                    <Edit2 size={20} />
+                    <Edit2 size={18} />
                   </button>
                   <button
                     onClick={() => handleDelete(template.id || '')}
-                    className="p-3 rounded-xl bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                    className="p-2 sm:p-3 rounded-xl bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all"
                   >
-                    <Trash2 size={20} />
+                    <Trash2 size={18} />
                   </button>
                 </div>
               </div>
@@ -403,11 +467,11 @@ const EmailTemplates: React.FC = () => {
               <div className="space-y-3">
                 {template.templateType === TemplateType.EMAIL && (
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject Line</p>
-                    <p className="text-sm font-bold text-slate-700 mt-1">{template.subject}</p>
+                    <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject Line</p>
+                    <p className="text-sm font-bold text-slate-700 mt-1 line-clamp-2">{template.subject}</p>
                   </div>
                 )}
-                <div className={`${template.templateType === TemplateType.EMAIL ? 'bg-slate-50' : 'bg-blue-50'} p-6 rounded-2xl text-sm text-slate-600 whitespace-pre-wrap font-medium leading-relaxed border ${template.templateType === TemplateType.EMAIL ? 'border-slate-100' : 'border-blue-100'} max-h-48 overflow-y-auto`}>
+                <div className={`bg-white p-3 sm:p-4 md:p-6 rounded-lg text-xs sm:text-sm text-slate-600 whitespace-pre-wrap font-medium leading-relaxed border border-slate-100 max-h-48 overflow-y-auto`}>
                   {template.content}
                 </div>
               </div>
