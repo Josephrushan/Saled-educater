@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { Search, Plus, ChevronRight, User, Filter, School as SchoolIcon, Eye, EyeOff } from 'lucide-react';
+import { Search, Plus, ChevronRight, User, Filter, School as SchoolIcon, Eye, EyeOff, Trash2, Check } from 'lucide-react';
 import { STAGE_CONFIG } from '../constants';
 import { School, SalesRep, SalesStage } from '../types';
+import { deleteSchool } from '../services/firebase';
 
 interface SchoolListProps {
   onSelectSchool: (school: School) => void;
@@ -17,6 +18,8 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
   const [repFilter, setRepFilter] = useState<'all' | 'mine'>(currentUser?.role === 'admin' ? 'all' : 'mine');
   const [stageFilter, setStageFilter] = useState<'all' | 'available' | 'communication' | 'appointment' | 'completed'>('available');
   const [hideNoEmail, setHideNoEmail] = useState(true);
+  const [selectedSchools, setSelectedSchools] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Debug log
   React.useEffect(() => {
@@ -96,24 +99,107 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
     return 'Rep: Unassigned';
   };
 
+  // Toggle school selection
+  const toggleSelection = (schoolId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSelected = new Set(selectedSchools);
+    if (newSelected.has(schoolId)) {
+      newSelected.delete(schoolId);
+    } else {
+      newSelected.add(schoolId);
+    }
+    setSelectedSchools(newSelected);
+  };
+
+  // Select/deselect all displayed schools
+  const toggleSelectAll = () => {
+    if (selectedSchools.size === filteredSchools.length) {
+      setSelectedSchools(new Set());
+    } else {
+      setSelectedSchools(new Set(filteredSchools.map(s => s.id)));
+    }
+  };
+
+  // Delete selected schools
+  const handleDeleteSelected = async () => {
+    if (selectedSchools.size === 0) return;
+    
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${selectedSchools.size} school${selectedSchools.size > 1 ? 's' : ''}? This action cannot be undone.`
+    );
+    
+    if (!confirmDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const deletePromises = Array.from(selectedSchools).map(schoolId => deleteSchool(schoolId));
+      await Promise.all(deletePromises);
+      setSelectedSchools(new Set());
+    } catch (error) {
+      console.error('Error deleting schools:', error);
+      alert('Error deleting schools. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 md:space-y-8 animate-in slide-in-from-bottom-6 duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight">Schools</h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">Real-time lead status.</p>
+          <p className="text-slate-500 text-sm font-medium mt-1">
+            {selectedSchools.size > 0 
+              ? `${selectedSchools.size} school${selectedSchools.size > 1 ? 's' : ''} selected`
+              : 'Real-time lead status.'}
+          </p>
         </div>
-        <button 
-          onClick={onAddSchool}
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-brand hover:bg-brand/90 text-slate-900 px-6 py-3.5 md:px-8 md:py-4 rounded-full md:rounded-[1.5rem] font-black text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl shadow-brand/20"
-        >
-          <Plus size={18} />
-          New Lead
-        </button>
+        <div className="flex gap-3 w-full md:w-auto">
+          {selectedSchools.size > 0 && (
+            <button 
+              onClick={handleDeleteSelected}
+              disabled={isDeleting}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-6 py-3.5 md:px-8 md:py-4 rounded-full md:rounded-[1.5rem] font-black text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl shadow-red-500/20"
+            >
+              <Trash2 size={18} />
+              {isDeleting ? 'Deleting...' : `Delete (${selectedSchools.size})`}
+            </button>
+          )}
+          <button 
+            onClick={onAddSchool}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-brand hover:bg-brand/90 text-slate-900 px-6 py-3.5 md:px-8 md:py-4 rounded-full md:rounded-[1.5rem] font-black text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl shadow-brand/20"
+          >
+            <Plus size={18} />
+            New Lead
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl md:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-4 md:p-6 border-b border-slate-50 bg-slate-50/30 space-y-4">
+          {/* Select All Checkbox */}
+          {filteredSchools.length > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-50 transition-all">
+              <button
+                onClick={toggleSelectAll}
+                className={`flex items-center justify-center w-6 h-6 rounded border-2 transition-all ${
+                  selectedSchools.size === filteredSchools.length && filteredSchools.length > 0
+                    ? 'bg-brand border-brand'
+                    : 'border-slate-300 hover:border-brand'
+                }`}
+              >
+                {(selectedSchools.size === filteredSchools.length && filteredSchools.length > 0) && (
+                  <Check size={16} className="text-slate-900" />
+                )}
+              </button>
+              <span className="text-xs font-bold text-slate-600">
+                {selectedSchools.size === filteredSchools.length && filteredSchools.length > 0
+                  ? 'Deselect All'
+                  : 'Select All'}
+              </span>
+            </div>
+          )}
+
           {/* Rep Filter (Mine/Team) */}
           <div className="flex w-full bg-white p-1 rounded-full border border-slate-100">
             <button 
@@ -192,11 +278,27 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
           {filteredSchools.map((school) => (
             <div 
               key={school.id} 
-              className="p-5 active:bg-slate-50 flex items-center gap-4 transition-all"
+              className={`p-5 flex items-center gap-4 transition-all cursor-pointer ${
+                selectedSchools.has(school.id) 
+                  ? 'bg-brand/10 border-l-4 border-brand pl-5' 
+                  : 'active:bg-slate-50'
+              }`}
               onClick={() => onSelectSchool(school as any)}
             >
-              <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                <SchoolIcon size={20} />
+              <button
+                onClick={(e) => toggleSelection(school.id, e)}
+                className={`flex items-center justify-center w-6 h-6 rounded border-2 shrink-0 transition-all ${
+                  selectedSchools.has(school.id)
+                    ? 'bg-brand border-brand'
+                    : 'border-slate-300 hover:border-brand'
+                }`}
+              >
+                {selectedSchools.has(school.id) && (
+                  <Check size={16} className="text-slate-900" />
+                )}
+              </button>
+              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                <SchoolIcon size={18} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
@@ -222,6 +324,20 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
           <table className="w-full">
             <thead>
               <tr className="bg-white border-b border-slate-50 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <th className="px-8 py-6 w-12">
+                  <button
+                    onClick={toggleSelectAll}
+                    className={`flex items-center justify-center w-6 h-6 rounded border-2 transition-all ${
+                      selectedSchools.size === filteredSchools.length && filteredSchools.length > 0
+                        ? 'bg-brand border-brand'
+                        : 'border-slate-300 hover:border-brand'
+                    }`}
+                  >
+                    {(selectedSchools.size === filteredSchools.length && filteredSchools.length > 0) && (
+                      <Check size={16} className="text-slate-900" />
+                    )}
+                  </button>
+                </th>
                 <th className="px-8 py-6">School & Ownership</th>
                 <th className="px-8 py-6">Sales Phase</th>
                 <th className="px-8 py-6">Capacity</th>
@@ -233,9 +349,25 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
               {filteredSchools.map((school) => (
                 <tr 
                   key={school.id} 
-                  className="group hover:bg-slate-50/50 transition-all cursor-pointer"
+                  className={`group hover:bg-slate-50/50 transition-all cursor-pointer ${
+                    selectedSchools.has(school.id) ? 'bg-brand/10' : ''
+                  }`}
                   onClick={() => onSelectSchool(school as any)}
                 >
+                  <td className="px-8 py-6 w-12">
+                    <button
+                      onClick={(e) => toggleSelection(school.id, e)}
+                      className={`flex items-center justify-center w-6 h-6 rounded border-2 transition-all ${
+                        selectedSchools.has(school.id)
+                          ? 'bg-brand border-brand'
+                          : 'border-slate-300 hover:border-brand'
+                      }`}
+                    >
+                      {selectedSchools.has(school.id) && (
+                        <Check size={16} className="text-slate-900" />
+                      )}
+                    </button>
+                  </td>
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all">
