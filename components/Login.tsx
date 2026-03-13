@@ -40,14 +40,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: '#080a16' }}>
-      <div className="w-full max-w-md space-y-0">
-        <div className="text-center">
-          <img src={LOGO_URL} alt="Educater" className="w-56 h-56 mx-auto -mb-12 object-contain" />
-          <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/edu%20sales%2Fedu%20coins.jpg?alt=media&token=a0e36c71-5e2c-4fc0-9b3b-d4b2884b4f99" alt="Edu Coins" className="w-80 h-80 mx-auto object-contain" />
+    <div className="min-h-screen flex items-center justify-center p-3 sm:p-6" style={{ backgroundColor: '#080a16' }}>
+      <div className="w-full max-w-md space-y-0 max-h-screen overflow-hidden flex flex-col">
+        <div className="text-center flex-shrink-0">
+          <img src={LOGO_URL} alt="Educater" className="w-32 sm:w-56 h-32 sm:h-56 mx-auto -mb-6 sm:-mb-12 object-contain" />
+          <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/edu%20sales%2Fedu%20coins.jpg?alt=media&token=a0e36c71-5e2c-4fc0-9b3b-d4b2884b4f99" alt="Edu Coins" className="w-52 sm:w-80 h-52 sm:h-80 mx-auto object-contain" />
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-3 sm:space-y-6 flex-1 flex flex-col justify-center">
           {error && (
             <div className="flex items-center gap-3 p-4 bg-rose-50 text-rose-600 rounded-full text-xs font-bold animate-in fade-in slide-in-from-top-2">
               <AlertCircle size={18} />
@@ -64,7 +64,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@educater.app"
-                className="w-full pl-12 pr-4 py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-900"
+                className="w-full pl-12 pr-4 py-2 sm:py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-900 text-sm"
                 style={{ backgroundColor: '#0f0f19' }}
               />
             </div>
@@ -79,7 +79,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-4 py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-900"
+                className="w-full pl-12 pr-4 py-2 sm:py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-900 text-sm"
                 style={{ backgroundColor: '#0f0f19' }}
               />
             </div>
@@ -88,7 +88,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <button 
             type="submit"
             disabled={isLoading}
-            className="w-full bg-brand hover:bg-brand/90 text-slate-900 py-5 rounded-full font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 group"
+            className="w-full mt-6 sm:mt-0 bg-brand hover:bg-brand/90 text-slate-900 py-2 sm:py-5 rounded-full font-black text-xs sm:text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 sm:gap-3 group"
           >
             {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
               <>
@@ -99,7 +99,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </button>
         </form>
 
-        <div className="pt-8 flex flex-col items-center justify-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+        <div className="hidden sm:flex pt-4 flex-col items-center justify-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest flex-shrink-0">
           <div className="flex items-center gap-2">
             <Lock size={12} />
             Secure Enterprise Encryption
