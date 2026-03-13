@@ -43,7 +43,8 @@ import {
   getUnreadUpdatesCount,
   getUpdates,
   getAvailableRepsForTeam,
-  promoteUserToAdmin
+  promoteUserToAdmin,
+  subscribeToUserUpdates
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
 import PWAControls from './components/PWAControls';
@@ -137,6 +138,22 @@ const App: React.FC = () => {
       window.addEventListener('focus', handleFocus);
       return () => window.removeEventListener('focus', handleFocus);
     }
+  }, [currentUser?.id]);
+
+  // Real-time subscription to user data (for role changes, etc.)
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    console.log('🔔 Setting up real-time user subscription for:', currentUser.id);
+
+    const unsubscribe = subscribeToUserUpdates(currentUser.id, (updatedUser) => {
+      console.log('✨ User data synced from Firestore:', updatedUser);
+      setCurrentUser(updatedUser);
+      // Also update localStorage to keep them in sync
+      localStorage.setItem('educater_currentUser', JSON.stringify(updatedUser));
+    });
+
+    return unsubscribe;
   }, [currentUser?.id]);
 
   // Check and display popup once per session

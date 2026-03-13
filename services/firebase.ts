@@ -2045,4 +2045,35 @@ export async function promoteUserToAdmin(email: string): Promise<boolean> {
   }
 }
 
+/**
+ * Subscribe to real-time updates for the current user
+ * This ensures role changes are reflected immediately in the UI
+ */
+export function subscribeToUserUpdates(
+  userId: string,
+  onUpdate: (user: SalesRep) => void
+): () => void {
+  try {
+    const unsubscribe = onSnapshot(
+      doc(db, REPS_COLLECTION, userId),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const userData = { id: docSnap.id, ...docSnap.data() } as SalesRep;
+          console.log('🔄 User data updated from Firestore:', userData);
+          onUpdate(userData);
+        }
+      },
+      (error) => {
+        console.error('❌ Error subscribing to user updates:', error);
+      }
+    );
+    
+    return unsubscribe;
+  } catch (error) {
+    console.error('❌ Error setting up user subscription:', error);
+    return () => {}; // Return empty unsubscribe
+  }
+}
+
+
 
