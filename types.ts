@@ -71,7 +71,7 @@ export interface SalesRep {
   bankProofUrl?: string;
   totalSchools: number;
   activeCommissions: number;
-  role?: 'admin' | 'rep';
+  role?: 'admin' | 'team_approver' | 'rep';
   lastSeen?: string; // ISO timestamp of last login
 }
 

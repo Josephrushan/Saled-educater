@@ -2047,11 +2047,11 @@ export async function updateTeamMemberRole(teamLeadId: string, memberId: string,
 }
 
 /**
- * Promote a user to admin role
+ * Promote a user to team_approver role (can only approve team members, not delete anything)
  */
-export async function promoteUserToAdmin(email: string): Promise<boolean> {
+export async function promoteUserToTeamApprover(email: string): Promise<boolean> {
   try {
-    console.log('🔐 Promoting user to admin:', email);
+    console.log('🔐 Promoting user to team_approver:', email);
     
     // Find user by email in educater_salesman collection
     const repsRef = collection(db, REPS_COLLECTION);
@@ -2066,16 +2066,16 @@ export async function promoteUserToAdmin(email: string): Promise<boolean> {
     const userDoc = snapshot.docs[0];
     const userId = userDoc.id;
     
-    // Update user role to admin
+    // Update user role to team_approver (limited permissions)
     await updateDoc(doc(db, REPS_COLLECTION, userId), {
-      role: 'admin',
+      role: 'team_approver',
       promotedAt: new Date().toISOString()
     });
     
-    console.log('✅ User promoted to admin successfully:', email);
+    console.log('✅ User promoted to team_approver successfully:', email);
     return true;
   } catch (error) {
-    console.error('❌ Error promoting user to admin:', error);
+    console.error('❌ Error promoting user to team_approver:', error);
     return false;
   }
 }

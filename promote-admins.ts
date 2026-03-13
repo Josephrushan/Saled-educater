@@ -1,31 +1,32 @@
 /**
- * Temporary utility to promote specific users to admin role
- * Run this once to set up admin permissions for:
- * - Imraandamon@educater.co.za
+ * Temporary utility to promote specific users to team_approver role
+ * Run this once to set up team member approval permissions for:
+ * - Imraan@educater.co.za
  * - Shaunese@educater.co.za
  * 
- * Usage: Import and call promoteSpecificUsersToAdmin() in your app
+ * These users can only approve team members, they cannot delete anything
+ * Usage: Import and call promoteSpecificUsersToTeamApprover() in your app
  */
 
-import { promoteUserToAdmin } from './services/firebase';
+import { promoteUserToTeamApprover } from './services/firebase';
 
-export async function promoteSpecificUsersToAdmin() {
+export async function promoteSpecificUsersToTeamApprover() {
   const usersToPromote = [
     'Imraan@educater.co.za',
     'Shaunese@educater.co.za'
   ];
 
-  console.log('🚀 Starting admin promotion process...');
+  console.log('🚀 Starting team approver promotion process...');
   console.log('Users to promote:', usersToPromote);
 
   for (const email of usersToPromote) {
-    const success = await promoteUserToAdmin(email);
+    const success = await promoteUserToTeamApprover(email);
     if (success) {
-      console.log(`✅ Successfully promoted: ${email}`);
+      console.log(`✅ Successfully promoted to team_approver: ${email}`);
     } else {
       console.log(`❌ Failed to promote: ${email}`);
     }
   }
 
-  console.log('🎉 Admin promotion process complete!');
+  console.log('🎉 Team approver promotion process complete!');
 }

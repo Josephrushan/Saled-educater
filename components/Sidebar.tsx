@@ -15,13 +15,14 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser, onLogout, unreadMessageCount = 0, unreadUpdatesCount = 0 }) => {
   const isAdmin = currentUser?.role === 'admin';
+  const canApproveMembers = currentUser?.role === 'admin' || currentUser?.role === 'team_approver';
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, hide: false },
     { id: 'reps', label: 'Sales Members', icon: <Users size={20} />, hide: !isAdmin },
     { id: 'schools', label: 'Schools', icon: <School size={20} />, hide: false },
     { id: 'team', label: 'My Team', icon: <UserPlus size={20} />, hide: false },
-    { id: 'approvals', label: 'Team Approvals', icon: <CheckSquare size={20} />, hide: !isAdmin },
+    { id: 'approvals', label: 'Team Approvals', icon: <CheckSquare size={20} />, hide: !canApproveMembers },
     { id: 'templates', label: 'Email Drafts', icon: <FileText size={20} />, hide: false },
     { id: 'tools', label: 'Sales Tools', icon: <Download size={20} />, hide: false },
     { id: 'training', label: 'Training', icon: <BookOpen size={20} />, hide: false },

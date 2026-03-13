@@ -43,7 +43,7 @@ import {
   getUnreadUpdatesCount,
   getUpdates,
   getAvailableRepsForTeam,
-  promoteUserToAdmin,
+  promoteUserToTeamApprover,
   subscribeToUserUpdates
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
@@ -179,29 +179,29 @@ const App: React.FC = () => {
     sessionStorage.setItem('popup_shown_this_session', 'true');
   };
 
-  // Promote specific users to admin on app initialization
+  // Promote specific users to team_approver role on app initialization
   useEffect(() => {
     if (adminPromotionDoneRef.current) return; // Only run once
     
-    const promoteAdmins = async () => {
+    const promoteUsers = async () => {
       try {
-        console.log('🔐 Initializing admin users...');
+        console.log('🔐 Initializing team approvers...');
         const usersToPromote = [
           'Imraan@educater.co.za',
           'Shaunese@educater.co.za'
         ];
 
         for (const email of usersToPromote) {
-          const success = await promoteUserToAdmin(email);
-          console.log(success ? `✅ Promoted: ${email}` : `⚠️ User may already be admin or not found: ${email}`);
+          const success = await promoteUserToTeamApprover(email);
+          console.log(success ? `✅ Promoted to team_approver: ${email}` : `⚠️ User may already be promoted or not found: ${email}`);
         }
-        console.log('🎉 Admin initialization complete!');
+        console.log('🎉 Team approver initialization complete!');
       } catch (error) {
-        console.error('❌ Error promoting admins:', error);
+        console.error('❌ Error promoting team approvers:', error);
       }
     };
 
-    promoteAdmins();
+    promoteUsers();
     adminPromotionDoneRef.current = true; // Mark as done
   }, []);
 
@@ -551,7 +551,7 @@ const App: React.FC = () => {
       case 'analytics': return currentUser ? <AnalyticsStrategy currentUser={currentUser} schools={schools} onBack={() => setActiveTab('dashboard')} /> : null;
       case 'team': return currentUser ? <TeamManagement currentUser={currentUser} /> : null;
       case 'updates': return currentUser ? <UpdatesModule currentUser={currentUser} /> : null;
-      case 'approvals': return currentUser?.role === 'admin' ? <AdminApprovalPanel currentUser={currentUser} /> : <Dashboard currentUser={currentUser} schools={schools} />;
+      case 'approvals': return (currentUser?.role === 'admin' || currentUser?.role === 'team_approver') ? <AdminApprovalPanel currentUser={currentUser} /> : <Dashboard currentUser={currentUser} schools={schools} />;
       default: return <Dashboard currentUser={currentUser} schools={schools} />;
     }
   };

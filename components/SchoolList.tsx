@@ -155,7 +155,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
           </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          {selectedSchools.size > 0 && (
+          {selectedSchools.size > 0 && currentUser?.role === 'admin' && (
             <button 
               onClick={handleDeleteSelected}
               disabled={isDeleting}
