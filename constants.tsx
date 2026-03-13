@@ -4,7 +4,7 @@ import {
   Clock, Mail, Users, AlertCircle, CheckCircle2, TrendingUp, XCircle, FileText, Calendar, CheckSquare, Phone, FileCheck
 } from 'lucide-react';
 
-export const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75";
+export const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educatorwhite.png?alt=media&token=c19f45df-b3d6-41a1-be5f-7432b9bba889";
 export const SIDEBAR_LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/icon.png?alt=media&token=0963de99-0e33-4484-8bc9-1d14c3adb1ce";
 
 export const STAGE_CONFIG: Record<string, { color: string; icon: React.ReactNode }> = {

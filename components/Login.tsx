@@ -40,11 +40,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-10">
+    <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: '#080a16' }}>
+      <div className="w-full max-w-md space-y-0">
         <div className="text-center">
-          <img src={LOGO_URL} alt="Educater" className="w-48 h-48 mx-auto mb-8" />
-          <h1 className="text-4xl font-black text-[#9598a1] tracking-tight">Team Hub</h1>
+          <img src={LOGO_URL} alt="Educater" className="w-56 h-56 mx-auto -mb-12 object-contain" />
+          <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/edu%20sales%2Fedu%20coins.jpg?alt=media&token=a0e36c71-5e2c-4fc0-9b3b-d4b2884b4f99" alt="Edu Coins" className="w-80 h-80 mx-auto object-contain" />
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -64,7 +64,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@educater.app"
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900" 
+                className="w-full pl-12 pr-4 py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-900"
+                style={{ backgroundColor: '#0f0f19' }}
               />
             </div>
           </div>
@@ -78,7 +79,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-full focus:ring-4 focus:ring-brand/5 focus:border-brand outline-none transition-all font-bold text-slate-900"
+                className="w-full pl-12 pr-4 py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-900"
+                style={{ backgroundColor: '#0f0f19' }}
               />
             </div>
           </div>
@@ -86,7 +88,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <button 
             type="submit"
             disabled={isLoading}
-            className="w-full bg-brand hover:bg-brand/90 text-slate-900 py-5 rounded-full font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-brand/20 flex items-center justify-center gap-3 group"
+            className="w-full bg-brand hover:bg-brand/90 text-slate-900 py-5 rounded-full font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 group"
           >
             {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
               <>
@@ -97,7 +99,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </button>
         </form>
 
-        <div className="pt-8 border-t border-slate-50 flex flex-col items-center justify-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+        <div className="pt-8 flex flex-col items-center justify-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
           <div className="flex items-center gap-2">
             <Lock size={12} />
             Secure Enterprise Encryption
