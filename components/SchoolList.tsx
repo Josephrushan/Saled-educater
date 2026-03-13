@@ -159,7 +159,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
             <button 
               onClick={handleDeleteSelected}
               disabled={isDeleting}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-6 py-3.5 md:px-8 md:py-4 rounded-full md:rounded-[1.5rem] font-black text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl shadow-red-500/20"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white px-6 py-3.5 md:px-8 md:py-4 rounded-full md:rounded-[1.5rem] font-black text-xs md:text-sm uppercase tracking-widest transition-all"
             >
               <Trash2 size={18} />
               {isDeleting ? 'Deleting...' : `Delete (${selectedSchools.size})`}

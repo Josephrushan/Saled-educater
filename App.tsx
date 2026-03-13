@@ -42,7 +42,8 @@ import {
   addExistingRepToTeam,
   getUnreadUpdatesCount,
   getUpdates,
-  getAvailableRepsForTeam
+  getAvailableRepsForTeam,
+  promoteUserToAdmin
 } from './services/firebase';
 import { MOCK_SCHOOLS } from './constants';
 import PWAControls from './components/PWAControls';
@@ -73,6 +74,9 @@ const App: React.FC = () => {
   });
   const [allReps, setAllReps] = useState<SalesRep[]>([]);
   const [directMessageUnsubscribers, setDirectMessageUnsubscribers] = useState<Map<string, () => void>>(new Map());
+  
+  // Ref to track if we've already promoted the admins (run only once)
+  const adminPromotionDoneRef = useRef(false);
   
   // Ref to always have the latest notified message IDs (prevents stale closure)
   // Initialize with the same data as the state
@@ -157,6 +161,32 @@ const App: React.FC = () => {
     // Mark popup as shown for this session
     sessionStorage.setItem('popup_shown_this_session', 'true');
   };
+
+  // Promote specific users to admin on app initialization
+  useEffect(() => {
+    if (adminPromotionDoneRef.current) return; // Only run once
+    
+    const promoteAdmins = async () => {
+      try {
+        console.log('🔐 Initializing admin users...');
+        const usersToPromote = [
+          'Imraandamon@educater.co.za',
+          'Shaunese@educater.co.za'
+        ];
+
+        for (const email of usersToPromote) {
+          const success = await promoteUserToAdmin(email);
+          console.log(success ? `✅ Promoted: ${email}` : `⚠️ User may already be admin or not found: ${email}`);
+        }
+        console.log('🎉 Admin initialization complete!');
+      } catch (error) {
+        console.error('❌ Error promoting admins:', error);
+      }
+    };
+
+    promoteAdmins();
+    adminPromotionDoneRef.current = true; // Mark as done
+  }, []);
 
   // Subscribe to all direct messages from all reps
   useEffect(() => {

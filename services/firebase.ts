@@ -2011,4 +2011,38 @@ export async function updateTeamMemberRole(teamLeadId: string, memberId: string,
   }
 }
 
+/**
+ * Promote a user to admin role
+ */
+export async function promoteUserToAdmin(email: string): Promise<boolean> {
+  try {
+    console.log('🔐 Promoting user to admin:', email);
+    
+    // Find user by email in educater_salesman collection
+    const repsRef = collection(db, REPS_COLLECTION);
+    const q = query(repsRef, where('email', '==', email));
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      console.error('❌ User not found:', email);
+      return false;
+    }
+    
+    const userDoc = snapshot.docs[0];
+    const userId = userDoc.id;
+    
+    // Update user role to admin
+    await updateDoc(doc(db, REPS_COLLECTION, userId), {
+      role: 'admin',
+      promotedAt: new Date().toISOString()
+    });
+    
+    console.log('✅ User promoted to admin successfully:', email);
+    return true;
+  } catch (error) {
+    console.error('❌ Error promoting user to admin:', error);
+    return false;
+  }
+}
+
 
