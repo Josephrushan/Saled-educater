@@ -26,12 +26,16 @@ const MobileTopBar: React.FC<MobileTopBarProps> = ({ onOpenDrawer, onOpenProfile
 
       <button 
         onClick={onOpenProfile}
-        className="w-10 h-10 rounded-full border-2 border-slate-100 overflow-hidden bg-slate-50 flex items-center justify-center transition-transform active:scale-95"
+        className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-transform active:scale-95 ${
+          currentUser?.profilePicUrl 
+            ? 'border-slate-100 overflow-hidden bg-slate-50' 
+            : 'border-green-500 overflow-hidden bg-green-500'
+        }`}
       >
         {currentUser?.profilePicUrl ? (
           <img src={currentUser.profilePicUrl} alt="Profile" className="w-full h-full object-cover" />
         ) : (
-          <span className="text-sm font-black text-slate-400">{currentUser?.avatar}</span>
+          <span className="text-sm font-black text-white">{currentUser?.avatar}</span>
         )}
       </button>
     </div>

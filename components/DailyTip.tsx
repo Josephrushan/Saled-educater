@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X } from 'lucide-react';
+import { X, Lightbulb } from 'lucide-react';
 import { DAILY_SALES_TIPS } from '../constants';
 
 interface DailyTipProps {
@@ -61,7 +61,10 @@ const DailyTip: React.FC<DailyTipProps> = ({ onClose }) => {
 
       {/* Content */}
       <div className="flex-1">
-        <h3 className="font-black text-sm text-slate-900 mb-1">💡 Daily Sales Tip</h3>
+        <h3 className="font-black text-sm text-slate-900 mb-1 flex items-center gap-2">
+          <Lightbulb size={18} className="text-slate-900 stroke-2" />
+          Daily Sales Tip
+        </h3>
         <p className="text-sm text-slate-700 leading-relaxed">
           {todaysTip}
         </p>

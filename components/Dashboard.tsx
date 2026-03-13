@@ -44,7 +44,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
   const stats = [
     { label: 'My Schools', value: mySchools.length, icon: <SchoolIcon className="text-slate-900" />, sub: 'Owned by you' },
     { label: 'Active Commission', value: `R${(mySchools.reduce((acc, s) => acc + ((s.studentCount || 0) * 5), 0)).toLocaleString()}`, icon: <span className="text-brand font-black text-lg">ZAR</span>, sub: 'Monthly recurring' },
-    { label: 'Global Schools', value: schools.length, icon: <Users className="text-slate-400" />, sub: 'Educater Network' },
+    { label: 'Global Schools', value: schools.length, icon: <Users className="text-slate-900" />, sub: 'Educater Network' },
     { label: 'Top Engagement', value: '92%', icon: <Star className="text-brand" />, sub: 'Engagement Track' },
   ];
 

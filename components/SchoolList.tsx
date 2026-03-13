@@ -16,10 +16,11 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
   const [searchTerm, setSearchTerm] = useState('');
   // Admin users default to 'Team' view, regular reps default to 'Mine'
   const [repFilter, setRepFilter] = useState<'all' | 'mine'>(currentUser?.role === 'admin' ? 'all' : 'mine');
-  const [stageFilter, setStageFilter] = useState<'all' | 'available' | 'communication' | 'appointment' | 'completed'>('available');
+  const [stageFilter, setStageFilter] = useState<'all' | 'available' | 'communication' | 'appointment' | 'completed'>('all');
   const [hideNoEmail, setHideNoEmail] = useState(true);
   const [selectedSchools, setSelectedSchools] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  const [stageDropdownOpen, setStageDropdownOpen] = useState(false);
 
   // Debug log
   React.useEffect(() => {
@@ -170,7 +171,7 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
             className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-brand hover:bg-brand/90 text-slate-900 px-6 py-3.5 md:px-8 md:py-4 rounded-full md:rounded-[1.5rem] font-black text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl shadow-brand/20"
           >
             <Plus size={18} />
-            New Lead
+            New School
           </button>
         </div>
       </div>
@@ -216,52 +217,57 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
             </button>
           </div>
 
-          {/* Stage Filter */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          {/* Stage Filter Dropdown */}
+          <div className="relative w-full md:w-64">
             <button 
-              onClick={() => setStageFilter('all')}
-              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-900'}`}
+              onClick={() => setStageDropdownOpen(!stageDropdownOpen)}
+              className="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-full text-slate-900 font-black text-xs uppercase tracking-widest hover:border-slate-300 transition-all text-left flex items-center justify-between"
             >
-              All Stages
+              <span>{stageFilter === 'all' ? 'All Stages' : stageFilter.charAt(0).toUpperCase() + stageFilter.slice(1)}</span>
+              <svg className={`w-4 h-4 transition-transform ${stageDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 9l7 7 7-7" />
+              </svg>
             </button>
-            <button 
-              onClick={() => setStageFilter('available')}
-              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'available' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-500'}`}
-            >
-              Available
-            </button>
-            <button 
-              onClick={() => setStageFilter('appointment')}
-              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'appointment' ? 'bg-purple-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-purple-500'}`}
-            >
-              Appointment
-            </button>
-            <button 
-              onClick={() => setStageFilter('completed')}
-              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'completed' ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-green-500'}`}
-            >
-              Completed
-            </button>
-            <button 
-              onClick={() => setStageFilter('communication')}
-              className={`px-3 md:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${stageFilter === 'communication' ? 'bg-amber-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-amber-500'}`}
-            >
-              Communication
-            </button>
+            {stageDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-lg z-10">
+                <button 
+                  onClick={() => { setStageFilter('all'); setStageDropdownOpen(false); }}
+                  className={`w-full text-left px-4 py-2.5 font-black text-xs uppercase tracking-widest transition-all ${stageFilter === 'all' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  All Stages
+                </button>
+                <button 
+                  onClick={() => { setStageFilter('available'); setStageDropdownOpen(false); }}
+                  className={`w-full text-left px-4 py-2.5 font-black text-xs uppercase tracking-widest transition-all ${stageFilter === 'available' ? 'bg-blue-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  Available
+                </button>
+                <button 
+                  onClick={() => { setStageFilter('communication'); setStageDropdownOpen(false); }}
+                  className={`w-full text-left px-4 py-2.5 font-black text-xs uppercase tracking-widest transition-all ${stageFilter === 'communication' ? 'bg-amber-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  Communication
+                </button>
+                <button 
+                  onClick={() => { setStageFilter('appointment'); setStageDropdownOpen(false); }}
+                  className={`w-full text-left px-4 py-2.5 font-black text-xs uppercase tracking-widest transition-all ${stageFilter === 'appointment' ? 'bg-purple-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  Appointment
+                </button>
+                <button 
+                  onClick={() => { setStageFilter('completed'); setStageDropdownOpen(false); }}
+                  className={`w-full text-left px-4 py-2.5 font-black text-xs uppercase tracking-widest transition-all ${stageFilter === 'completed' ? 'bg-green-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  Completed
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="relative w-full flex items-center gap-2">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-            <input 
-              type="text" 
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 pl-11 pr-4 py-2.5 bg-white border border-slate-100 rounded-full focus:outline-none focus:ring-4 focus:ring-brand/5 transition-all text-sm font-medium"
-            />
+          <div className="relative w-full flex flex-col md:flex-row md:items-center gap-2">
             <button
               onClick={() => setHideNoEmail(!hideNoEmail)}
-              className={`p-2.5 rounded-xl transition-all ${
+              className={`md:p-2.5 md:rounded-xl p-2.5 rounded-xl transition-all w-full md:w-auto flex items-center justify-start md:justify-center gap-2 md:gap-0 ${
                 hideNoEmail 
                   ? 'bg-slate-900 text-white' 
                   : 'bg-white border border-slate-200 text-slate-400 hover:text-slate-900'
@@ -269,7 +275,20 @@ const SchoolList: React.FC<SchoolListProps> = ({ onSelectSchool, onAddSchool, cu
               title={hideNoEmail ? 'Show all schools' : 'Hide schools without email'}
             >
               {hideNoEmail ? <Eye size={18} /> : <EyeOff size={18} />}
+              <span className="md:hidden text-[10px] font-black uppercase tracking-widest">
+                {hideNoEmail ? 'Hide No Email' : 'Show All'}
+              </span>
             </button>
+            <div className="relative w-full flex items-center gap-2">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 pl-11 pr-4 py-2.5 bg-white border border-slate-100 rounded-full focus:outline-none focus:ring-4 focus:ring-brand/5 transition-all text-sm font-medium"
+              />
+            </div>
           </div>
         </div>
 
