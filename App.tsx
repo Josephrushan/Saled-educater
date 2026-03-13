@@ -170,7 +170,7 @@ const App: React.FC = () => {
       try {
         console.log('🔐 Initializing admin users...');
         const usersToPromote = [
-          'Imraandamon@educater.co.za',
+          'Imraan@educater.co.za',
           'Shaunese@educater.co.za'
         ];
 

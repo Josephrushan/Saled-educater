@@ -11,7 +11,7 @@ import { promoteUserToAdmin } from './services/firebase';
 
 export async function promoteSpecificUsersToAdmin() {
   const usersToPromote = [
-    'Imraandamon@educater.co.za',
+    'Imraan@educater.co.za',
     'Shaunese@educater.co.za'
   ];
 
