@@ -691,6 +691,41 @@ export async function deleteSchool(schoolId: string): Promise<boolean> {
 }
 
 /**
+ * Deletes all schools from Firestore
+ */
+export async function deleteAllSchools(): Promise<{ success: number; failed: number }> {
+  try {
+    console.log('🗑️ Starting bulk delete of all schools...');
+    const querySnapshot = await getDocs(collection(db, SCHOOLS_COLLECTION));
+    
+    let success = 0;
+    let failed = 0;
+    
+    const deletePromises = querySnapshot.docs.map(schoolDoc => 
+      deleteSchool(schoolDoc.id)
+        .then(result => {
+          if (result) success++;
+          else failed++;
+          return result;
+        })
+        .catch(error => {
+          console.error(`Failed to delete school ${schoolDoc.id}:`, error);
+          failed++;
+          return false;
+        })
+    );
+    
+    await Promise.all(deletePromises);
+    
+    console.log(`✅ Bulk delete complete: ${success} deleted, ${failed} failed`);
+    return { success, failed };
+  } catch (error) {
+    console.error('❌ Error deleting all schools:', error);
+    return { success: 0, failed: 0 };
+  }
+}
+
+/**
  * Migration: Updates old "Super Admin" references to "Keagan Smith" and fixes rep assignments
  */
 export async function migrateOldAdminData(): Promise<void> {
