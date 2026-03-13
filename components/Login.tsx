@@ -40,7 +40,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-3 sm:p-6" style={{ backgroundColor: '#080a16' }}>
+    <>
+      <style>{`
+        input::placeholder {
+          color: #374151 !important;
+          opacity: 1;
+        }
+      `}</style>
+      <div className="min-h-screen flex items-center justify-center p-3 sm:p-6" style={{ backgroundColor: '#080a16' }}>
       <div className="w-full max-w-md space-y-0 max-h-screen overflow-hidden flex flex-col">
         <div className="text-center flex-shrink-0">
           <img src={LOGO_URL} alt="Educater" className="w-32 sm:w-56 h-32 sm:h-56 mx-auto -mb-6 sm:-mb-12 object-contain" />
@@ -64,8 +71,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@educater.app"
-                className="w-full pl-12 pr-4 py-2 sm:py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-900 text-sm"
-                style={{ backgroundColor: '#0f0f19' }}
+                className="w-full pl-12 pr-4 py-2 sm:py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-400 text-sm"
+                style={{ 
+                  backgroundColor: '#0f0f19',
+                  color: '#cbd5e1'
+                }}
               />
             </div>
           </div>
@@ -78,9 +88,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-12 pr-4 py-2 sm:py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-900 text-sm"
-                style={{ backgroundColor: '#0f0f19' }}
+                placeholder="•••••••••••"
+                className="w-full pl-12 pr-4 py-2 sm:py-4 rounded-full focus:ring-4 focus:ring-brand/5 outline-none transition-all font-bold text-slate-400 text-sm"
+                style={{
+                  backgroundColor: '#0f0f19',
+                  color: '#cbd5e1'
+                }}
               />
             </div>
           </div>
@@ -107,6 +120,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
