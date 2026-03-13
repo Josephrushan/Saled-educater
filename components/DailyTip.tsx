@@ -39,33 +39,33 @@ const DailyTip: React.FC<DailyTipProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg p-4 mb-6 relative flex items-center gap-4 shadow-sm">
-      {/* Speech Bubble Icon */}
-      <img 
-        src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/speech%20bubble_200x200.webp?alt=media&token=25c10f21-477c-4028-8217-fe815cfd540e"
-        alt="Daily Tip"
-        className="w-12 h-12 flex-shrink-0"
-      />
-
-      {/* Vertical Line Separator */}
-      <div className="w-1 h-16 bg-[#072432] rounded-full"></div>
+    <div className="bg-[#181818] rounded-lg p-4 mb-6 relative flex items-center gap-4 shadow-sm">
+      {/* Video Loop */}
+      <video 
+        autoPlay
+        muted
+        loop
+        className="w-32 h-32 flex-shrink-0 rounded"
+      >
+        <source src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/edu%20sales%2FSales%20Tip2.mp4?alt=media&token=a7648599-2958-4bcf-ba68-0872d6753c81" type="video/mp4" />
+      </video>
 
       {/* Close button */}
       <button
         onClick={handleDismiss}
-        className="absolute top-3 right-3 p-1 hover:bg-brand/10 rounded transition-colors"
+        className="absolute top-3 right-3 p-1 hover:bg-slate-700 rounded transition-colors"
         title="Dismiss"
       >
-        <X size={18} className="text-slate-500 hover:text-slate-700" />
+        <X size={18} className="text-slate-400 hover:text-slate-200" />
       </button>
 
       {/* Content */}
       <div className="flex-1">
-        <h3 className="font-black text-sm text-slate-900 mb-1 flex items-center gap-2">
-          <Lightbulb size={18} className="text-slate-900 stroke-2" />
+        <h3 className="font-black text-sm text-white mb-1 flex items-center gap-2">
+          <Lightbulb size={18} className="text-white stroke-2" />
           Daily Sales Tip
         </h3>
-        <p className="text-sm text-slate-700 leading-relaxed">
+        <p className="text-sm text-slate-300 leading-relaxed">
           {todaysTip}
         </p>
       </div>

@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
   return (
     <div className="w-64 bg-white h-screen border-r border-slate-100 flex flex-col fixed left-0 top-0 z-40">
       <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-        <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75" alt="Educater" className="h-8 object-contain" />
+        <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75" alt="Educater" className="h-4 object-contain" />
         <button 
           onClick={onLogout}
           className="p-2 text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
@@ -52,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
             onClick={() => setActiveTab(item.id)}
             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 text-sm font-bold tracking-tight relative ${
               activeTab === item.id 
-                ? 'bg-brand text-slate-900 shadow-lg shadow-brand/20' 
+                ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' 
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >

@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area 
 } from 'recharts';
-import { TrendingUp, Users, School as SchoolIcon, Star, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import { School, SalesRep } from '../types';
 import { seedSchoolsDatabase } from '../services/firebase';
 import DailyTip from './DailyTip';
@@ -42,10 +42,10 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
   };
   
   const stats = [
-    { label: 'My Schools', value: mySchools.length, icon: <SchoolIcon className="text-slate-900" />, sub: 'Owned by you' },
-    { label: 'Active Commission', value: `R${(mySchools.reduce((acc, s) => acc + ((s.studentCount || 0) * 5), 0)).toLocaleString()}`, icon: <span className="text-brand font-black text-lg">ZAR</span>, sub: 'Monthly recurring' },
-    { label: 'Global Schools', value: schools.length, icon: <Users className="text-slate-900" />, sub: 'Educater Network' },
-    { label: 'Top Engagement', value: '92%', icon: <Star className="text-brand" />, sub: 'Engagement Track' },
+    { label: 'My Schools', value: mySchools.length, icon: <span className="text-slate-900 font-black text-sm">SCHOOLS</span>, sub: 'Owned by you' },
+    { label: 'Active Commission', value: `R${(mySchools.reduce((acc, s) => acc + ((s.studentCount || 0) * 5), 0)).toLocaleString()}`, icon: <span className="text-slate-900 font-black text-lg">ZAR</span>, sub: 'Monthly recurring' },
+    { label: 'Global Schools', value: schools.length, icon: <span className="text-slate-900 font-black text-sm">GLOBAL</span>, sub: 'Educater Network' },
+    { label: 'Top Engagement', value: '92%', icon: <span className="text-slate-900 font-black text-sm">PEAK</span>, sub: 'Engagement Track' },
   ];
 
   const chartData = [
@@ -63,16 +63,6 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Welcome, {currentUser?.name.split(' ')[0]}</h1>
           <p className="text-slate-500 text-sm font-medium mt-1">Performance snapshot for today.</p>
         </div>
-        {currentUser?.role === 'admin' && (
-          <button
-            onClick={handleSeedSchools}
-            disabled={seeding}
-            className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 disabled:bg-slate-300 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
-          >
-            <Zap size={16} />
-            {seeding ? 'Seeding...' : 'Seed Schools'}
-          </button>
-        )}
       </div>
 
       {seedMessage && (
@@ -114,19 +104,13 @@ const Dashboard: React.FC<DashboardProps> = ({ currentUser, schools, onSchoolsUp
           <div className="h-48 md:h-72 w-full min-h-[200px]">
             <ResponsiveContainer width="99%" height="100%">
               <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#00ff8e" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#00ff8e" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 700}} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '10px' }}
                 />
-                <Area type="monotone" dataKey="count" stroke="#00ff8e" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+                <Area type="monotone" dataKey="count" stroke="#000000" strokeWidth={3} fillOpacity={0} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
