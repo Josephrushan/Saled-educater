@@ -44,10 +44,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="w-full max-w-md space-y-0 max-h-screen overflow-hidden flex flex-col">
         <div className="text-center flex-shrink-0">
           <img src={LOGO_URL} alt="Educater" className="w-32 sm:w-56 h-32 sm:h-56 mx-auto -mb-6 sm:-mb-12 object-contain" />
-          <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/edu%20sales%2Fedu%20coins.jpg?alt=media&token=a0e36c71-5e2c-4fc0-9b3b-d4b2884b4f99" alt="Edu Coins" className="w-52 sm:w-80 h-52 sm:h-80 mx-auto object-contain" />
+          <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/edu%20sales%2Fedu%20coins.jpg?alt=media&token=a0e36c71-5e2c-4fc0-9b3b-d4b2884b4f99" alt="Edu Coins" className="w-64 sm:w-80 h-64 sm:h-80 mx-auto object-contain" />
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-3 sm:space-y-6 flex-1 flex flex-col justify-center">
+        <form onSubmit={handleLogin} className="space-y-3 sm:space-y-6 flex-1 flex flex-col justify-center px-4 sm:px-0">
           {error && (
             <div className="flex items-center gap-3 p-4 bg-rose-50 text-rose-600 rounded-full text-xs font-bold animate-in fade-in slide-in-from-top-2">
               <AlertCircle size={18} />
