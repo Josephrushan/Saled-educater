@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, currentUser,
   return (
     <div className="w-64 bg-white h-screen border-r border-slate-100 flex flex-col fixed left-0 top-0 z-40">
       <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-        <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75" alt="Educater" className="h-4 object-contain" />
+        <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75" alt="Educater" className="h-4 object-contain" style={{ filter: 'brightness(0) saturate(100%)' }} />
         <button 
           onClick={onLogout}
           className="p-2 text-slate-900 hover:bg-slate-100 rounded-lg transition-all"

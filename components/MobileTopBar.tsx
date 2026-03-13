@@ -21,7 +21,7 @@ const MobileTopBar: React.FC<MobileTopBarProps> = ({ onOpenDrawer, onOpenProfile
       </button>
 
       <div className="flex items-center justify-center">
-        <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75" alt="Educater" className="h-8 object-contain" />
+        <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75" alt="Educater" className="h-8 object-contain" style={{ filter: 'brightness(0) saturate(100%)' }} />
       </div>
 
       <button 
@@ -29,7 +29,7 @@ const MobileTopBar: React.FC<MobileTopBarProps> = ({ onOpenDrawer, onOpenProfile
         className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-transform active:scale-95 ${
           currentUser?.profilePicUrl 
             ? 'border-slate-100 overflow-hidden bg-slate-50' 
-            : 'border-green-500 overflow-hidden bg-green-500'
+            : 'border-slate-900 bg-slate-900 overflow-hidden'
         }`}
       >
         {currentUser?.profilePicUrl ? (

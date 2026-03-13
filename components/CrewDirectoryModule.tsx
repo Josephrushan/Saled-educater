@@ -7,24 +7,7 @@ interface CrewDirectoryModuleProps {
   currentUser: SalesRep | null;
 }
 
-// Color gradients for avatars
-const colorGradients = [
-  'from-blue-400 to-cyan-400',
-  'from-purple-400 to-pink-400',
-  'from-orange-400 to-red-400',
-  'from-green-400 to-emerald-400',
-  'from-indigo-400 to-blue-400',
-  'from-rose-400 to-pink-400',
-  'from-amber-400 to-orange-400',
-  'from-teal-400 to-cyan-400',
-  'from-violet-400 to-purple-400',
-  'from-lime-400 to-green-400',
-];
 
-const getGradientForUser = (name: string): string => {
-  const hash = name.charCodeAt(0) + name.charCodeAt(name.length - 1);
-  return colorGradients[hash % colorGradients.length];
-};
 
 const CrewDirectoryModule: React.FC<CrewDirectoryModuleProps> = ({ currentUser }) => {
   const [reps, setReps] = useState<SalesRep[]>([]);
@@ -109,7 +92,7 @@ const CrewDirectoryModule: React.FC<CrewDirectoryModuleProps> = ({ currentUser }
                     className="w-20 h-20 rounded-full object-cover border-4 border-slate-100"
                   />
                 ) : (
-                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getGradientForUser(rep.name)} flex items-center justify-center text-2xl font-black text-white shadow-lg`}>
+                  <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center text-2xl font-black text-white shadow-lg">
                     {rep.avatar || rep.name[0]}
                   </div>
                 )}

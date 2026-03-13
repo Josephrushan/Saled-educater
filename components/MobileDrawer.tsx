@@ -34,7 +34,7 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose, onNavigate
       />
       <div className="absolute top-0 left-0 bottom-0 w-72 bg-white shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
         <div className="p-6 border-b border-slate-50 flex items-center justify-between flex-shrink-0">
-          <span className="text-lg font-black text-slate-900 uppercase tracking-widest">Menu</span>
+          <img src="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/Educator.svg?alt=media&token=474dc685-fd5c-4475-b93a-b8d55c367d75" alt="Menu" className="h-6 object-contain" style={{ filter: 'brightness(0) saturate(100%)' }} />
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-900">
             <X size={24} />
           </button>
